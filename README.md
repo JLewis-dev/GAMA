@@ -1,4 +1,3 @@
-
 # GAMA  
 **Genomic Availability & Metadata Analysis Tool**
 
@@ -17,7 +16,7 @@ GAMA:
 - Unifies NCBI database searches  
 - Computes a data richness score  
 - Classifies SRA accessions by experimental modality  
-- Enables strategic parsing of Assembly and SRA accession metadata  
+- Enables strategic parsing of Assembly and SRA results  
 - Generates publication-ready visuals 
 
 ---
@@ -87,15 +86,15 @@ plot_sra_availability(META)
 ### 8. Extract filtered Assembly accession metadata
 
 ``` r
-ASM_META <- extract_assembly_metadata(RESULTS, best = TRUE)
-print(ASM_META)
+ASM <- extract_assembly_metadata(RESULTS, best = TRUE)
+print(ASM)
 ```
 
 ### 9. Extract filtered SRA accession metadata
 
 ``` r
-SRA_META <- extract_sra_metadata(RESULTS, species = 'Vigna vexillata', class = 'genomic')
-print(SRA_META)
+SRA <- extract_sra_metadata(RESULTS, species = 'Vigna vexillata', class = 'genomic')
+print(SRA)
 ```
 
 ### 10. Cite
@@ -121,8 +120,6 @@ GAMA includes built-in plotting functions for rapid assessment.
 
 Supports custom ranking, colour palettes, and ggplot2 theming.
 
----
-
 ### SRA modality plots
 
 `plot_sra_availability()` visualises:
@@ -139,10 +136,9 @@ Optional GEO overlays are available via extended plotting functions.
 
 Queries automatically record:
 
-- Timestamp  
-- Tool version  
-- Database sources  
-- Search terms  
+- Tool version 
+- Timestamp 
+- Database sources 
 
 This metadata is embedded in outputs.
 
@@ -213,7 +209,7 @@ SRA experiments are classified using an ontology derived from large-scale metada
 
 - Other  
 
-Fallback strategies are applied when primary metadata fields are missing or ambiguous.
+Fallback rules are applied when primary metadata fields are missing or ambiguous.
 
 ---
 
@@ -223,7 +219,7 @@ GAMA is designed for:
 
 - Grant and project scoping  
 - Identification of under-studied taxa  
-- Strategic prioritisation of existing data sets  
+- Strategic prioritisation of existing datasets  
 
 It is particularly suited to investigations of underutilised and non-model plant species.
 

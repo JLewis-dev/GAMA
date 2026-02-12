@@ -2,7 +2,7 @@
 % Please edit documentation in R/Helpers.R
 \name{print.gdt_tbl}
 \alias{print.gdt_tbl}
-\title{Print a GAMA summary tibble}
+\title{Print GAMA summary tibble}
 \usage{
 \method{print}{gdt_tbl}(x, ...)
 }
@@ -15,5 +15,5 @@
 The input object, invisibly.
 }
 \description{
-Print a GAMA summary tibble
+Print GAMA summary tibble
 }

@@ -2,9 +2,9 @@ citHeader('To cite GAMA in publications:')
 
 citEntry(
   entry = 'Misc',
-  title = 'GAMA: Genomic Availability and Metadata Analysis Tool',
+  title = 'GAMA: Genomic Availability & Metadata Analysis Tool',
   author = person('James', 'Lewis'),
   year = '2026',
-  note = 'R package version 0.1.0',
+  note = 'R package version 0.1.1',
   url = 'https://github.com/JLewis-dev/GAMA'
 )

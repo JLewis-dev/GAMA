@@ -16,6 +16,8 @@ plot_sra_geo_availability(
 )
 }
 \arguments{
+\item{SRA}{Tibble returned by \code{\link[=summarise_sra_availability]{summarise_sra_availability()}} with include_geo = TRUE}
+
 \item{species}{Optional character vector of species to plot.}
 
 \item{classes}{Character vector of modality classes to display.}
@@ -27,8 +29,6 @@ plot_sra_geo_availability(
 \item{colours}{Named character vector of class colours.}
 
 \item{alpha_vals}{Named numeric vector controlling GEO-linked transparency.}
-
-\item{x}{Tibble returned by \code{\link[=summarise_sra_availability]{summarise_sra_availability()}} with include_geo = TRUE}
 }
 \value{
 A ggplot object (single species) or named list of ggplot objects showing per-modality GEO linkage.

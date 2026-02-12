@@ -2,7 +2,7 @@
 % Please edit documentation in R/Plotting.R
 \name{plot_sra_availability}
 \alias{plot_sra_availability}
-\title{Plot proportional SRA experimental modality composition}
+\title{Plot SRA experimental modality composition}
 \usage{
 plot_sra_availability(
   SRA,
@@ -31,5 +31,5 @@ plot_sra_availability(
 A ggplot object showing proportional SRA modality composition across species.
 }
 \description{
-Plot proportional SRA experimental modality composition
+Plot SRA experimental modality composition
 }

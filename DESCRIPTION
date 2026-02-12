@@ -1,16 +1,17 @@
 Package: GAMA
-Title: Genomic Availability and Metadata Analysis Tool
-Version: 0.1.0
+Title: Genomic Availability & Metadata Analysis Tool
+Version: 0.1.1
 Authors@R:
-    person("James", "Lewis",
-           email = "James.Lewis-2022@outlook.com",
-           role = c("aut", "cre"))
-Description: The Genomic Availability and Metadata Analysis Tool (GAMA) is an
-    R-based framework for efficiently surveying publicly accessible sequencing
-    data for user-defined sets of species. It unifies NCBI Assembly, SRA, and
-    BioSample query searches to generate reproducible availability summaries
-    with a composite data richness score, alongside ontology-based breakdowns
-    of SRA modalities and GEO experiment linkage. GAMA is intended to support
+    person('James', 'Lewis',
+           email = 'James.Lewis-2022@outlook.com',
+           role = c('aut', 'cre'))
+Description:
+    GAMA (Genomic Availability & Metadata Analysis Tool) is an R-based
+    framework for efficiently surveying publicly accessible sequencing
+    data for user-defined sets of species. It unifies NCBI Assembly, SRA,
+    and BioSample query searches to generate availability summaries with a
+    composite data richness score, alongside ontology-based breakdowns of
+    SRA modalities and GEO experiment linkage. GAMA is intended to support
     feasibility assessments of in silico research on underutilised plants.
 URL: https://github.com/JLewis-dev/GAMA
 BugReports: https://github.com/JLewis-dev/GAMA/issues
@@ -24,5 +25,7 @@ Imports:
     tibble,
     tidyr,
     xml2
+Depends:
+    R (>= 4.2.0)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
