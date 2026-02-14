@@ -2,20 +2,43 @@
 % Please edit documentation in R/Availability_Analysis.R
 \name{extract_assembly_metadata}
 \alias{extract_assembly_metadata}
-\title{Extract Assembly accession metadata}
+\title{Extract filtered Assembly metadata}
 \usage{
 extract_assembly_metadata(results, species = NULL, best = FALSE)
 }
 \arguments{
-\item{results}{List returned by \code{\link[=query_species]{query_species()}}.}
+\item{results}{A list returned by \code{\link[=query_species]{query_species()}}, containing Assembly IDs.}
 
-\item{species}{Optional character vector of species to include.}
+\item{species}{\code{NULL} (default) to return assemblies for all species, or a
+character vector specifying which species to extract.}
 
-\item{best}{Logical; if TRUE, return only the best assembly per species.}
+\item{best}{Logical; if \code{TRUE}, return only the best assembly per species.}
 }
 \value{
-A tibble of assembly metadata (e.g., accession, assembly level, N50, coverage, BioSample/BioProject and release information).
+A tibble with one row per assembly (or one row per species when
+\code{best = TRUE}). Fields include species, accession, assembly level, N50,
+coverage, BioSample/BioProject accessions, submitter, release date, and
+FTP path (where available). The tibble has class \code{gdt_tbl} and carries a
+\code{query_info} attribute for provenance.
 }
 \description{
-Extract Assembly accession metadata
+Retrieves and structures assembly metadata for one or more species using the
+Assembly identifiers stored in the output of \code{\link[=query_species]{query_species()}}. Metadata are
+returned in a tidy tibble and optionally reduced to a single 'best' assembly
+per species.
+}
+\details{
+When \code{best = TRUE}, the best assembly is selected using
+structural-weighting (assembly level) and N50 as a tie-breaker.
+}
+\examples{
+\dontrun{
+RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+ASM <- extract_assembly_metadata(RESULTS, best = TRUE)
+print(ASM)
+attr(ASM, 'query_info')
+}
+}
+\seealso{
+\code{\link[=query_species]{query_species()}}
 }

@@ -7,7 +7,7 @@
 \method{print}{gdt_tbl}(x, ...)
 }
 \arguments{
-\item{x}{An object of class 'gdt_tbl'.}
+\item{x}{An object of class \code{gdt_tbl}.}
 
 \item{...}{Further arguments passed to the next print method.}
 }
@@ -15,5 +15,22 @@
 The input object, invisibly.
 }
 \description{
-Print GAMA summary tibble
+Prints a \code{gdt_tbl} object with attached query provenance. When present, the
+\code{query_info} attribute is displayed above the table, showing the tool
+version, query timestamp (UTC), and queried databases.
+}
+\details{
+This method extends the default tibble printing behaviour by prepending a
+single-line provenance header. If no provenance is attached, a warning
+message is printed instead.
+}
+\examples{
+\dontrun{
+RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+SUMMARY <- summarise_availability(RESULTS)
+print(SUMMARY)
+}
+}
+\seealso{
+\code{\link[=summarise_availability]{summarise_availability()}}, \code{\link[=summarise_sra_availability]{summarise_sra_availability()}}
 }

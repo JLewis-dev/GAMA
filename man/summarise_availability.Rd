@@ -2,16 +2,44 @@
 % Please edit documentation in R/Availability_Analysis.R
 \name{summarise_availability}
 \alias{summarise_availability}
-\title{Summarise accession counts and compute data richness scores}
+\title{Summarise accession counts and compute data richness}
 \usage{
 summarise_availability(results)
 }
 \arguments{
-\item{results}{List returned by \code{\link[=query_species]{query_species()}}.}
+\item{results}{A list returned by \code{\link[=query_species]{query_species()}}.}
 }
 \value{
-A tibble of per-species accession counts and composite data richness scores (class 'gdt_tbl').
+A tibble with one row per species and the following columns:
+\itemize{
+\item \code{species}: species name
+\item \code{Assembly}, \code{SRA}, \code{BioSample}: accession counts per database
+\item \code{A}, \code{S}, \code{B}: component scores used for the composite
+\item \code{score}: composite data richness score
+}
+The tibble has class \code{gdt_tbl} and carries a \code{query_info} attribute for
+provenance.
 }
 \description{
-Summarise accession counts and compute data richness scores
+Collapses the output of \code{\link[=query_species]{query_species()}} into a species-level summary table
+of accession counts (Assembly, SRA, BioSample) and composite data richness
+scores.
+}
+\details{
+For each species, accession counts are extracted from the underlying query
+results and combined with a composite scoring system computed by the
+internal scoring engine. The returned tibble is given class \code{gdt_tbl} and
+retains query provenance via the \code{query_info} attribute, which is carried
+over from the \code{results} object.
+}
+\examples{
+\dontrun{
+RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+SUMMARY <- summarise_availability(RESULTS)
+print(SUMMARY)
+attr(SUMMARY, 'query_info')
+}
+}
+\seealso{
+\code{\link[=query_species]{query_species()}}, \code{\link[=plot_availability]{plot_availability()}}
 }

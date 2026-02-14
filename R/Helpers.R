@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.1.1'
+.GAMA_VERSION <- '0.1.2'
 
 # NCBI best practice:
 
@@ -27,15 +27,12 @@
 }
 
 .ncbi_throttle <- function(keyed = .ncbi_has_key()) {
-  # Conservative defaults: <=3 req/s without key; <=10 req/s with key
   Sys.sleep(if (isTRUE(keyed)) 0.12 else 0.35)
 }
 
-# General utilities
+# Null-coalescing operator
 
-`.%||%` <- function(a, b) if (!is.null(a)) a else b
-`..%||%` <- `.%||%`
-`%||%` <- `.%||%`
+`%||%` <- function(a, b) if (!is.null(a)) a else b
 
 # Safe rentrez wrappers
 
@@ -140,7 +137,6 @@ utils::globalVariables(c(
     tool_version   = .GAMA_VERSION,
     query_time_utc = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
     databases      = dbs,
-    retmax      = retmax,
     terms          = stats::setNames(as.list(paste0(species, '[Organism]')), species)
   )
 }
@@ -155,21 +151,39 @@ utils::globalVariables(c(
 
 #' Print GAMA summary tibble
 #'
-#' @param x An object of class 'gdt_tbl'.
+#' Prints a `gdt_tbl` object with attached query provenance. When present, the
+#' `query_info` attribute is displayed above the table, showing the tool
+#' version, query timestamp (UTC), and queried databases.
+#'
+#' @details
+#' This method extends the default tibble printing behaviour by prepending a
+#' single-line provenance header. If no provenance is attached, a warning
+#' message is printed instead.
+#'
+#' @param x An object of class `gdt_tbl`.
 #' @param ... Further arguments passed to the next print method.
+#'
 #' @return The input object, invisibly.
+#'
+#' @seealso [summarise_availability()], [summarise_sra_availability()]
+#'
+#' @examples
+#' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' SUMMARY <- summarise_availability(RESULTS)
+#' print(SUMMARY)
+#' }
 #' @export
 print.gdt_tbl <- function(x, ...) {
   qi <- attr(x, 'query_info')
   if (!is.null(qi)) {
     cat(
-    paste0(
-    'GAMA v', qi$tool_version,
-    ' | Query time (UTC): ', qi$query_time_utc,
-    ' | Databases: ', paste(qi$databases, collapse = ', '),
-    ' | retmax=', qi$retmax,
-    '\n'
-    )
+      paste0(
+        'GAMA v', qi$tool_version,
+        ' | Query time (UTC): ', qi$query_time_utc,
+        ' | Databases: ', paste(qi$databases, collapse = ', '),
+        '\n'
+      )
     )
   } else {
     cat('GAMA | WARNING: no provenance attached\n')

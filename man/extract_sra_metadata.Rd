@@ -2,7 +2,7 @@
 % Please edit documentation in R/Availability_Analysis.R
 \name{extract_sra_metadata}
 \alias{extract_sra_metadata}
-\title{Extract SRA accession metadata and classify experimental modality}
+\title{Extract filtered SRA metadata}
 \usage{
 extract_sra_metadata(
   results,
@@ -13,19 +13,51 @@ extract_sra_metadata(
 )
 }
 \arguments{
-\item{results}{List returned by \code{\link[=query_species]{query_species()}}.}
+\item{results}{A list returned by \code{\link[=query_species]{query_species()}}, containing SRA IDs.}
 
-\item{species}{Optional character vector of species to include.}
+\item{species}{\code{NULL} (default) to include all species, or a character
+vector specifying which species to include.}
 
-\item{class}{Optional character vector of ontology classes to retain.}
+\item{class}{Optional character vector of modality classes to retain.}
 
-\item{subclass}{Optional character vector of ontology subclasses to retain.}
+\item{subclass}{Optional character vector of modality subclasses to retain.}
 
-\item{only_geo}{Logical; if TRUE, retain only GEO-linked experiments.}
+\item{only_geo}{Logical; if \code{TRUE}, retain only GEO-linked experiments.}
 }
 \value{
-A tibble of experiment-level SRA metadata with strategy normalisation, ontology assignments and GEO linkage fields.
+A tibble with one row per SRA experiment, including identifiers,
+strategy fields, ontology assignments, and GEO linkage columns. The tibble
+has class \code{gdt_tbl} and carries a \code{query_info} attribute for provenance.
 }
 \description{
-Extract SRA accession metadata and classify experimental modality
+Retrieves experiment-level SRA metadata for one or more species using the
+internal SRA metadata engine, then normalises sequencing strategy labels and
+assigns curated modality classes and subclasses.
+}
+\details{
+For each experiment, the function:
+\itemize{
+\item extracts the raw \code{LIBRARY_STRATEGY} value from the SRA XML
+\item normalises strategy strings
+\item assigns ontology-based \code{class} and \code{subclass}
+\item records GEO linkage fields (\code{geo_linked}, \code{gse_ids}, \code{gsm_ids})
+}
+
+Optional filters can restrict output to particular classes/subclasses, or
+GEO-linked experiments only.
+}
+\examples{
+\dontrun{
+RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+SRA <- extract_sra_metadata(
+  RESULTS,
+  species = 'Vigna vexillata',
+  class = 'genomic'
+)
+print(SRA)
+attr(SRA, 'query_info')
+}
+}
+\seealso{
+\code{\link[=query_species]{query_species()}}, \code{\link[=summarise_sra_availability]{summarise_sra_availability()}}
 }
