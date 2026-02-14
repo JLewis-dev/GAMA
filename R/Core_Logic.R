@@ -204,7 +204,7 @@ title_raw = NA_character_) {
     if (!is.na(ttl) && grepl('\\bdnase\\b', ttl)) return(list(class = 'epigenomic', subclass = 'DNase-seq'))
     if (!is.na(ttl) && grepl('\\bfaire\\b', ttl)) return(list(class = 'epigenomic', subclass = 'FAIRE-seq'))
     if (!is.na(ttl) && grepl('\\bmnase\\b', ttl)) return(list(class = 'epigenomic', subclass = 'MNase-seq'))
-    if (!is.na(ttl) && grepl('\\bchip\\b', ttl))  return(list(class = 'epigenomic', subclass = 'ChIP-seq'))
+    if (!is.na(ttl) && grepl('\\bchip\\b', ttl)) return(list(class = 'epigenomic', subclass = 'ChIP-seq'))
     if (!is.na(ttl) && grepl('\\bbisulfite\\b|\\bwgbs\\b|\\brrbs\\b|\\bmethyl\\b', ttl)) return(list(class = 'epigenomic', subclass = 'Bisulfite-seq'))
     return(list(class = 'epigenomic', subclass = 'Other'))
   }
@@ -215,7 +215,7 @@ title_raw = NA_character_) {
     if (grepl('\\bdnase\\b', ttl)) return(list(class = 'epigenomic', subclass = 'DNase-seq'))
     if (grepl('\\bfaire\\b', ttl)) return(list(class = 'epigenomic', subclass = 'FAIRE-seq'))
     if (grepl('\\bmnase\\b', ttl)) return(list(class = 'epigenomic', subclass = 'MNase-seq'))
-    if (grepl('\\bchip\\b', ttl))  return(list(class = 'epigenomic', subclass = 'ChIP-seq'))
+    if (grepl('\\bchip\\b', ttl)) return(list(class = 'epigenomic', subclass = 'ChIP-seq'))
   }
   if (!is.na(ttl) && grepl('\\bbisulfite\\b|\\bwgbs\\b|\\brrbs\\b|\\bmethyl\\b', ttl)) {
     return(list(class = 'epigenomic', subclass = 'Bisulfite-seq'))
@@ -229,8 +229,8 @@ title_raw = NA_character_) {
   }
   if (!is.na(ttl) && grepl('\\bhi c\\b|\\bhic\\b|\\bchia pet\\b|\\btcc\\b|\\b3c\\b|\\b4c\\b|\\b5c\\b|\\bcapture c\\b|\\bhichip\\b|\\bplac\\b|\\bpromoter capture\\b', ttl)) {
     if (grepl('\\bhi c\\b|\\bhic\\b', ttl)) return(list(class = 'chromatin', subclass = 'Hi-C'))
-    if (grepl('\\bchia pet\\b', ttl))        return(list(class = 'chromatin', subclass = 'ChIA-PET'))
-    if (grepl('\\btcc\\b', ttl))             return(list(class = 'chromatin', subclass = 'TCC'))
+    if (grepl('\\bchia pet\\b', ttl)) return(list(class = 'chromatin', subclass = 'ChIA-PET'))
+    if (grepl('\\btcc\\b', ttl)) return(list(class = 'chromatin', subclass = 'TCC'))
     return(list(class = 'chromatin', subclass = '3C-based'))
   }
   if (.is_unknown(strategy_raw) || .is_unknown(strategy_norm) || .is_other_strategy(strategy_norm)) {

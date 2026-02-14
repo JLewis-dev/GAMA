@@ -2,12 +2,31 @@
 
 #' Plot data richness
 #'
-#' @param SUMMARY Tibble returned by [summarise_availability()].
-#' @param rank Character; species ordering method.
-#' @param abbreviate Logical; abbreviate species names.
-#' @param theme_fn ggplot2 theme function.
-#' @param colours Named character vector of fill colours.
-#' @return A ggplot object showing stacked bar charts of data richness components.
+#' Visualises species-level data richness using the composite scores generated
+#' during the query phase. Assembly, SRA, and BioSample contributions are shown
+#' as stacked bar segments for each species.
+#'
+#' @param SUMMARY A tibble returned by [summarise_availability()], containing
+#'   species-level composite scores and component values (`A`, `S`, `B`).
+#' @param rank Ordering of species on the x-axis. One of 'highest' (default),
+#'   'lowest', 'A-Z', 'Z-A', or 'input'.
+#' @param abbreviate Logical; if `TRUE` (default), abbreviate species names to
+#'   'G. species' style labels.
+#' @param theme_fn A ggplot2 theme function (e.g. [ggplot2::theme_minimal()]).
+#' @param colours Named character vector of fill colours for the 'Assembly',
+#'   'SRA', and 'BioSample' segments.
+#'
+#' @return A ggplot object showing stacked bar segments for each species.
+#'
+#' @seealso [query_species()], [summarise_availability()]
+#'
+#' @examples
+#' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' SUMMARY <- summarise_availability(RESULTS)
+#' print(SUMMARY)
+#' plot_availability(SUMMARY)
+#' }
 #' @export
 plot_availability <- function(
 SUMMARY,
@@ -73,114 +92,187 @@ BioSample = '#56C5A8'
   )
 }
 
-#' Plot SRA experimental modality composition
+#' Plot SRA modality composition
 #'
-#' @param SRA Tibble returned by [summarise_sra_availability()].
-#' @param species Optional character vector of species to include.
-#' @param rank Character; species ordering method.
-#' @param abbreviate Logical; abbreviate species names.
-#' @param theme_fn ggplot2 theme function.
+#' Visualises species-level SRA modality composition using stacked horizontal
+#' bars. Each bar shows the proportional contribution of major SRA classes
+#' (genomic, transcriptomic, epigenomic, chromatin, other, unknown), with total
+#' SRA counts labelled.
+#'
+#' Operates on the wide-format summary returned by
+#' [summarise_sra_availability()].
+#'
+#' @param SRA A wide-format SRA summary table returned by
+#'   [summarise_sra_availability()].
+#' @param species `NULL` (default) to plot all species, or a character vector
+#'   of species to include.
+#' @param rank Ordering of species. One of 'highest' (default), 'lowest',
+#'   'A-Z', 'Z-A', or 'input'.
+#' @param abbreviate Logical; if `TRUE` (default), abbreviate species names.
+#' @param theme_fn A ggplot2 theme function.
 #' @param colours Named character vector of class colours.
-#' @return A ggplot object showing proportional SRA modality composition across species.
+#'
+#' @return A ggplot object showing proportional SRA modality profiles across
+#'   species.
+#'
+#' @seealso [summarise_sra_availability()], [plot_sra_geo_availability()]
+#'
+#' @examples
+#' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' SRA_SUMMARY <- summarise_sra_availability(RESULTS)
+#' plot_sra_availability(SRA_SUMMARY)
+#' }
 #' @export
 plot_sra_availability <- function(
-SRA,
-species    = NULL,
-rank       = c('highest', 'lowest', 'A-Z', 'Z-A', 'input'),
-abbreviate = TRUE,
-theme_fn   = ggplot2::theme_minimal,
-colours    = c(
-genomic        = '#E3F9F2',
-transcriptomic = '#A8E6CF',
-epigenomic     = '#56C5A8',
-chromatin      = '#2FA083',
-other          = '#166A55',
-unknown        = '#BDBDBD'
-)
+    SRA,
+    species    = NULL,
+    rank       = c('highest', 'lowest', 'A-Z', 'Z-A', 'input'),
+    abbreviate = TRUE,
+    theme_fn   = ggplot2::theme_minimal,
+    colours    = c(
+      genomic        = '#E3F9F2',
+      transcriptomic = '#A8E6CF',
+      epigenomic     = '#56C5A8',
+      chromatin      = '#2FA083',
+      other          = '#166A55',
+      unknown        = '#BDBDBD'
+    )
 ) {
   rank <- match.arg(rank)
   CORE <- SRA |>
-  dplyr::select(species, SRA, genomic, transcriptomic, epigenomic, chromatin, other, unknown)
+    dplyr::select(
+      species, SRA, genomic, transcriptomic, epigenomic, chromatin, other,
+      unknown
+    )
   if (!is.null(species)) {
     CORE <- CORE |> dplyr::filter(.data$species %in% species)
     if (!nrow(CORE)) stop('No matching species found')
   }
   TOTAL <- CORE[, c('species', 'SRA')]
   if (rank == 'highest') {
-    TOTAL <- TOTAL[order(TOTAL$SRA, decreasing = FALSE), ]
-  } else if (rank == 'lowest') {
     TOTAL <- TOTAL[order(TOTAL$SRA, decreasing = TRUE), ]
+  } else if (rank == 'lowest') {
+    TOTAL <- TOTAL[order(TOTAL$SRA, decreasing = FALSE), ]
   } else if (rank == 'A-Z') {
-    TOTAL <- TOTAL[order(TOTAL$species, decreasing = TRUE), ]
-  } else if (rank == 'Z-A') {
     TOTAL <- TOTAL[order(TOTAL$species, decreasing = FALSE), ]
+  } else if (rank == 'Z-A') {
+    TOTAL <- TOTAL[order(TOTAL$species, decreasing = TRUE), ]
+  } else if (rank == 'input') {
+    TOTAL <- TOTAL
   }
   species_order <- TOTAL$species
   LONG <- CORE |>
-  tidyr::pivot_longer(
-  cols      = c('genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown'),
-  names_to  = 'class',
-  values_to = 'count'
-  ) |>
-  dplyr::group_by(species) |>
-  dplyr::mutate(prop = count / sum(count)) |>
-  dplyr::ungroup()
+    tidyr::pivot_longer(
+      cols      = c(
+        'genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other',
+        'unknown'
+      ),
+      names_to  = 'class',
+      values_to = 'count'
+    ) |>
+    dplyr::group_by(species) |>
+    dplyr::mutate(prop = count / sum(count)) |>
+    dplyr::ungroup()
   LONG$class <- factor(
-  LONG$class,
-  levels = c('genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown')
+    LONG$class,
+    levels = c(
+      'genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other',
+      'unknown'
+    )
   )
-  LONG$species_label <- if (abbreviate) .shorten_species(LONG$species) else LONG$species
-  LONG$species_label <- factor(
-  LONG$species_label,
-  levels = if (abbreviate) .shorten_species(species_order) else species_order
-  )
+  LONG$species_label <- if (abbreviate) {
+    .shorten_species(LONG$species)
+  } else {
+    LONG$species
+  }
+  levels_in_plot <- if (abbreviate) {
+    .shorten_species(species_order)
+  } else {
+    species_order
+  }
+  LONG$species_label <- factor(LONG$species_label, levels = rev(levels_in_plot))
   p <- ggplot2::ggplot(
-  LONG,
-  ggplot2::aes(x = species_label, y = prop, fill = class)
+    LONG,
+    ggplot2::aes(x = species_label, y = prop, fill = class)
   ) +
-  ggplot2::geom_col(width = 0.7) +
-  ggplot2::scale_fill_manual(values = colours) +
-  ggplot2::coord_flip(clip = 'off') +
-  ggplot2::labs(
-  x    = NULL,
-  y    = 'Proportion of experiments',
-  fill = 'Class:'
-  ) +
-  theme_fn(base_size = 13) +
-  ggplot2::theme(
-  plot.margin        = ggplot2::margin(10, 40, 10, 10),
-  legend.position    = 'top',
-  axis.text.y        = ggplot2::element_text(size = 11, face = 'italic'),
-  axis.text.x        = ggplot2::element_text(size = 11),
-  panel.grid.major.y = ggplot2::element_blank(),
-  plot.title         = ggplot2::element_blank()
-  )
+    ggplot2::geom_col(width = 0.7) +
+    ggplot2::scale_fill_manual(values = colours) +
+    ggplot2::coord_flip(clip = 'off') +
+    ggplot2::labs(
+      x    = NULL,
+      y    = 'Proportion of experiments',
+      fill = 'Class:'
+    ) +
+    theme_fn(base_size = 13) +
+    ggplot2::theme(
+      plot.margin        = ggplot2::margin(10, 40, 10, 10),
+      legend.position    = 'top',
+      axis.text.y        = ggplot2::element_text(size = 11, face = 'italic'),
+      axis.text.x        = ggplot2::element_text(size = 11),
+      panel.grid.major.y = ggplot2::element_blank(),
+      plot.title         = ggplot2::element_blank()
+    )
   totals_df <- TOTAL
+  totals_df$species_label <- if (abbreviate) {
+    .shorten_species(totals_df$species)
+  } else {
+    totals_df$species
+  }
   totals_df$species_label <- factor(
-  if (abbreviate) .shorten_species(totals_df$species) else totals_df$species,
-  levels = levels(LONG$species_label)
+    totals_df$species_label,
+    levels = levels(LONG$species_label)
   )
   p +
-  ggplot2::geom_text(
-  data = totals_df,
-  ggplot2::aes(x = species_label, y = 1.005, label = SRA),
-  hjust = 0,
-  size  = 3.5,
-  inherit.aes = FALSE
-  ) +
-  ggplot2::scale_y_continuous(expand = c(0, 0))
+    ggplot2::geom_text(
+      data = totals_df,
+      ggplot2::aes(x = species_label, y = 1.005, label = SRA),
+      hjust = 0,
+      size  = 3.5,
+      inherit.aes = FALSE
+    ) +
+    ggplot2::scale_y_continuous(expand = c(0, 0))
 }
 
-#' Plot GEO linkage overlay for SRA experimental modalities
+#' Plot SRA modality GEO linkage overlay
 #'
-#' @param SRA Tibble returned by [summarise_sra_availability()] with include_geo = TRUE
-#' @param species Optional character vector of species to plot.
-#' @param classes Character vector of modality classes to display.
-#' @param rank Character; species ordering method.
-#' @param theme_fn ggplot2 theme function.
+#' Visualises GEO linkage as an overlay on SRA modality classes. Each modality
+#' is displayed as a 100% bar in a neutral background, with the modality colour
+#' representing the GEO-linked fraction. Labels show `GEO-linked / Total` for
+#' each modality.
+#'
+#' Operates on the wide-format output of [summarise_sra_availability()] when
+#' `include_geo = TRUE`.
+#'
+#' If `species` is `NULL`, plots are generated for all species in the table.
+#' A single species returns a ggplot object; multiple species returns a named
+#' list of ggplot objects.
+#'
+#' @param SRA A wide-format SRA summary table returned by
+#'   [summarise_sra_availability()] when `include_geo = TRUE`.
+#' @param species `NULL` (default) for all species, or a character vector of
+#'   species to plot.
+#' @param classes Character vector of modality classes to display. Values are
+#'   intersected with the fixed plotting order used internally.
+#' @param rank Ordering of species (when `species = NULL`), or ordering applied
+#'   to the requested species vector. One of 'highest', 'lowest', 'A-Z', 'Z-A',
+#'   or 'input'.
+#' @param theme_fn A ggplot2 theme function.
 #' @param colours Named character vector of class colours.
-#' @param alpha_vals Named numeric vector controlling GEO-linked transparency.
-#' @return A ggplot object (single species) or named list of ggplot objects showing per-modality GEO linkage.
+#' @param alpha_vals Named numeric vector giving alpha values for GEO-linked
+#'   vs not GEO-linked segments.
+#'
+#' @return A ggplot object (single species) or a named list of ggplot objects
+#'   (multiple species).
+#'
+#' @seealso [summarise_sra_availability()], [plot_sra_availability()]
+#'
+#' @examples
+#' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' SRA_GEO <- summarise_sra_availability(RESULTS, include_geo = TRUE)
+#' plot_sra_geo_availability(SRA_GEO, species = 'Vigna vexillata')
+#' }
 #' @export
 plot_sra_geo_availability <- function(
 SRA,

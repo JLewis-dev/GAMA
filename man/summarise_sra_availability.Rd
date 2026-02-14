@@ -2,7 +2,7 @@
 % Please edit documentation in R/Availability_Analysis.R
 \name{summarise_sra_availability}
 \alias{summarise_sra_availability}
-\title{Summarise SRA experimental modality composition}
+\title{Summarise SRA modality composition}
 \usage{
 summarise_sra_availability(
   results,
@@ -12,17 +12,45 @@ summarise_sra_availability(
 )
 }
 \arguments{
-\item{results}{List returned by \code{\link[=query_species]{query_species()}}.}
+\item{results}{A list returned by \code{\link[=query_species]{query_species()}}.}
 
-\item{species}{Optional character vector of species to include.}
+\item{species}{\code{NULL} (default) to include all species, or a character
+vector specifying which species to include.}
 
-\item{all}{Logical; if TRUE, include subclass-level counts.}
+\item{all}{Logical; if \code{TRUE}, include subclass-level columns.}
 
-\item{include_geo}{Logical; if TRUE, append GEO linkage summaries.}
+\item{include_geo}{Logical; if \code{TRUE}, append GEO linkage summaries.}
 }
 \value{
-A tibble of per-species SRA modality counts and totals (class 'gdt_tbl'); optionally includes subclass and GEO overlay columns.
+A tibble with one row per species containing class-level counts and
+totals. When \code{all = TRUE}, subclass-level counts are included. When
+\code{include_geo = TRUE}, GEO summary columns are appended (e.g.
+\code{denom_total}, \code{geo_linked_denom}, \code{geo_prop}, and '\if{html}{\out{<class>}}_geo').
+The tibble has class \code{gdt_tbl} and carries a \code{query_info} attribute.
 }
 \description{
-Summarise SRA experimental modality composition
+Collapses experiment-level SRA metadata into species-level modality counts
+using ontology-assigned classes and (optionally) subclasses.
+}
+\details{
+By default, the output includes class-level counts for the major modality
+classes (genomic, transcriptomic, epigenomic, chromatin, other, unknown),
+plus the total number of SRA experiments per species.
+
+GEO overlay:
+When \code{include_geo = TRUE}, GEO-linked class counts are appended as
+'\if{html}{\out{<class>}}_geo' columns, alongside a GEO-compatible denominator summary and
+proportion. The GEO-compatible denominator is defined as:
+transcriptomic + epigenomic + chromatin + other + unknown.
+}
+\examples{
+\dontrun{
+RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+SRA_SUMMARY <- summarise_sra_availability(RESULTS)
+print(SRA_SUMMARY)
+}
+}
+\seealso{
+\code{\link[=extract_sra_metadata]{extract_sra_metadata()}}, \code{\link[=plot_sra_availability]{plot_sra_availability()}},
+\code{\link[=plot_sra_geo_availability]{plot_sra_geo_availability()}}
 }

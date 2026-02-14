@@ -2,16 +2,42 @@
 % Please edit documentation in R/Availability_Analysis.R
 \name{query_species}
 \alias{query_species}
-\title{Query NCBI databases using a set of species}
+\title{Query NCBI databases using species list}
 \usage{
 query_species(species)
 }
 \arguments{
-\item{species}{Character vector of binomial species names.}
+\item{species}{Character vector of binomial species names (e.g.
+'Vigna angularis'). Duplicates are removed with \code{\link[=unique]{unique()}}.}
 }
 \value{
-A named list (one element per species) containing database search results, record IDs, accession counts, and query metadata.
+A named list with one element per species. Each element is a list
+with components \code{assembly}, \code{sra}, and \code{biosample} containing
+database-specific search results (including counts and record identifiers,
+depending on the internal search implementation). The output has a
+\code{query_info} attribute storing query provenance.
 }
 \description{
-Query NCBI databases using a set of species
+Queries NCBI Assembly, SRA, and BioSample and returns per-species search
+results in a named list. A provenance record is attached to the output as
+the \code{query_info} attribute.
+}
+\details{
+\code{query_species()} is the entry point for the NCBI query phase. Each species
+is queried independently across the supported databases, and results are
+stored in a per-species list with components \code{assembly}, \code{sra}, and
+\code{biosample}.
+
+The returned object has an attribute \code{query_info} containing the tool
+version, query timestamp (UTC), database names, and the search terms used.
+}
+\examples{
+\dontrun{
+RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+str(RESULTS, max.level = 2)
+attr(RESULTS, 'query_info')
+}
+}
+\seealso{
+\code{\link[=summarise_availability]{summarise_availability()}}
 }

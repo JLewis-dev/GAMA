@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: 'If you use GAMA in your research, please cite it as below.'
 title: 'GAMA: Genomic Availability & Metadata Analysis Tool'
-version: 0.1.1
-date-released: 2026-02-12
+version: 0.1.2
+date-released: 2026-02-14
 authors:
   - family-names: Lewis
     given-names: James

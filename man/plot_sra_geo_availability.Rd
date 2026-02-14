@@ -2,7 +2,7 @@
 % Please edit documentation in R/Plotting.R
 \name{plot_sra_geo_availability}
 \alias{plot_sra_geo_availability}
-\title{Plot GEO linkage overlay for SRA experimental modalities}
+\title{Plot SRA modality GEO linkage overlay}
 \usage{
 plot_sra_geo_availability(
   SRA,
@@ -16,23 +16,51 @@ plot_sra_geo_availability(
 )
 }
 \arguments{
-\item{SRA}{Tibble returned by \code{\link[=summarise_sra_availability]{summarise_sra_availability()}} with include_geo = TRUE}
+\item{SRA}{A wide-format SRA summary table returned by
+\code{\link[=summarise_sra_availability]{summarise_sra_availability()}} when \code{include_geo = TRUE}.}
 
-\item{species}{Optional character vector of species to plot.}
+\item{species}{\code{NULL} (default) for all species, or a character vector of
+species to plot.}
 
-\item{classes}{Character vector of modality classes to display.}
+\item{classes}{Character vector of modality classes to display. Values are
+intersected with the fixed plotting order used internally.}
 
-\item{rank}{Character; species ordering method.}
+\item{rank}{Ordering of species (when \code{species = NULL}), or ordering applied
+to the requested species vector. One of 'highest', 'lowest', 'A-Z', 'Z-A',
+or 'input'.}
 
-\item{theme_fn}{ggplot2 theme function.}
+\item{theme_fn}{A ggplot2 theme function.}
 
 \item{colours}{Named character vector of class colours.}
 
-\item{alpha_vals}{Named numeric vector controlling GEO-linked transparency.}
+\item{alpha_vals}{Named numeric vector giving alpha values for GEO-linked
+vs not GEO-linked segments.}
 }
 \value{
-A ggplot object (single species) or named list of ggplot objects showing per-modality GEO linkage.
+A ggplot object (single species) or a named list of ggplot objects
+(multiple species).
 }
 \description{
-Plot GEO linkage overlay for SRA experimental modalities
+Visualises GEO linkage as an overlay on SRA modality classes. Each modality
+is displayed as a 100\% bar in a neutral background, with the modality colour
+representing the GEO-linked fraction. Labels show \code{GEO-linked / Total} for
+each modality.
+}
+\details{
+Operates on the wide-format output of \code{\link[=summarise_sra_availability]{summarise_sra_availability()}} when
+\code{include_geo = TRUE}.
+
+If \code{species} is \code{NULL}, plots are generated for all species in the table.
+A single species returns a ggplot object; multiple species returns a named
+list of ggplot objects.
+}
+\examples{
+\dontrun{
+RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+SRA_GEO <- summarise_sra_availability(RESULTS, include_geo = TRUE)
+plot_sra_geo_availability(SRA_GEO, species = 'Vigna vexillata')
+}
+}
+\seealso{
+\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}, \code{\link[=plot_sra_availability]{plot_sra_availability()}}
 }

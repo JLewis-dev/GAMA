@@ -1,9 +1,37 @@
 # AVAILABILITY ANALYSIS =======================================================
 
-#' Query NCBI databases using a set of species
+#' Query NCBI databases using species list
 #'
-#' @param species Character vector of binomial species names.
-#' @return A named list (one element per species) containing database search results, record IDs, accession counts, and query metadata.
+#' Queries NCBI Assembly, SRA, and BioSample and returns per-species search
+#' results in a named list. A provenance record is attached to the output as
+#' the `query_info` attribute.
+#'
+#' @details
+#' `query_species()` is the entry point for the NCBI query phase. Each species
+#' is queried independently across the supported databases, and results are
+#' stored in a per-species list with components `assembly`, `sra`, and
+#' `biosample`.
+#'
+#' The returned object has an attribute `query_info` containing the tool
+#' version, query timestamp (UTC), database names, and the search terms used.
+#'
+#' @param species Character vector of binomial species names (e.g.
+#'   'Vigna angularis'). Duplicates are removed with [unique()].
+#'
+#' @return A named list with one element per species. Each element is a list
+#'   with components `assembly`, `sra`, and `biosample` containing
+#'   database-specific search results (including counts and record identifiers,
+#'   depending on the internal search implementation). The output has a
+#'   `query_info` attribute storing query provenance.
+#'
+#' @seealso [summarise_availability()]
+#'
+#' @examples
+#' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' str(RESULTS, max.level = 2)
+#' attr(RESULTS, 'query_info')
+#' }
 #' @export
 query_species <- function(species) {
   species <- unique(species)
@@ -29,10 +57,40 @@ query_species <- function(species) {
   RESULTS
 }
 
-#' Summarise accession counts and compute data richness scores
+#' Summarise accession counts and compute data richness
 #'
-#' @param results List returned by [query_species()].
-#' @return A tibble of per-species accession counts and composite data richness scores (class 'gdt_tbl').
+#' Collapses the output of [query_species()] into a species-level summary table
+#' of accession counts (Assembly, SRA, BioSample) and composite data richness
+#' scores.
+#'
+#' @details
+#' For each species, accession counts are extracted from the underlying query
+#' results and combined with a composite scoring system computed by the
+#' internal scoring engine. The returned tibble is given class `gdt_tbl` and
+#' retains query provenance via the `query_info` attribute, which is carried
+#' over from the `results` object.
+#'
+#' @param results A list returned by [query_species()].
+#'
+#' @return A tibble with one row per species and the following columns:
+#' \itemize{
+#'   \item `species`: species name
+#'   \item `Assembly`, `SRA`, `BioSample`: accession counts per database
+#'   \item `A`, `S`, `B`: component scores used for the composite
+#'   \item `score`: composite data richness score
+#' }
+#' The tibble has class `gdt_tbl` and carries a `query_info` attribute for
+#' provenance.
+#'
+#' @seealso [query_species()], [plot_availability()]
+#'
+#' @examples
+#' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' SUMMARY <- summarise_availability(RESULTS)
+#' print(SUMMARY)
+#' attr(SUMMARY, 'query_info')
+#' }
 #' @export
 summarise_availability <- function(results) {
   SPECIES <- names(results)
@@ -50,13 +108,42 @@ summarise_availability <- function(results) {
   .as_gdt_table(OUT, results)
 }
 
-#' Summarise SRA experimental modality composition
+#' Summarise SRA modality composition
 #'
-#' @param results List returned by [query_species()].
-#' @param species Optional character vector of species to include.
-#' @param all Logical; if TRUE, include subclass-level counts.
-#' @param include_geo Logical; if TRUE, append GEO linkage summaries.
-#' @return A tibble of per-species SRA modality counts and totals (class 'gdt_tbl'); optionally includes subclass and GEO overlay columns.
+#' Collapses experiment-level SRA metadata into species-level modality counts
+#' using ontology-assigned classes and (optionally) subclasses.
+#'
+#' By default, the output includes class-level counts for the major modality
+#' classes (genomic, transcriptomic, epigenomic, chromatin, other, unknown),
+#' plus the total number of SRA experiments per species.
+#'
+#' GEO overlay:
+#' When `include_geo = TRUE`, GEO-linked class counts are appended as
+#' '<class>_geo' columns, alongside a GEO-compatible denominator summary and
+#' proportion. The GEO-compatible denominator is defined as:
+#' transcriptomic + epigenomic + chromatin + other + unknown.
+#'
+#' @param results A list returned by [query_species()].
+#' @param species `NULL` (default) to include all species, or a character
+#'   vector specifying which species to include.
+#' @param all Logical; if `TRUE`, include subclass-level columns.
+#' @param include_geo Logical; if `TRUE`, append GEO linkage summaries.
+#'
+#' @return A tibble with one row per species containing class-level counts and
+#'   totals. When `all = TRUE`, subclass-level counts are included. When
+#'   `include_geo = TRUE`, GEO summary columns are appended (e.g.
+#'   `denom_total`, `geo_linked_denom`, `geo_prop`, and '<class>_geo').
+#'   The tibble has class `gdt_tbl` and carries a `query_info` attribute.
+#'
+#' @seealso [extract_sra_metadata()], [plot_sra_availability()],
+#'   [plot_sra_geo_availability()]
+#'
+#' @examples
+#' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' SRA_SUMMARY <- summarise_sra_availability(RESULTS)
+#' print(SRA_SUMMARY)
+#' }
 #' @export
 summarise_sra_availability <- function(results,
 species     = NULL,
@@ -132,12 +219,36 @@ include_geo = FALSE) {
   .as_gdt_table(OUT2, results)
 }
 
-#' Extract Assembly accession metadata
+#' Extract filtered Assembly metadata
 #'
-#' @param results List returned by [query_species()].
-#' @param species Optional character vector of species to include.
-#' @param best Logical; if TRUE, return only the best assembly per species.
-#' @return A tibble of assembly metadata (e.g., accession, assembly level, N50, coverage, BioSample/BioProject and release information).
+#' Retrieves and structures assembly metadata for one or more species using the
+#' Assembly identifiers stored in the output of [query_species()]. Metadata are
+#' returned in a tidy tibble and optionally reduced to a single 'best' assembly
+#' per species.
+#'
+#' When `best = TRUE`, the best assembly is selected using
+#' structural-weighting (assembly level) and N50 as a tie-breaker.
+#'
+#' @param results A list returned by [query_species()], containing Assembly IDs.
+#' @param species `NULL` (default) to return assemblies for all species, or a
+#'   character vector specifying which species to extract.
+#' @param best Logical; if `TRUE`, return only the best assembly per species.
+#'
+#' @return A tibble with one row per assembly (or one row per species when
+#'   `best = TRUE`). Fields include species, accession, assembly level, N50,
+#'   coverage, BioSample/BioProject accessions, submitter, release date, and
+#'   FTP path (where available). The tibble has class `gdt_tbl` and carries a
+#'   `query_info` attribute for provenance.
+#'
+#' @seealso [query_species()]
+#'
+#' @examples
+#' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' ASM <- extract_assembly_metadata(RESULTS, best = TRUE)
+#' print(ASM)
+#' attr(ASM, 'query_info')
+#' }
 #' @export
 extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
   if (!is.null(species)) results <- results[species]
@@ -213,14 +324,47 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
   .as_gdt_table(OUT, results)
 }
 
-#' Extract SRA accession metadata and classify experimental modality
+#' Extract filtered SRA metadata
 #'
-#' @param results List returned by [query_species()].
-#' @param species Optional character vector of species to include.
-#' @param class Optional character vector of ontology classes to retain.
-#' @param subclass Optional character vector of ontology subclasses to retain.
-#' @param only_geo Logical; if TRUE, retain only GEO-linked experiments.
-#' @return A tibble of experiment-level SRA metadata with strategy normalisation, ontology assignments and GEO linkage fields.
+#' Retrieves experiment-level SRA metadata for one or more species using the
+#' internal SRA metadata engine, then normalises sequencing strategy labels and
+#' assigns curated modality classes and subclasses.
+#'
+#' For each experiment, the function:
+#' \itemize{
+#'   \item extracts the raw `LIBRARY_STRATEGY` value from the SRA XML
+#'   \item normalises strategy strings
+#'   \item assigns ontology-based `class` and `subclass`
+#'   \item records GEO linkage fields (`geo_linked`, `gse_ids`, `gsm_ids`)
+#' }
+#'
+#' Optional filters can restrict output to particular classes/subclasses, or
+#' GEO-linked experiments only.
+#'
+#' @param results A list returned by [query_species()], containing SRA IDs.
+#' @param species `NULL` (default) to include all species, or a character
+#'   vector specifying which species to include.
+#' @param class Optional character vector of modality classes to retain.
+#' @param subclass Optional character vector of modality subclasses to retain.
+#' @param only_geo Logical; if `TRUE`, retain only GEO-linked experiments.
+#'
+#' @return A tibble with one row per SRA experiment, including identifiers,
+#'   strategy fields, ontology assignments, and GEO linkage columns. The tibble
+#'   has class `gdt_tbl` and carries a `query_info` attribute for provenance.
+#'
+#' @seealso [query_species()], [summarise_sra_availability()]
+#'
+#' @examples
+#' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' SRA <- extract_sra_metadata(
+#'   RESULTS,
+#'   species = 'Vigna vexillata',
+#'   class = 'genomic'
+#' )
+#' print(SRA)
+#' attr(SRA, 'query_info')
+#' }
 #' @export
 extract_sra_metadata <- function(results,
 species  = NULL,

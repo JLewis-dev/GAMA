@@ -13,19 +13,36 @@ plot_availability(
 )
 }
 \arguments{
-\item{SUMMARY}{Tibble returned by \code{\link[=summarise_availability]{summarise_availability()}}.}
+\item{SUMMARY}{A tibble returned by \code{\link[=summarise_availability]{summarise_availability()}}, containing
+species-level composite scores and component values (\code{A}, \code{S}, \code{B}).}
 
-\item{rank}{Character; species ordering method.}
+\item{rank}{Ordering of species on the x-axis. One of 'highest' (default),
+'lowest', 'A-Z', 'Z-A', or 'input'.}
 
-\item{abbreviate}{Logical; abbreviate species names.}
+\item{abbreviate}{Logical; if \code{TRUE} (default), abbreviate species names to
+'G. species' style labels.}
 
-\item{theme_fn}{ggplot2 theme function.}
+\item{theme_fn}{A ggplot2 theme function (e.g. \code{\link[ggplot2:ggtheme]{ggplot2::theme_minimal()}}).}
 
-\item{colours}{Named character vector of fill colours.}
+\item{colours}{Named character vector of fill colours for the 'Assembly',
+'SRA', and 'BioSample' segments.}
 }
 \value{
-A ggplot object showing stacked bar charts of data richness components.
+A ggplot object showing stacked bar segments for each species.
 }
 \description{
-Plot data richness
+Visualises species-level data richness using the composite scores generated
+during the query phase. Assembly, SRA, and BioSample contributions are shown
+as stacked bar segments for each species.
+}
+\examples{
+\dontrun{
+RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+SUMMARY <- summarise_availability(RESULTS)
+print(SUMMARY)
+plot_availability(SUMMARY)
+}
+}
+\seealso{
+\code{\link[=query_species]{query_species()}}, \code{\link[=summarise_availability]{summarise_availability()}}
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/Plotting.R
 \name{plot_sra_availability}
 \alias{plot_sra_availability}
-\title{Plot SRA experimental modality composition}
+\title{Plot SRA modality composition}
 \usage{
 plot_sra_availability(
   SRA,
@@ -15,21 +15,42 @@ plot_sra_availability(
 )
 }
 \arguments{
-\item{SRA}{Tibble returned by \code{\link[=summarise_sra_availability]{summarise_sra_availability()}}.}
+\item{SRA}{A wide-format SRA summary table returned by
+\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}.}
 
-\item{species}{Optional character vector of species to include.}
+\item{species}{\code{NULL} (default) to plot all species, or a character vector
+of species to include.}
 
-\item{rank}{Character; species ordering method.}
+\item{rank}{Ordering of species. One of 'highest' (default), 'lowest',
+'A-Z', 'Z-A', or 'input'.}
 
-\item{abbreviate}{Logical; abbreviate species names.}
+\item{abbreviate}{Logical; if \code{TRUE} (default), abbreviate species names.}
 
-\item{theme_fn}{ggplot2 theme function.}
+\item{theme_fn}{A ggplot2 theme function.}
 
 \item{colours}{Named character vector of class colours.}
 }
 \value{
-A ggplot object showing proportional SRA modality composition across species.
+A ggplot object showing proportional SRA modality profiles across
+species.
 }
 \description{
-Plot SRA experimental modality composition
+Visualises species-level SRA modality composition using stacked horizontal
+bars. Each bar shows the proportional contribution of major SRA classes
+(genomic, transcriptomic, epigenomic, chromatin, other, unknown), with total
+SRA counts labelled.
+}
+\details{
+Operates on the wide-format summary returned by
+\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}.
+}
+\examples{
+\dontrun{
+RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+SRA_SUMMARY <- summarise_sra_availability(RESULTS)
+plot_sra_availability(SRA_SUMMARY)
+}
+}
+\seealso{
+\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}, \code{\link[=plot_sra_geo_availability]{plot_sra_geo_availability()}}
 }
