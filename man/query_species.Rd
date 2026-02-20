@@ -23,7 +23,7 @@ results in a named list. A provenance record is attached to the output as
 the \code{query_info} attribute.
 }
 \details{
-\code{query_species()} is the entry point for the NCBI query phase. Each species
+\code{query_species()} is the entry point for the NCBI search phase. Each species
 is queried independently across the supported databases, and results are
 stored in a per-species list with components \code{assembly}, \code{sra}, and
 \code{biosample}.

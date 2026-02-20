@@ -7,7 +7,7 @@
 #' the `query_info` attribute.
 #'
 #' @details
-#' `query_species()` is the entry point for the NCBI query phase. Each species
+#' `query_species()` is the entry point for the NCBI search phase. Each species
 #' is queried independently across the supported databases, and results are
 #' stored in a per-species list with components `assembly`, `sra`, and
 #' `biosample`.
@@ -34,25 +34,24 @@
 #' }
 #' @export
 query_species <- function(species) {
-  species <- unique(species)
-  n <- length(species)
-  pb <- utils::txtProgressBar(min = 0, max = n, style = 3)
-  RESULTS <- lapply(seq_along(species), function(i) {
-    sp <- species[i]
-    RES <- list(
+  species     <- unique(species)
+  n           <- length(species)
+  pb          <- .pb_init(n)
+  RESULTS     <- lapply(seq_along(species), function(i) {
+    sp        <- species[i]
+    RES       <- list(
     assembly  = .ncbi_search('assembly',  sp),
     sra       = .ncbi_search('sra',       sp),
     biosample = .ncbi_search('biosample', sp)
     )
-    utils::setTxtProgressBar(pb, i)
+    .pb_tick(pb, i)
     RES
   })
-  close(pb)
+  .pb_close(pb)
   names(RESULTS) <- species
   attr(RESULTS, 'query_info') <- .make_query_info(
   species = species,
-  dbs     = c('assembly', 'sra', 'biosample'),
-  retmax  = 999999
+  dbs     = c('assembly', 'sra', 'biosample')
   )
   RESULTS
 }
@@ -117,6 +116,15 @@ summarise_availability <- function(results) {
 #' classes (genomic, transcriptomic, epigenomic, chromatin, other, unknown),
 #' plus the total number of SRA experiments per species.
 #'
+#' Profile cache (used by [summarise_sra_skew()]):
+#' In addition to the summary table, this function attaches a cached, UID-level
+#' profile as an attribute `sra_profile`. The profile contains (at minimum)
+#' `species`, `entrez_uid`, `biosample`, `bioproject`, `class`, and `subclass`.
+#' This cache is intended to be re-used locally for downstream summaries that
+#' require within-species structure (e.g. replication skew across BioProjects or
+#' BioSamples) without re-querying NCBI. In particular, [summarise_sra_skew()]
+#' consumes `attr(x, 'sra_profile')` from the output of this function.
+#'
 #' GEO overlay:
 #' When `include_geo = TRUE`, GEO-linked class counts are appended as
 #' '<class>_geo' columns, alongside a GEO-compatible denominator summary and
@@ -134,9 +142,11 @@ summarise_availability <- function(results) {
 #'   `include_geo = TRUE`, GEO summary columns are appended (e.g.
 #'   `denom_total`, `geo_linked_denom`, `geo_prop`, and '<class>_geo').
 #'   The tibble has class `gdt_tbl` and carries a `query_info` attribute.
+#'   It also carries a cached UID-level profile as attribute `sra_profile`
+#'   (see “Profile cache”), plus metadata in `sra_profile_info`.
 #'
-#' @seealso [extract_sra_metadata()], [plot_sra_availability()],
-#'   [plot_sra_geo_availability()]
+#' @seealso [summarise_sra_skew()], [extract_sra_metadata()],
+#'   [plot_sra_availability()], [plot_sra_geo_availability()]
 #'
 #' @examples
 #' \dontrun{
@@ -150,6 +160,8 @@ species     = NULL,
 all         = FALSE,
 include_geo = FALSE) {
   META <- .sra_metadata_core(results, species = species)
+  PROFILE <- META |>
+  dplyr::select(species, entrez_uid, biosample, bioproject, class, subclass)
   CLASS <- META |>
   dplyr::count(species, class, name = 'count') |>
   tidyr::pivot_wider(
@@ -175,7 +187,17 @@ include_geo = FALSE) {
     )
     OUT <- dplyr::left_join(OUT, SUB, by = 'species')
   }
-  if (!include_geo) return(.as_gdt_table(OUT, results))
+  if (!include_geo) {
+    OUT <- .as_gdt_table(OUT, results)
+    attr(OUT, 'sra_profile') <- PROFILE
+    attr(OUT, 'sra_profile_info') <- list(
+    cached_at_utc   = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
+    profile_time_utc = attr(OUT, 'query_info')$query_time_utc %||% NA_character_,
+    id_col          = 'entrez_uid',
+    fields          = c('species', 'entrez_uid', 'biosample', 'bioproject', 'class', 'subclass')
+    )
+    return(OUT)
+  }
   denom <- c('transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown')
   DENOM <- META |>
   dplyr::filter(.data$class %in% !!denom) |>
@@ -216,7 +238,15 @@ include_geo = FALSE) {
   NA_real_)
   ) |>
   dplyr::left_join(GEO_CLASS, by = 'species')
-  .as_gdt_table(OUT2, results)
+  OUT2 <- .as_gdt_table(OUT2, results)
+  attr(OUT2, 'sra_profile') <- PROFILE
+  attr(OUT2, 'sra_profile_info') <- list(
+  cached_at_utc    = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
+  profile_time_utc = attr(OUT2, 'query_info')$query_time_utc %||% NA_character_,
+  id_col           = 'entrez_uid',
+  fields           = c('species', 'entrez_uid', 'biosample', 'bioproject', 'class', 'subclass')
+  )
+  OUT2
 }
 
 #' Extract filtered Assembly metadata
@@ -253,11 +283,11 @@ include_geo = FALSE) {
 extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
   if (!is.null(species)) results <- results[species]
   n  <- length(results)
-  pb <- utils::txtProgressBar(min = 0, max = n, style = 3)
+  pb <- .pb_init(n)
   META <- lapply(seq_along(results), function(i) {
     sp  <- names(results)[i]
     res <- results[[i]]
-    utils::setTxtProgressBar(pb, i)
+    .pb_tick(pb, i)
     asm <- res$assembly
     if (is.null(asm) || (asm$count %||% 0L) == 0L) {
       return(tibble::tibble(
@@ -292,7 +322,7 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
       )
     }))
   })
-  close(pb)
+  .pb_close(pb)
   META <- dplyr::bind_rows(META)
   if (!best) return(.as_gdt_table(META, results))
   BEST <- lapply(seq_along(results), function(i) {
@@ -382,4 +412,115 @@ only_geo = FALSE) {
     META <- META |> dplyr::filter(.data$geo_linked)
   }
   .as_gdt_table(META, results)
+}
+
+#' Summarise SRA replication skew across BioProjects / BioSamples
+#'
+#' Quantifies replication skew across independent units (BioProject or
+#' BioSample) using the cached UID-level SRA profile produced by
+#' summarise_sra_availability(). Optionally computes skew within a
+#' single modality class.
+#'
+#' Profile cache (consumed by this function):
+#' The input must carry a cached UID-level profile as attribute 'sra_profile'
+#' containing (at minimum) 'species', 'entrez_uid', 'biosample', 'bioproject',
+#' and 'class'. Each row in the profile corresponds to an Entrez UID.
+#'
+#' @details
+#' The `eff` column is the *effective number of units* (Hill number of order 2),
+#' computed as the inverse Simpson index: `eff = 1 / sum(p^2)`, where `p` is the
+#' proportion of experiments in each BioProject/BioSample. Larger values indicate
+#' a more even spread; values near 1 indicate strong concentration in few units.
+#'
+#' @param x A data.frame/tibble returned by summarise_sra_availability()
+#'   that has a cached profile attached as attribute 'sra_profile'.
+#' @param species Optional character vector of species names to filter the
+#'   output. If NULL, all species in x are returned.
+#' @param unit Character scalar; either 'bioproject' (default) or 'biosample'.
+#' @param class Optional character scalar specifying a single modality class.
+#'
+#' @return A tibble/data.frame with one row per species containing:
+#'   `species`, `BioProject`/`BioSample` (number of distinct units with records),
+#'   `class`, `min`, `q25`, `med`, `q75`, `max` (experiments per unit), and
+#'   `eff` (effective number of units; inverse Simpson index).
+#'
+#' @examples
+#' \dontrun{
+#' SRA_SUMMARY <- summarise_sra_availability(RESULTS)
+#' SKEW <- summarise_sra_skew(SRA_SUMMARY)
+#' print(SKEW)
+#' }
+#'
+#' @export
+summarise_sra_skew <- function(x, species = NULL, unit = c('bioproject', 'biosample'), class = NULL) {
+  if (missing(unit)) unit <- 'bioproject'
+  if (length(unit) != 1L) stop('`unit` must be a single value: \'bioproject\' or \'biosample\'.', call. = FALSE)
+  unit <- match.arg(unit)
+  if (!is.null(class) && length(class) != 1L) stop('`class` must be a single modality class (or NULL). Use one class per call.', call. = FALSE)
+  prof <- attr(x, 'sra_profile', exact = TRUE)
+  if (is.null(prof)) stop('No cached SRA profile found on `x` (expected attribute \'sra_profile\'). Run summarise_sra_availability() first and pass its output.', call. = FALSE)
+  required_cols <- c('species', 'class', 'biosample', 'bioproject')
+  missing_cols <- setdiff(required_cols, colnames(prof))
+  if (length(missing_cols) > 0L) stop(paste0('Cached profile is missing required columns: ', paste(missing_cols, collapse = ', ')), call. = FALSE)
+  if (is.null(species)) {
+    if ('species' %in% names(x)) {
+      species_all <- sort(unique(as.character(x$species)))
+    } else {
+      species_all <- sort(unique(as.character(prof$species)))
+    }
+  } else {
+    species_all <- as.character(species)
+  }
+  species_all <- species_all[!is.na(species_all) & nzchar(species_all)]
+  unit_col <- if (identical(unit, 'bioproject')) 'bioproject' else 'biosample'
+  out_unit_label <- if (identical(unit, 'bioproject')) 'BioProject' else 'BioSample'
+  out_cols <- c('species', out_unit_label, 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff')
+  if (!length(species_all)) {
+    out <- as.data.frame(stats::setNames(replicate(length(out_cols), vector('list', 0), simplify = FALSE), out_cols))
+    for (nm in setdiff(out_cols, c('species', out_unit_label, 'class'))) out[[nm]] <- numeric(0)
+    out[['species']] <- character(0)
+    out[[out_unit_label]] <- integer(0)
+    out[['class']] <- character(0)
+    return(out)
+  }
+  prof_use <- prof[prof$species %in% species_all, , drop = FALSE]
+  if (!is.null(class)) prof_use <- prof_use[prof_use$class %in% class, , drop = FALSE]
+  calc_one <- function(sp) {
+    units <- prof_use[[unit_col]][prof_use$species == sp]
+    units <- units[!is.na(units)]
+    counts <- as.numeric(table(units))
+    counts <- counts[counts > 0]
+    if (length(counts) == 0L) {
+      return(data.frame(
+        species = sp, ucount = 0L,
+        min = NA_real_, q25 = NA_real_, med = NA_real_, q75 = NA_real_, max = NA_real_, eff = NA_real_,
+        stringsAsFactors = FALSE
+      ))
+    }
+    qs <- as.numeric(stats::quantile(counts, probs = c(0.25, 0.5, 0.75), names = FALSE, type = 7))
+    p <- counts / sum(counts)
+    eff <- 1 / sum(p^2)
+    data.frame(
+      species = sp, ucount = length(counts),
+      min = min(counts), q25 = qs[1], med = qs[2], q75 = qs[3], max = max(counts), eff = eff,
+      stringsAsFactors = FALSE
+    )
+  }
+  out <- do.call(rbind, lapply(species_all, calc_one))
+  names(out)[names(out) == 'ucount'] <- out_unit_label
+  out$class <- if (is.null(class)) 'all' else as.character(class)
+  if (is.null(species)) {
+    out <- out[order(out$species), , drop = FALSE]
+  } else {
+    out$species <- factor(out$species, levels = species_all)
+    out <- out[order(out$species), , drop = FALSE]
+    out$species <- as.character(out$species)
+  }
+  out <- out[c('species', out_unit_label, 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff')]
+  qi_in <- attr(x, 'query_info', exact = TRUE)
+  if (!is.null(qi_in)) attr(out, 'query_info') <- qi_in
+  attr(out, 'sra_profile') <- prof_use
+  attr(out, 'sra_profile_info') <- attr(x, 'sra_profile_info', exact = TRUE)
+  class(out) <- c('gdt_tbl', class(out))
+  out
 }

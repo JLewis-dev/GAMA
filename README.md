@@ -5,7 +5,7 @@
 > GAMA is currently in early development. Interfaces, outputs, and scoring methods may change.  
 > Users are encouraged to validate results independently and report issues.
 
-GAMA is an R-based framework for surveying publicly available sequencing data across NCBI Assembly, SRA, and BioSample. Its aim is to support feasibility assessments for in silico research on underutilised plant species.
+GAMA is an R-based framework for surveying publicly available sequencing data across NCBI Assembly, SRA, and BioSample. Its aim is to support feasibility assessments for *in silico* research on underutilised plant species.
 
 ---
 
@@ -128,7 +128,32 @@ Supports custom ranking, colour palettes, and ggplot2 theming.
 - Ontology-classified experiment types  
 - Cross-species comparisons  
 
-Optional GEO overlays are available via extended plotting functions.
+Optional GEO overlays and experimental distribution summaries are available via additional functions.
+
+<details>
+<summary><strong>Example outputs</strong></summary>
+
+<br>
+
+**Data richness plot**
+
+<p align='center'>
+  <img src='man/figures/Data_richness_plot.png' alt='GAMA example: data richness plot' width='800'>
+</p>
+
+**SRA modality plot**
+
+<p align='center'>
+  <img src='man/figures/SRA_modality_plot.png' alt='GAMA example: SRA modality plot' width='800'>
+</p>
+
+**SRA skew plot**
+
+<p align='center'>
+  <img src='man/figures/SRA_skew_plot.png' alt='GAMA example: SRA skew plot' width='800'>
+</p>
+
+</details>
 
 ---
 

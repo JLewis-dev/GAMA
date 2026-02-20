@@ -1,6 +1,6 @@
 Package: GAMA
 Title: Genomic Availability & Metadata Analysis Tool
-Version: 0.1.2
+Version: 0.2.0
 Authors@R:
     person('James', 'Lewis',
            email = 'James.Lewis-2022@outlook.com',
@@ -12,7 +12,7 @@ Description:
     and BioSample query searches to generate availability summaries with a
     composite data richness score, alongside ontology-based breakdowns of
     SRA modalities and GEO experiment linkage. GAMA is intended to support
-    feasibility assessments of in silico research on underutilised plants.
+    feasibility assessments for in silico research on underutilised plants.
 URL: https://github.com/JLewis-dev/GAMA
 BugReports: https://github.com/JLewis-dev/GAMA/issues
 License: MIT + file LICENSE
@@ -22,6 +22,7 @@ Imports:
     ggplot2,
     purrr,
     rentrez,
+    rlang,
     tibble,
     tidyr,
     xml2

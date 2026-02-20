@@ -20,9 +20,9 @@ Prints a \code{gdt_tbl} object with attached query provenance. When present, the
 version, query timestamp (UTC), and queried databases.
 }
 \details{
-This method extends the default tibble printing behaviour by prepending a
-single-line provenance header. If no provenance is attached, a warning
-message is printed instead.
+Extends the default tibble printing behaviour by prepending a single-line
+provenance header. If no provenance is attached, a warning message is
+printed instead.
 }
 \examples{
 \dontrun{

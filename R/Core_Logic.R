@@ -87,6 +87,28 @@
   trimws(x)
 }
 
+.extract_sra_ids <- function(x) {
+  if (is.null(x) || (is.atomic(x) && !nzchar(as.character(x)))) {
+    return(list(
+    biosample  = NA_character_,
+    bioproject = NA_character_
+    ))
+  }
+  txt <- if (is.list(x)) {
+    paste(unlist(x, recursive = TRUE, use.names = FALSE), collapse = ' ')
+  } else {
+    as.character(x)
+  }
+  txt <- as.character(txt)
+  pat_sam <- '\\b(?:SAMN|SAMEA|SAMD)\\d+\\b'
+  pat_prj <- '\\b(?:PRJNA|PRJEB|PRJDB|PRJDA)\\d+\\b'
+  sam_matches <- unique(unlist(regmatches(txt, gregexpr(pat_sam, txt, perl = TRUE))))
+  prj_matches <- unique(unlist(regmatches(txt, gregexpr(pat_prj, txt, perl = TRUE))))
+  sam_val <- if (length(sam_matches)) sam_matches[1] else NA_character_
+  prj_val <- if (length(prj_matches)) prj_matches[1] else NA_character_
+  list(biosample = sam_val, bioproject = prj_val)
+}
+
 .extract_xml_tag <- function(expxml, tag) {
   if (is.null(expxml) || is.na(expxml) || !nzchar(expxml)) return(NA_character_)
   wrapped <- paste0('<ROOT>', expxml, '</ROOT>')
@@ -552,7 +574,9 @@ title_raw = NA_character_) {
   if (!length(SRA_IDS)) {
     return(tibble::tibble(
     species       = character(),
-    sra_id        = character(),
+    entrez_uid    = character(),
+    biosample     = character(),
+    bioproject    = character(),
     strategy_raw  = character(),
     strategy_norm = character(),
     class         = character(),
@@ -569,10 +593,10 @@ title_raw = NA_character_) {
   }))
   batch_size <- 200
   BATCHES <- split(SRA_IDS, ceiling(seq_along(SRA_IDS) / batch_size))
-  pb <- utils::txtProgressBar(min = 0, max = length(BATCHES), style = 3)
+  pb <- .pb_init(length(BATCHES))
   OUT <- list()
   for (i in seq_along(BATCHES)) {
-    utils::setTxtProgressBar(pb, i)
+    .pb_tick(pb, i)
     ids  <- BATCHES[[i]]
     SUMS <- .fetch_esummary_batched('sra', ids)
     SUMS <- .normalise_esummary_list(SUMS, ids)
@@ -604,6 +628,7 @@ title_raw = NA_character_) {
       if (cls$class == 'other' && (.is_unknown(strategy_raw) || .is_unknown(strategy_norm))) {
         cls <- list(class = 'unknown', subclass = 'Unknown')
       }
+      sra_ids <- .extract_sra_ids(x)
       geo <- .extract_geo_accessions(x$expxml)
       geo_linked <- .is_geo_linked(geo$GSE, geo$GSM)
       gse_ids <- .collapse_acc(geo$GSE)
@@ -611,7 +636,9 @@ title_raw = NA_character_) {
       sp <- ID_TO_SPECIES[[acc]] %||% NA_character_
       OUT[[acc]] <- tibble::tibble(
       species       = sp,
-      sra_id        = acc,
+      entrez_uid    = acc,
+      biosample     = sra_ids$biosample,
+      bioproject    = sra_ids$bioproject,
       strategy_raw  = strategy_raw,
       strategy_norm = strategy_norm,
       class         = cls$class,
@@ -622,6 +649,6 @@ title_raw = NA_character_) {
       )
     }
   }
-  close(pb)
+  .pb_close(pb)
   dplyr::bind_rows(OUT)
 }

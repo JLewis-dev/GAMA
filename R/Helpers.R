@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.1.2'
+.GAMA_VERSION <- '0.2.0'
 
 # NCBI best practice:
 
@@ -30,9 +30,27 @@
   Sys.sleep(if (isTRUE(keyed)) 0.12 else 0.35)
 }
 
+# NCBI defaults
+
+.NCBI_RETMAX <- 999999L
+
 # Null-coalescing operator
 
 `%||%` <- function(a, b) if (!is.null(a)) a else b
+
+# Progress bars
+
+.pb_init <- function(n) {
+  utils::txtProgressBar(min = 0, max = n, style = 3)
+}
+
+.pb_tick <- function(pb, i) {
+  utils::setTxtProgressBar(pb, i)
+}
+
+.pb_close <- function(pb) {
+  close(pb)
+}
 
 # Safe rentrez wrappers
 
@@ -42,8 +60,8 @@
   .ncbi_throttle()
   .safe_search(
     db          = db,
-        term        = paste0(sp, '[Organism]'),
-    retmax      = 999999,
+    term        = paste0(sp, '[Organism]'),
+    retmax      = .NCBI_RETMAX,
     use_history = TRUE
   )$result
 }
@@ -109,11 +127,59 @@
 # Globals
 
 utils::globalVariables(c(
-'.data',
-'A', 'B', 'S', 'SRA',
-'chromatin', 'count', 'database', 'epigenomic', 'genomic',
-'label', 'other', 'prop', 'score', 'score_component', 'segment',
-'species_label', 'status', 'subclass', 'transcriptomic', 'unknown'
+  '.data',
+  'A',
+  'B',
+  'BioProject',
+  'bioproject',
+  'BioSample',
+  'biosample',
+  'chromatin',
+  'class',
+  'count',
+  'database',
+  'denom_total',
+  'eff',
+  'eff_units',
+  'entrez_uid',
+  'epigenomic',
+  'genomic',
+  'geo_linked',
+  'geo_linked_denom',
+  'geo_prop',
+  'gse_ids',
+  'gsm_ids',
+  'lab',
+  'label',
+  'label_y',
+  'max',
+  'med',
+  'min',
+  'other',
+  'prop',
+  'q25',
+  'q75',
+  'S',
+  'SRA',
+  'score',
+  'score_component',
+  'segment',
+  'species',
+  'species_label',
+  'status',
+  'subclass',
+  'transcriptomic',
+  'uids_per_unit_max',
+  'uids_per_unit_median',
+  'uids_per_unit_min',
+  'uids_per_unit_q25',
+  'uids_per_unit_q75',
+  'unknown',
+  'x',
+  'xmax',
+  'xmin',
+  'ymax',
+  'ymin'
 ))
 
 # Provenance
@@ -132,7 +198,7 @@ utils::globalVariables(c(
   NA_character_
 }
 
-.make_query_info <- function(species, dbs, retmax) {
+.make_query_info <- function(species, dbs) {
   list(
     tool_version   = .GAMA_VERSION,
     query_time_utc = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
@@ -156,9 +222,9 @@ utils::globalVariables(c(
 #' version, query timestamp (UTC), and queried databases.
 #'
 #' @details
-#' This method extends the default tibble printing behaviour by prepending a
-#' single-line provenance header. If no provenance is attached, a warning
-#' message is printed instead.
+#' Extends the default tibble printing behaviour by prepending a single-line
+#' provenance header. If no provenance is attached, a warning message is
+#' printed instead.
 #'
 #' @param x An object of class `gdt_tbl`.
 #' @param ... Further arguments passed to the next print method.

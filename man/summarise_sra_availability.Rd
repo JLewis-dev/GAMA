@@ -27,6 +27,8 @@ totals. When \code{all = TRUE}, subclass-level counts are included. When
 \code{include_geo = TRUE}, GEO summary columns are appended (e.g.
 \code{denom_total}, \code{geo_linked_denom}, \code{geo_prop}, and '\if{html}{\out{<class>}}_geo').
 The tibble has class \code{gdt_tbl} and carries a \code{query_info} attribute.
+It also carries a cached UID-level profile as attribute \code{sra_profile}
+(see “Profile cache”), plus metadata in \code{sra_profile_info}.
 }
 \description{
 Collapses experiment-level SRA metadata into species-level modality counts
@@ -36,6 +38,15 @@ using ontology-assigned classes and (optionally) subclasses.
 By default, the output includes class-level counts for the major modality
 classes (genomic, transcriptomic, epigenomic, chromatin, other, unknown),
 plus the total number of SRA experiments per species.
+
+Profile cache (used by \code{\link[=summarise_sra_skew]{summarise_sra_skew()}}):
+In addition to the summary table, this function attaches a cached, UID-level
+profile as an attribute \code{sra_profile}. The profile contains (at minimum)
+\code{species}, \code{entrez_uid}, \code{biosample}, \code{bioproject}, \code{class}, and \code{subclass}.
+This cache is intended to be re-used locally for downstream summaries that
+require within-species structure (e.g. replication skew across BioProjects or
+BioSamples) without re-querying NCBI. In particular, \code{\link[=summarise_sra_skew]{summarise_sra_skew()}}
+consumes \code{attr(x, 'sra_profile')} from the output of this function.
 
 GEO overlay:
 When \code{include_geo = TRUE}, GEO-linked class counts are appended as
@@ -51,6 +62,6 @@ print(SRA_SUMMARY)
 }
 }
 \seealso{
-\code{\link[=extract_sra_metadata]{extract_sra_metadata()}}, \code{\link[=plot_sra_availability]{plot_sra_availability()}},
-\code{\link[=plot_sra_geo_availability]{plot_sra_geo_availability()}}
+\code{\link[=summarise_sra_skew]{summarise_sra_skew()}}, \code{\link[=extract_sra_metadata]{extract_sra_metadata()}},
+\code{\link[=plot_sra_availability]{plot_sra_availability()}}, \code{\link[=plot_sra_geo_availability]{plot_sra_geo_availability()}}
 }
