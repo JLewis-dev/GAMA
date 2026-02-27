@@ -14,7 +14,8 @@ plot_sra_skew(
   theme_fn = ggplot2::theme_minimal,
   colours = c(box = "#E3F9F2", line = "black"),
   show_labels = TRUE,
-  label_digits = 1L
+  label_digits = 1L,
+  point_alpha = 0.25
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ plot_sra_skew(
 \item{show_labels}{Logical; if TRUE (default), label each box with eff and n.}
 
 \item{label_digits}{Integer; decimal places for eff labels.}
+
+\item{point_alpha}{Numeric alpha (transparency) for overlaid points.}
 }
 \value{
 A ggplot object.

@@ -48,6 +48,19 @@ query_species <- function(species) {
     RES
   })
   .pb_close(pb)
+  no_hits <- species[vapply(RESULTS, function(x) {
+    a <- x$assembly$count %||% 0L
+    s <- x$sra$count %||% 0L
+    b <- x$biosample$count %||% 0L
+    (a == 0L) && (s == 0L) && (b == 0L)
+  }, logical(1))]
+  if (length(no_hits) > 0L) {
+    if (length(no_hits) <= 10L) {
+      .gama_msg('No records found across Assembly/SRA/BioSample for: ', paste(no_hits, collapse = ', '), '.')
+    } else {
+      .gama_msg('No records found across Assembly/SRA/BioSample for ', length(no_hits), ' of ', n, ' species.')
+    }
+  }
   names(RESULTS) <- species
   attr(RESULTS, 'query_info') <- .make_query_info(
   species = species,
@@ -159,7 +172,18 @@ summarise_sra_availability <- function(results,
 species     = NULL,
 all         = FALSE,
 include_geo = FALSE) {
-  META <- .sra_metadata_core(results, species = species)
+  SPECIES_ALL <- names(results)
+  SPECIES_USE <- if (is.null(species)) {
+    SPECIES_ALL
+  } else {
+    sp_in <- as.character(species)
+    sp_in <- sp_in[!is.na(sp_in) & nzchar(sp_in)]
+    sp_in <- unique(sp_in)
+    missing <- setdiff(sp_in, SPECIES_ALL)
+    if (length(missing) > 0L) .gama_warn('Requested species not found in `results`: ', paste(missing, collapse = ', '), '. Dropping.')
+    sp_in[sp_in %in% SPECIES_ALL]
+  }
+  META <- .sra_metadata_core(results, species = SPECIES_USE)
   PROFILE <- META |>
   dplyr::select(species, entrez_uid, biosample, bioproject, class, subclass)
   CLASS <- META |>
@@ -187,6 +211,29 @@ include_geo = FALSE) {
     )
     OUT <- dplyr::left_join(OUT, SUB, by = 'species')
   }
+
+  OUT <- tibble::tibble(species = SPECIES_USE) |>
+  dplyr::left_join(OUT, by = 'species')
+  if (nrow(OUT) > 0L) {
+    count_cols <- setdiff(names(OUT), 'species')
+    OUT <- OUT |>
+    dplyr::mutate(dplyr::across(dplyr::all_of(count_cols), ~ {
+      y <- as.integer(.x)
+      y[is.na(y)] <- 0L
+      y
+    }))
+  }
+  if ('SRA' %in% names(OUT) && length(SPECIES_USE) > 0L) {
+    no_data <- OUT$species[OUT$SRA == 0L]
+    if (length(no_data) > 0L) {
+      if (length(no_data) <= 10L) {
+        .gama_msg('No SRA records found for: ', paste(no_data, collapse = ', '), '. Returning zeros for counts.')
+      } else {
+        .gama_msg('No SRA records found for ', length(no_data), ' of ', length(SPECIES_USE), ' species. Returning zeros for counts.')
+      }
+    }
+  }
+
   if (!include_geo) {
     OUT <- .as_gdt_table(OUT, results)
     attr(OUT, 'sra_profile') <- PROFILE
@@ -238,7 +285,18 @@ include_geo = FALSE) {
   NA_real_)
   ) |>
   dplyr::left_join(GEO_CLASS, by = 'species')
+
+  if (nrow(OUT2) > 0L) {
+    count_cols2 <- setdiff(names(OUT2), c('species', 'geo_prop'))
+    OUT2 <- OUT2 |>
+    dplyr::mutate(dplyr::across(dplyr::all_of(count_cols2), ~ {
+      y <- as.integer(.x)
+      y[is.na(y)] <- 0L
+      y
+    }))
+  }
   OUT2 <- .as_gdt_table(OUT2, results)
+
   attr(OUT2, 'sra_profile') <- PROFILE
   attr(OUT2, 'sra_profile_info') <- list(
   cached_at_utc    = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
@@ -281,7 +339,13 @@ include_geo = FALSE) {
 #' }
 #' @export
 extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
-  if (!is.null(species)) results <- results[species]
+  if (!is.null(species)) {
+    species <- as.character(species)
+    species <- species[!is.na(species) & nzchar(species)]
+    missing <- setdiff(species, names(results))
+    if (length(missing) > 0L) .gama_stop('Requested species not found in `results`: ', paste(missing, collapse = ', '), '.')
+    results <- results[species]
+  }
   n  <- length(results)
   pb <- .pb_init(n)
   META <- lapply(seq_along(results), function(i) {
@@ -401,6 +465,13 @@ species  = NULL,
 class    = NULL,
 subclass = NULL,
 only_geo = FALSE) {
+  if (!is.null(species)) {
+    species <- as.character(species)
+    species <- species[!is.na(species) & nzchar(species)]
+    missing <- setdiff(species, names(results))
+    if (length(missing) > 0L) .gama_warn('Requested species not found in `results`: ', paste(missing, collapse = ', '), '. Dropping.')
+    species <- species[species %in% names(results)]
+  }
   META <- .sra_metadata_core(results, species = species)
   if (!is.null(class)) {
     META <- META |> dplyr::filter(.data$class %in% !!class)
@@ -410,6 +481,10 @@ only_geo = FALSE) {
   }
   if (isTRUE(only_geo)) {
     META <- META |> dplyr::filter(.data$geo_linked)
+  }
+
+  if (nrow(META) == 0L && (!is.null(species) || !is.null(class) || !is.null(subclass) || isTRUE(only_geo))) {
+    .gama_msg('No SRA metadata records found for requested filters; returning empty table.')
   }
   .as_gdt_table(META, results)
 }
@@ -454,14 +529,14 @@ only_geo = FALSE) {
 #' @export
 summarise_sra_skew <- function(x, species = NULL, unit = c('bioproject', 'biosample'), class = NULL) {
   if (missing(unit)) unit <- 'bioproject'
-  if (length(unit) != 1L) stop('`unit` must be a single value: \'bioproject\' or \'biosample\'.', call. = FALSE)
+  if (length(unit) != 1L) .gama_stop('`unit` must be a single value: \'bioproject\' or \'biosample\'.')
   unit <- match.arg(unit)
-  if (!is.null(class) && length(class) != 1L) stop('`class` must be a single modality class (or NULL). Use one class per call.', call. = FALSE)
+  if (!is.null(class) && length(class) != 1L) .gama_stop('`class` must be a single modality class (or NULL). Use one class per call.')
   prof <- attr(x, 'sra_profile', exact = TRUE)
-  if (is.null(prof)) stop('No cached SRA profile found on `x` (expected attribute \'sra_profile\'). Run summarise_sra_availability() first and pass its output.', call. = FALSE)
+  if (is.null(prof)) .gama_stop('No cached SRA profile found on `x` (expected attribute \'sra_profile\'). Run summarise_sra_availability() first and pass its output.')
   required_cols <- c('species', 'class', 'biosample', 'bioproject')
   missing_cols <- setdiff(required_cols, colnames(prof))
-  if (length(missing_cols) > 0L) stop(paste0('Cached profile is missing required columns: ', paste(missing_cols, collapse = ', ')), call. = FALSE)
+  if (length(missing_cols) > 0L) .gama_stop(paste0('Cached profile is missing required columns: ', paste(missing_cols, collapse = ', '), '.'))
   if (is.null(species)) {
     if ('species' %in% names(x)) {
       species_all <- sort(unique(as.character(x$species)))

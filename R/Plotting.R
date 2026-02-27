@@ -40,6 +40,9 @@ BioSample = '#56C5A8'
 )
 ) {
   rank <- match.arg(rank)
+  req_cols <- c('species', 'score', 'A', 'S', 'B')
+  missing <- setdiff(req_cols, names(SUMMARY))
+  if (length(missing)) .gama_stop(sprintf('Input `SUMMARY` is missing required columns: %s.', paste(missing, collapse = ', ')))
   SUMMARY$species_label <- if (abbreviate) .shorten_species(SUMMARY$species) else SUMMARY$species
   SUMMARY$species_label <- factor(
   SUMMARY$species_label,
@@ -140,14 +143,19 @@ plot_sra_availability <- function(
     )
 ) {
   rank <- match.arg(rank)
+  req_cols <- c('species', 'SRA', 'genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown')
+  missing <- setdiff(req_cols, names(SRA))
+  if (length(missing)) .gama_stop(sprintf('Input `SRA` is missing required columns: %s.', paste(missing, collapse = ', ')))
   CORE <- SRA |>
     dplyr::select(
       species, SRA, genomic, transcriptomic, epigenomic, chromatin, other,
       unknown
     )
   if (!is.null(species)) {
+    missing_sp <- setdiff(species, CORE$species)
+    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `SRA`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
     CORE <- CORE |> dplyr::filter(.data$species %in% species)
-    if (!nrow(CORE)) stop('No matching species found')
+    if (!nrow(CORE)) .gama_stop('No matching species found.')
   }
   TOTAL <- CORE[, c('species', 'SRA')]
   if (rank == 'highest') {
@@ -275,27 +283,28 @@ plot_sra_availability <- function(
 #' }
 #' @export
 plot_sra_geo_availability <- function(
-SRA,
-species    = NULL,
-classes    = c('transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown'),
-rank       = c('highest', 'lowest', 'A-Z', 'Z-A', 'input'),
-theme_fn   = ggplot2::theme_minimal,
-colours    = c(
-transcriptomic = '#A8E6CF',
-epigenomic     = '#56C5A8',
-chromatin      = '#2FA083',
-other          = '#166A55',
-unknown        = '#BDBDBD'
-),
-alpha_vals = c(`Not GEO-linked` = 0.25, `GEO-linked` = 1)
+    SRA,
+    species    = NULL,
+    classes    = c('transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown'),
+    rank       = c('highest', 'lowest', 'A-Z', 'Z-A', 'input'),
+    theme_fn   = ggplot2::theme_minimal,
+    colours    = c(
+      transcriptomic = '#A8E6CF',
+      epigenomic     = '#56C5A8',
+      chromatin      = '#2FA083',
+      other          = '#166A55',
+      unknown        = '#BDBDBD'
+    ),
+    alpha_vals = c(`Not GEO-linked` = 0.25, `GEO-linked` = 1)
 ) {
   rank <- match.arg(rank)
+  if (!('species' %in% names(SRA))) .gama_stop('Input `SRA` must contain a `species` column.')
   FIXED_ORDER <- c('unknown', 'other', 'chromatin', 'epigenomic', 'transcriptomic')
   classes <- intersect(FIXED_ORDER, classes)
   geo_cols <- paste0(classes, '_geo')
-  if (!all(geo_cols %in% names(SRA))) {
-    stop('GEO summary columns missing. Run summarise_sra_availability(..., include_geo = TRUE).')
-  }
+  missing_base <- setdiff(classes, names(SRA))
+  if (length(missing_base)) .gama_stop(sprintf('Input `SRA` is missing required class columns: %s.', paste(missing_base, collapse = ', ')))
+  if (!all(geo_cols %in% names(SRA))) .gama_stop('GEO summary columns missing. Run summarise_sra_availability(..., include_geo = TRUE).')
   if (is.null(species)) {
     sp <- SRA$species
     if (rank != 'input') {
@@ -313,7 +322,9 @@ alpha_vals = c(`Not GEO-linked` = 0.25, `GEO-linked` = 1)
     }
   } else {
     sp <- intersect(species, SRA$species)
-    if (!length(sp)) stop('No matching species found')
+    missing_sp <- setdiff(species, SRA$species)
+    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `SRA`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
+    if (!length(sp)) .gama_stop('No matching species found.')
     if (rank == 'A-Z') {
       sp <- sort(sp, decreasing = FALSE)
     } else if (rank == 'Z-A') {
@@ -322,7 +333,7 @@ alpha_vals = c(`Not GEO-linked` = 0.25, `GEO-linked` = 1)
   }
   .plot_one <- function(one_species) {
     row <- SRA |> dplyr::filter(.data$species == !!one_species)
-    if (!nrow(row)) stop('No matching species found')
+    if (!nrow(row)) .gama_stop('No matching species found.')
     total  <- as.integer(row[1, classes,  drop = TRUE])
     linked <- as.integer(row[1, geo_cols, drop = TRUE])
     total[is.na(total)]   <- 0L
@@ -330,52 +341,58 @@ alpha_vals = c(`Not GEO-linked` = 0.25, `GEO-linked` = 1)
     prop_linked <- ifelse(total > 0, linked / total, 0)
     prop_not    <- ifelse(total > 0, 1 - prop_linked, 0)
     SUM <- tibble::tibble(
-    class       = factor(classes, levels = FIXED_ORDER),
-    total       = total,
-    linked      = linked,
-    label       = paste0(linked, '/', total),
-    prop_linked = prop_linked,
-    prop_not    = prop_not
+      class       = factor(classes, levels = FIXED_ORDER),
+      total       = total,
+      linked      = linked,
+      label       = paste0(linked, '/', total),
+      prop_linked = prop_linked,
+      prop_not    = prop_not
     )
     LONG <- dplyr::bind_rows(
-    SUM |> dplyr::transmute(class, status = 'Not GEO-linked', prop = prop_not),
-    SUM |> dplyr::transmute(class, status = 'GEO-linked',     prop = prop_linked)
+      SUM |> dplyr::transmute(class, status = 'Not GEO-linked', prop = prop_not),
+      SUM |> dplyr::transmute(class, status = 'GEO-linked',     prop = prop_linked)
     )
     LONG$class  <- factor(LONG$class, levels = FIXED_ORDER)
     LONG$status <- factor(LONG$status, levels = c('Not GEO-linked', 'GEO-linked'))
     ggplot2::ggplot(
-    LONG,
-    ggplot2::aes(x = class, y = prop, fill = class, alpha = status)
+      LONG,
+      ggplot2::aes(x = class, y = prop, fill = class, alpha = status)
     ) +
-    ggplot2::geom_col(width = 0.75) +
-    ggplot2::geom_text(
-    data = SUM,
-    ggplot2::aes(x = class, y = 1.02, label = label),
-    size = 3.5,
-    vjust = 0,
-    inherit.aes = FALSE
-    ) +
-    ggplot2::scale_fill_manual(values = colours, drop = FALSE) +
-    ggplot2::scale_alpha_manual(values = alpha_vals) +
-    ggplot2::guides(
-    fill  = ggplot2::guide_legend(reverse = TRUE),
-    alpha = ggplot2::guide_legend(reverse = FALSE)
-    ) +
-    ggplot2::coord_flip(clip = 'off') +
-    ggplot2::scale_y_continuous(expand = c(0, 0), limits = c(0, 1.12)) +
-    ggplot2::labs(
-    title = one_species,
-    x     = NULL,
-    y     = 'Proportion GEO-linked',
-    fill  = 'Class:',
-    alpha = NULL
-    ) +
-    theme_fn(base_size = 13) +
-    ggplot2::theme(
-    plot.margin     = ggplot2::margin(10, 40, 10, 10),
-    legend.position = 'top',
-    plot.title      = ggplot2::element_text(face = 'italic')
-    )
+      ggplot2::geom_col(width = 0.75) +
+      ggplot2::geom_text(
+        data = SUM,
+        ggplot2::aes(x = class, y = 1.005, label = label),
+        size = 3.5,
+        vjust = 0,
+        hjust = 0,
+        inherit.aes = FALSE
+      ) +
+      ggplot2::scale_fill_manual(values = colours, drop = FALSE) +
+      ggplot2::scale_alpha_manual(values = alpha_vals) +
+      ggplot2::guides(
+        fill  = ggplot2::guide_legend(reverse = TRUE),
+        alpha = ggplot2::guide_legend(reverse = FALSE)
+      ) +
+      ggplot2::coord_flip(clip = 'off') +
+      ggplot2::scale_y_continuous(
+        expand = c(0, 0),
+        limits = c(0, 1.03),
+        breaks = seq(0, 1, 0.25),
+        labels = function(x) sprintf('%.2f', x)
+      ) +
+      ggplot2::labs(
+        title = one_species,
+        x     = NULL,
+        y     = 'Proportion GEO-linked',
+        fill  = 'Class:',
+        alpha = NULL
+      ) +
+      theme_fn(base_size = 13) +
+      ggplot2::theme(
+        plot.margin     = ggplot2::margin(10, 60, 10, 10),
+        legend.position = 'top',
+        plot.title      = ggplot2::element_text(face = 'italic')
+      )
   }
   if (length(sp) == 1) return(.plot_one(sp))
   OUT <- lapply(sp, .plot_one)
@@ -427,24 +444,26 @@ plot_sra_skew <- function(
     point_alpha  = 0.25
 ) {
   rank <- match.arg(rank)
-  if (!all(c('species', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff') %in% names(SKEW))) stop('Input must be the output of summarise_sra_skew().', call. = FALSE)
-  unit_col <- if ('BioProject' %in% names(SKEW)) 'BioProject' else if ('BioSample' %in% names(SKEW)) 'BioSample' else stop('Expected a BioProject or BioSample column in `SKEW`.', call. = FALSE)
+  if (!all(c('species', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff') %in% names(SKEW))) .gama_stop('Input must be the output of summarise_sra_skew().')
+  unit_col <- if ('BioProject' %in% names(SKEW)) 'BioProject' else if ('BioSample' %in% names(SKEW)) 'BioSample' else .gama_stop('Expected a BioProject or BioSample column in `SKEW`.')
   CORE0 <- SKEW |> dplyr::select(species, dplyr::all_of(unit_col), class, min, q25, med, q75, max, eff)
   if (!is.null(species)) {
+    missing_sp <- setdiff(species, CORE0$species)
+    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `SKEW`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
     CORE0 <- CORE0 |> dplyr::filter(.data$species %in% species)
-    if (!nrow(CORE0)) stop('No matching species found in `SKEW` for the requested filter.', call. = FALSE)
+    if (!nrow(CORE0)) .gama_stop('No matching species found in `SKEW` for the requested filter.')
   }
   class_vals <- unique(CORE0$class)
-  if (length(class_vals) != 1L) stop('plot_sra_skew() expects a single class per plot.', call. = FALSE)
+  if (length(class_vals) != 1L) .gama_stop('plot_sra_skew() expects a single class per plot.')
   class_val <- class_vals[[1]]
   dropped <- unique(CORE0$species[is.na(CORE0$max)])
   CORE <- CORE0 |> dplyr::filter(!is.na(.data$max))
   if (!nrow(CORE)) {
-    stop(sprintf('No data to plot for class \'%s\': all selected species have zero records for this class.', class_val), call. = FALSE)
+    .gama_stop(sprintf('No data to plot for class \'%s\': all selected species have zero records for this class.', class_val))
   }
   if (length(dropped) > 0L) {
-    message(sprintf(
-      'Dropping %d species with no \'%s\' data: %s',
+    .gama_msg(sprintf(
+      'Dropping %d species with no \'%s\' data: %s.',
       length(dropped),
       class_val,
       paste(dropped, collapse = ', ')
@@ -486,7 +505,7 @@ plot_sra_skew <- function(
   if (isTRUE(show_points)) {
     prof <- attr(SKEW, 'sra_profile', exact = TRUE)
     if (is.null(prof)) {
-      message('show_points = TRUE but no sra_profile found on SKEW; plotting boxplots only.')
+      .gama_msg('`show_points` is TRUE but no `sra_profile` found on `SKEW`; plotting boxplots only.')
     } else {
       unit_col_lower <- tolower(unit_col)
       counts_df <- prof |>

@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.2.0'
+.GAMA_VERSION <- '0.2.1'
 
 # NCBI best practice:
 
@@ -73,7 +73,7 @@
     if (!inherits(out, 'try-error') && !is.null(out)) return(out)
     Sys.sleep(wait * i)
   }
-  stop('NCBI esummary repeatedly failed for: ', paste(id, collapse = ', '))
+  .gama_stop('NCBI esummary repeatedly failed for: ', paste(id, collapse = ', '))
 }
 
 .fetch_esummary_batched <- function(db, ids, batch_size = 100) {
@@ -182,6 +182,26 @@ utils::globalVariables(c(
   'ymin'
 ))
 
+# Messaging
+
+.gama_prefix <- function() {
+  paste0('GAMA v', .GAMA_VERSION, ' | ')
+}
+
+.gama_msg <- function(..., verbose = TRUE) {
+  if (!isTRUE(verbose)) return(invisible(NULL))
+  message(.gama_prefix(), paste0(..., collapse = ''))
+  invisible(NULL)
+}
+
+.gama_warn <- function(..., call. = FALSE) {
+  warning(.gama_prefix(), paste0(..., collapse = ''), call. = call.)
+}
+
+.gama_stop <- function(..., call. = FALSE) {
+  stop(.gama_prefix(), paste0(..., collapse = ''), call. = call.)
+}
+
 # Provenance
 
 .flatten_to_char <- function(x) {
@@ -209,7 +229,7 @@ utils::globalVariables(c(
 
 .as_gdt_table <- function(tbl, results) {
   qi <- attr(results, 'query_info')
-  if (is.null(qi)) warning('No query_info found on results object.')
+  if (is.null(qi)) .gama_warn('No query_info found on results object.')
   attr(tbl, 'query_info') <- qi
   class(tbl) <- c('gdt_tbl', class(tbl))
   tbl
@@ -252,7 +272,7 @@ print.gdt_tbl <- function(x, ...) {
       )
     )
   } else {
-    cat('GAMA | WARNING: no provenance attached\n')
+    cat(.gama_prefix(), 'WARNING: no provenance attached.\n', sep = '')
   }
   NextMethod()
 }

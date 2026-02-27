@@ -1,3 +1,23 @@
+# GAMA 0.2.1
+
+## Refactoring
+- Centralised user-facing messaging via new helpers (`.gama_msg()`, `.gama_warn()`, `.gama_stop()`) for consistent and informative console outputs
+- Standardised info/warning/error messaging style (and user-friendly `call. = FALSE` printing where appropriate) to reduce legacy drift
+- Updated provenance and print pathways to use the unified messaging style
+
+## Reliability
+- Reduced silent drops in availability workflows: summaries retain requested species and emit explicit messages when species have no data
+
+## Plotting
+- `plot_sra_geo_availability()` now matches `plot_sra_availability()` styling more closely:
+  - prevents GEO-linked fraction label clipping (margin/placement adjustments)
+  - enforces clean 0–1 axis breaks and **two-decimal** tick labels
+
+## Testing
+- Ran end-to-end availability and plotting workflows to confirm changes do not alter core functionality
+
+---
+
 # GAMA 0.2.0
 
 ## Features

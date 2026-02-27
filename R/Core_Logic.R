@@ -567,7 +567,7 @@ title_raw = NA_character_) {
 .sra_metadata_core <- function(results, species = NULL) {
   if (!is.null(species)) {
     species <- intersect(species, names(results))
-    if (!length(species)) stop('No matching species found')
+    if (!length(species)) .gama_stop('No matching species found.')
     results <- results[species]
   }
   SRA_IDS <- unique(unlist(purrr::map(results, ~ .x$sra$ids %||% character())))
