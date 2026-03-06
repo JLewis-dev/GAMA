@@ -16,13 +16,13 @@
 #' version, query timestamp (UTC), database names, and the search terms used.
 #'
 #' @param species Character vector of binomial species names (e.g.
-#'   'Vigna angularis'). Duplicates are removed with [unique()].
+#' 'Vigna angularis'). Duplicates are removed with [unique()].
 #'
 #' @return A named list with one element per species. Each element is a list
-#'   with components `assembly`, `sra`, and `biosample` containing
-#'   database-specific search results (including counts and record identifiers,
-#'   depending on the internal search implementation). The output has a
-#'   `query_info` attribute storing query provenance.
+#' with components `assembly`, `sra`, and `biosample` containing
+#' database-specific search results (including counts and record identifiers,
+#' depending on the internal search implementation). The output has a
+#' `query_info` attribute storing query provenance.
 #'
 #' @seealso [summarise_availability()]
 #'
@@ -85,12 +85,9 @@ query_species <- function(species) {
 #' @param results A list returned by [query_species()].
 #'
 #' @return A tibble with one row per species and the following columns:
-#' \itemize{
-#'   \item `species`: species name
-#'   \item `Assembly`, `SRA`, `BioSample`: accession counts per database
-#'   \item `A`, `S`, `B`: component scores used for the composite
-#'   \item `score`: composite data richness score
-#' }
+#' \itemize{ \item `species`: species name \item `Assembly`, `SRA`,
+#' `BioSample`: accession counts per database \item `A`, `S`, `B`: component
+#' scores used for the composite \item `score`: composite data richness score }
 #' The tibble has class `gdt_tbl` and carries a `query_info` attribute for
 #' provenance.
 #'
@@ -125,41 +122,46 @@ summarise_availability <- function(results) {
 #' Collapses experiment-level SRA metadata into species-level modality counts
 #' using ontology-assigned classes and (optionally) subclasses.
 #'
-#' By default, the output includes class-level counts for the major modality
-#' classes (genomic, transcriptomic, epigenomic, chromatin, other, unknown),
-#' plus the total number of SRA experiments per species.
+#' By default, the output includes class-level counts for the major modalities
+#' (genomic, transcriptomic, epigenomic, chromatin, other, unknown), plus the
+#' total number of SRA experiments per species.
 #'
 #' Profile cache (used by [summarise_sra_skew()]):
 #' In addition to the summary table, this function attaches a cached, UID-level
 #' profile as an attribute `sra_profile`. The profile contains (at minimum)
-#' `species`, `entrez_uid`, `biosample`, `bioproject`, `class`, and `subclass`.
-#' This cache is intended to be re-used locally for downstream summaries that
-#' require within-species structure (e.g. replication skew across BioProjects or
+#' `species`, `entrez_uid`, `biosample`, `bioproject`, `class`, `subclass`, and
+#' GEO linkage fields (`geo_linked`, `gse_ids`, `gsm_ids`). This cache is
+#' intended to be re-used locally for downstream summaries that require
+#' within-species structure (e.g. replication skew across BioProjects or
 #' BioSamples) without re-querying NCBI. In particular, [summarise_sra_skew()]
 #' consumes `attr(x, 'sra_profile')` from the output of this function.
 #'
 #' GEO overlay:
-#' When `include_geo = TRUE`, GEO-linked class counts are appended as
-#' '<class>_geo' columns, alongside a GEO-compatible denominator summary and
-#' proportion. The GEO-compatible denominator is defined as:
-#' transcriptomic + epigenomic + chromatin + other + unknown.
+#' GEO linkage fields are always cached in `attr(x, 'sra_profile')` regardless
+#' of `include_geo`. When `include_geo = TRUE`, species-level GEO summary
+#' columns are appended as '<class>_geo' columns, alongside a GEO-compatible
+#' denominator summary (`denom_total`, `geo_linked_denom`) and proportion
+#' (`geo_prop`). The GEO-compatible denominator is defined as: transcriptomic +
+#' epigenomic + chromatin + other + unknown.
 #'
 #' @param results A list returned by [query_species()].
 #' @param species `NULL` (default) to include all species, or a character
-#'   vector specifying which species to include.
+#' vector specifying which species to include.
 #' @param all Logical; if `TRUE`, include subclass-level columns.
-#' @param include_geo Logical; if `TRUE`, append GEO linkage summaries.
+#' @param include_geo Logical; if `TRUE`, append GEO summary columns (GEO
+#' fields are cached regardless).
 #'
 #' @return A tibble with one row per species containing class-level counts and
-#'   totals. When `all = TRUE`, subclass-level counts are included. When
-#'   `include_geo = TRUE`, GEO summary columns are appended (e.g.
-#'   `denom_total`, `geo_linked_denom`, `geo_prop`, and '<class>_geo').
-#'   The tibble has class `gdt_tbl` and carries a `query_info` attribute.
-#'   It also carries a cached UID-level profile as attribute `sra_profile`
-#'   (see “Profile cache”), plus metadata in `sra_profile_info`.
+#' totals. When `all = TRUE`, subclass-level counts are included. When
+#' `include_geo = TRUE`, GEO summary columns are appended (e.g. `denom_total`,
+#' `geo_linked_denom`, `geo_prop`, and '<class>_geo'). GEO linkage fields are
+#' cached regardless in `attr(x, 'sra_profile')`. The tibble has class
+#' `gdt_tbl` and carries a `query_info` attribute. It also carries a cached
+#' UID-level profile as attribute `sra_profile` (see “Profile cache”), plus
+#' metadata in `sra_profile_info`.
 #'
 #' @seealso [summarise_sra_skew()], [extract_sra_metadata()],
-#'   [plot_sra_availability()], [plot_sra_geo_availability()]
+#' [plot_sra_availability()], [plot_sra_geo()]
 #'
 #' @examples
 #' \dontrun{
@@ -183,9 +185,39 @@ include_geo = FALSE) {
     if (length(missing) > 0L) .gama_warn('Requested species not found in `results`: ', paste(missing, collapse = ', '), '. Dropping.')
     sp_in[sp_in %in% SPECIES_ALL]
   }
+  if (!length(SPECIES_USE)) {
+    MODES <- c('genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown')
+    OUT <- tibble::tibble(species = character(), SRA = integer())
+    for (m in MODES) OUT[[m]] <- integer()
+    if (isTRUE(include_geo)) {
+      OUT$denom_total <- integer()
+      OUT$geo_linked_denom <- integer()
+      OUT$geo_prop <- numeric()
+      for (m in MODES) OUT[[paste0(m, '_geo')]] <- integer()
+    }
+    OUT <- .as_gdt_table(OUT, results)
+    attr(OUT, 'sra_profile') <- tibble::tibble(
+    species    = character(),
+    entrez_uid = character(),
+    biosample  = character(),
+    bioproject = character(),
+    class      = character(),
+    subclass   = character(),
+    geo_linked = logical(),
+    gse_ids    = character(),
+    gsm_ids    = character()
+    )
+    attr(OUT, 'sra_profile_info') <- list(
+    cached_at_utc    = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
+    profile_time_utc = attr(OUT, 'query_info')$query_time_utc %||% NA_character_,
+    id_col           = 'entrez_uid',
+    fields           = c('species', 'entrez_uid', 'biosample', 'bioproject', 'class', 'subclass', 'geo_linked', 'gse_ids', 'gsm_ids')
+    )
+    return(OUT)
+  }
   META <- .sra_metadata_core(results, species = SPECIES_USE)
   PROFILE <- META |>
-  dplyr::select(species, entrez_uid, biosample, bioproject, class, subclass)
+  dplyr::select(species, entrez_uid, biosample, bioproject, class, subclass, geo_linked, gse_ids, gsm_ids)
   CLASS <- META |>
   dplyr::count(species, class, name = 'count') |>
   tidyr::pivot_wider(
@@ -193,15 +225,14 @@ include_geo = FALSE) {
   values_from = count,
   values_fill = 0
   )
-  for (m in c('genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown')) {
-    if (!m %in% names(CLASS)) CLASS[[m]] <- 0L
-  }
+  MODES <- c('genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown')
+  for (m in MODES) if (!m %in% names(CLASS)) CLASS[[m]] <- 0L
   SRA_TOTAL <- META |>
   dplyr::count(species, name = 'SRA')
   OUT <- CLASS |>
   dplyr::left_join(SRA_TOTAL, by = 'species') |>
-  dplyr::select(species, SRA, genomic, transcriptomic, epigenomic, chromatin, other, unknown)
-  if (all) {
+  dplyr::select(species, SRA, dplyr::all_of(MODES))
+  if (isTRUE(all)) {
     SUB <- META |>
     dplyr::count(species, subclass, name = 'count') |>
     tidyr::pivot_wider(
@@ -211,11 +242,51 @@ include_geo = FALSE) {
     )
     OUT <- dplyr::left_join(OUT, SUB, by = 'species')
   }
-
+  if (isTRUE(include_geo)) {
+    denom <- c('transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown')
+    DENOM <- META |>
+    dplyr::filter(.data$class %in% denom) |>
+    dplyr::count(species, name = 'denom_total')
+    GEO_DENOM <- META |>
+    dplyr::filter(.data$class %in% denom, .data$geo_linked) |>
+    dplyr::count(species, name = 'geo_linked_denom')
+    GEO_CLASS <- META |>
+    dplyr::filter(.data$geo_linked) |>
+    dplyr::count(species, class, name = 'count') |>
+    tidyr::pivot_wider(
+    names_from  = class,
+    values_from = count,
+    values_fill = 0
+    )
+    for (m in MODES) if (!m %in% names(GEO_CLASS)) GEO_CLASS[[m]] <- 0L
+    GEO_CLASS <- GEO_CLASS |>
+    dplyr::transmute(
+    species,
+    genomic_geo        = as.integer(.data$genomic),
+    transcriptomic_geo = as.integer(.data$transcriptomic),
+    epigenomic_geo     = as.integer(.data$epigenomic),
+    chromatin_geo      = as.integer(.data$chromatin),
+    other_geo          = as.integer(.data$other),
+    unknown_geo        = as.integer(.data$unknown)
+    )
+    GEO_SUM <- tibble::tibble(species = SPECIES_USE) |>
+    dplyr::left_join(DENOM, by = 'species') |>
+    dplyr::left_join(GEO_DENOM, by = 'species') |>
+    dplyr::mutate(
+    denom_total      = as.integer(.data$denom_total %||% 0L),
+    geo_linked_denom = as.integer(.data$geo_linked_denom %||% 0L),
+    geo_prop         = dplyr::if_else(.data$denom_total > 0,
+    .data$geo_linked_denom / .data$denom_total,
+    NA_real_)
+    ) |>
+    dplyr::left_join(GEO_CLASS, by = 'species')
+    OUT <- OUT |>
+    dplyr::left_join(GEO_SUM, by = 'species')
+  }
   OUT <- tibble::tibble(species = SPECIES_USE) |>
   dplyr::left_join(OUT, by = 'species')
   if (nrow(OUT) > 0L) {
-    count_cols <- setdiff(names(OUT), 'species')
+    count_cols <- setdiff(names(OUT), c('species', 'geo_prop'))
     OUT <- OUT |>
     dplyr::mutate(dplyr::across(dplyr::all_of(count_cols), ~ {
       y <- as.integer(.x)
@@ -233,78 +304,15 @@ include_geo = FALSE) {
       }
     }
   }
-
-  if (!include_geo) {
-    OUT <- .as_gdt_table(OUT, results)
-    attr(OUT, 'sra_profile') <- PROFILE
-    attr(OUT, 'sra_profile_info') <- list(
-    cached_at_utc   = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
-    profile_time_utc = attr(OUT, 'query_info')$query_time_utc %||% NA_character_,
-    id_col          = 'entrez_uid',
-    fields          = c('species', 'entrez_uid', 'biosample', 'bioproject', 'class', 'subclass')
-    )
-    return(OUT)
-  }
-  denom <- c('transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown')
-  DENOM <- META |>
-  dplyr::filter(.data$class %in% !!denom) |>
-  dplyr::count(species, name = 'denom_total')
-  GEO_DENOM <- META |>
-  dplyr::filter(.data$class %in% !!denom) |>
-  dplyr::filter(.data$geo_linked) |>
-  dplyr::count(species, name = 'geo_linked_denom')
-  GEO_CLASS <- META |>
-  dplyr::filter(.data$geo_linked) |>
-  dplyr::count(species, class, name = 'count') |>
-  tidyr::pivot_wider(
-  names_from  = class,
-  values_from = count,
-  values_fill = 0
-  )
-  for (m in c('genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown')) {
-    if (!m %in% names(GEO_CLASS)) GEO_CLASS[[m]] <- 0L
-  }
-  GEO_CLASS <- GEO_CLASS |>
-  dplyr::transmute(
-  species,
-  genomic_geo        = as.integer(.data$genomic),
-  transcriptomic_geo = as.integer(.data$transcriptomic),
-  epigenomic_geo     = as.integer(.data$epigenomic),
-  chromatin_geo      = as.integer(.data$chromatin),
-  other_geo          = as.integer(.data$other),
-  unknown_geo        = as.integer(.data$unknown)
-  )
-  OUT2 <- OUT |>
-  dplyr::left_join(DENOM, by = 'species') |>
-  dplyr::left_join(GEO_DENOM, by = 'species') |>
-  dplyr::mutate(
-  denom_total      = as.integer(.data$denom_total %||% 0L),
-  geo_linked_denom = as.integer(.data$geo_linked_denom %||% 0L),
-  geo_prop         = dplyr::if_else(.data$denom_total > 0,
-  .data$geo_linked_denom / .data$denom_total,
-  NA_real_)
-  ) |>
-  dplyr::left_join(GEO_CLASS, by = 'species')
-
-  if (nrow(OUT2) > 0L) {
-    count_cols2 <- setdiff(names(OUT2), c('species', 'geo_prop'))
-    OUT2 <- OUT2 |>
-    dplyr::mutate(dplyr::across(dplyr::all_of(count_cols2), ~ {
-      y <- as.integer(.x)
-      y[is.na(y)] <- 0L
-      y
-    }))
-  }
-  OUT2 <- .as_gdt_table(OUT2, results)
-
-  attr(OUT2, 'sra_profile') <- PROFILE
-  attr(OUT2, 'sra_profile_info') <- list(
+  OUT <- .as_gdt_table(OUT, results)
+  attr(OUT, 'sra_profile') <- PROFILE
+  attr(OUT, 'sra_profile_info') <- list(
   cached_at_utc    = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
-  profile_time_utc = attr(OUT2, 'query_info')$query_time_utc %||% NA_character_,
+  profile_time_utc = attr(OUT, 'query_info')$query_time_utc %||% NA_character_,
   id_col           = 'entrez_uid',
-  fields           = c('species', 'entrez_uid', 'biosample', 'bioproject', 'class', 'subclass')
+  fields           = c('species', 'entrez_uid', 'biosample', 'bioproject', 'class', 'subclass', 'geo_linked', 'gse_ids', 'gsm_ids')
   )
-  OUT2
+  OUT
 }
 
 #' Extract filtered Assembly metadata
@@ -314,19 +322,20 @@ include_geo = FALSE) {
 #' returned in a tidy tibble and optionally reduced to a single 'best' assembly
 #' per species.
 #'
-#' When `best = TRUE`, the best assembly is selected using
-#' structural-weighting (assembly level) and N50 as a tie-breaker.
+#' When `best = TRUE`, the best assembly is selected using structural-weighting
+#' (assembly level) and N50 as a tie-breaker.
 #'
-#' @param results A list returned by [query_species()], containing Assembly IDs.
+#' @param results A list returned by [query_species()], containing Assembly
+#' IDs.
 #' @param species `NULL` (default) to return assemblies for all species, or a
-#'   character vector specifying which species to extract.
+#' character vector specifying which species to extract.
 #' @param best Logical; if `TRUE`, return only the best assembly per species.
 #'
 #' @return A tibble with one row per assembly (or one row per species when
-#'   `best = TRUE`). Fields include species, accession, assembly level, N50,
-#'   coverage, BioSample/BioProject accessions, submitter, release date, and
-#'   FTP path (where available). The tibble has class `gdt_tbl` and carries a
-#'   `query_info` attribute for provenance.
+#' `best = TRUE`). Fields include species, accession, assembly level, N50,
+#' coverage, BioSample/BioProject accessions, submitter, release date, and FTP
+#' path (where available). The tibble has class `gdt_tbl` and carries a
+#' `query_info` attribute for provenance.
 #'
 #' @seealso [query_species()]
 #'
@@ -425,26 +434,24 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
 #' assigns curated modality classes and subclasses.
 #'
 #' For each experiment, the function:
-#' \itemize{
-#'   \item extracts the raw `LIBRARY_STRATEGY` value from the SRA XML
-#'   \item normalises strategy strings
-#'   \item assigns ontology-based `class` and `subclass`
-#'   \item records GEO linkage fields (`geo_linked`, `gse_ids`, `gsm_ids`)
-#' }
+#' \itemize{ \item extracts the raw `LIBRARY_STRATEGY` value from the SRA XML
+#' \item normalises strategy strings \item assigns ontology-based `class` and
+#' `subclass` \item records GEO linkage fields (`geo_linked`, `gse_ids`,
+#' `gsm_ids`) }
 #'
 #' Optional filters can restrict output to particular classes/subclasses, or
 #' GEO-linked experiments only.
 #'
 #' @param results A list returned by [query_species()], containing SRA IDs.
 #' @param species `NULL` (default) to include all species, or a character
-#'   vector specifying which species to include.
+#' vector specifying which species to include.
 #' @param class Optional character vector of modality classes to retain.
 #' @param subclass Optional character vector of modality subclasses to retain.
 #' @param only_geo Logical; if `TRUE`, retain only GEO-linked experiments.
 #'
 #' @return A tibble with one row per SRA experiment, including identifiers,
-#'   strategy fields, ontology assignments, and GEO linkage columns. The tibble
-#'   has class `gdt_tbl` and carries a `query_info` attribute for provenance.
+#' strategy fields, ontology assignments, and GEO linkage columns. The tibble
+#' has class `gdt_tbl` and carries a `query_info` attribute for provenance.
 #'
 #' @seealso [query_species()], [summarise_sra_availability()]
 #'
@@ -472,17 +479,32 @@ only_geo = FALSE) {
     if (length(missing) > 0L) .gama_warn('Requested species not found in `results`: ', paste(missing, collapse = ', '), '. Dropping.')
     species <- species[species %in% names(results)]
   }
+  if (!is.null(species) && !length(species)) {
+    META <- tibble::tibble(
+    species       = character(),
+    entrez_uid    = character(),
+    biosample     = character(),
+    bioproject    = character(),
+    strategy_raw  = character(),
+    strategy_norm = character(),
+    class         = character(),
+    subclass      = character(),
+    geo_linked    = logical(),
+    gse_ids       = character(),
+    gsm_ids       = character()
+    )
+    return(.as_gdt_table(META, results))
+  }
   META <- .sra_metadata_core(results, species = species)
   if (!is.null(class)) {
-    META <- META |> dplyr::filter(.data$class %in% !!class)
+    META <- META |> dplyr::filter(.data$class %in% class)
   }
   if (!is.null(subclass)) {
-    META <- META |> dplyr::filter(.data$subclass %in% !!subclass)
+    META <- META |> dplyr::filter(.data$subclass %in% subclass)
   }
   if (isTRUE(only_geo)) {
     META <- META |> dplyr::filter(.data$geo_linked)
   }
-
   if (nrow(META) == 0L && (!is.null(species) || !is.null(class) || !is.null(subclass) || isTRUE(only_geo))) {
     .gama_msg('No SRA metadata records found for requested filters; returning empty table.')
   }
@@ -493,8 +515,8 @@ only_geo = FALSE) {
 #'
 #' Quantifies replication skew across independent units (BioProject or
 #' BioSample) using the cached UID-level SRA profile produced by
-#' summarise_sra_availability(). Optionally computes skew within a
-#' single modality class.
+#' summarise_sra_availability(). Optionally computes skew within a single
+#' modality class.
 #'
 #' Profile cache (consumed by this function):
 #' The input must carry a cached UID-level profile as attribute 'sra_profile'
@@ -502,22 +524,23 @@ only_geo = FALSE) {
 #' and 'class'. Each row in the profile corresponds to an Entrez UID.
 #'
 #' @details
-#' The `eff` column is the *effective number of units* (Hill number of order 2),
-#' computed as the inverse Simpson index: `eff = 1 / sum(p^2)`, where `p` is the
-#' proportion of experiments in each BioProject/BioSample. Larger values indicate
-#' a more even spread; values near 1 indicate strong concentration in few units.
+#' The `eff` column is the *effective number of units* (Hill number of order
+#' 2), computed as the inverse Simpson index: `eff = 1 / sum(p^2)`, where `p`
+#' is the proportion of experiments in each BioProject/BioSample. Larger values
+#' indicate a more even spread; values near 1 indicate strong concentration in
+#' few units.
 #'
 #' @param x A data.frame/tibble returned by summarise_sra_availability()
-#'   that has a cached profile attached as attribute 'sra_profile'.
+#' that has a cached profile attached as attribute 'sra_profile'.
 #' @param species Optional character vector of species names to filter the
-#'   output. If NULL, all species in x are returned.
+#' output. If NULL, all species in x are returned.
 #' @param unit Character scalar; either 'bioproject' (default) or 'biosample'.
 #' @param class Optional character scalar specifying a single modality class.
 #'
 #' @return A tibble/data.frame with one row per species containing:
-#'   `species`, `BioProject`/`BioSample` (number of distinct units with records),
-#'   `class`, `min`, `q25`, `med`, `q75`, `max` (experiments per unit), and
-#'   `eff` (effective number of units; inverse Simpson index).
+#' `species`, `BioProject`/`BioSample` (number of distinct units with records),
+#' `class`, `min`, `q25`, `med`, `q75`, `max` (experiments per unit), and `eff`
+#' (effective number of units; inverse Simpson index).
 #'
 #' @examples
 #' \dontrun{

@@ -11,12 +11,9 @@ summarise_availability(results)
 }
 \value{
 A tibble with one row per species and the following columns:
-\itemize{
-\item \code{species}: species name
-\item \code{Assembly}, \code{SRA}, \code{BioSample}: accession counts per database
-\item \code{A}, \code{S}, \code{B}: component scores used for the composite
-\item \code{score}: composite data richness score
-}
+\itemize{ \item \code{species}: species name \item \code{Assembly}, \code{SRA},
+\code{BioSample}: accession counts per database \item \code{A}, \code{S}, \code{B}: component
+scores used for the composite \item \code{score}: composite data richness score }
 The tibble has class \code{gdt_tbl} and carries a \code{query_info} attribute for
 provenance.
 }

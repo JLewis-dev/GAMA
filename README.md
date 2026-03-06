@@ -5,7 +5,7 @@
 > GAMA is currently in early development. Interfaces, outputs, and scoring methods may change.  
 > Users are encouraged to validate results independently and report issues.
 
-GAMA is an R-based framework for surveying publicly available sequencing data across NCBI Assembly, SRA, and BioSample. Its aim is to support feasibility assessments for *in silico* research on underutilised plant species.
+GAMA is an R-based framework for surveying publicly accessible sequencing data across NCBI Assembly, SRA, and BioSample. Its aim is to support feasibility assessments for *in silico* research on underutilised plants.
 
 ---
 
@@ -18,6 +18,8 @@ GAMA:
 - Classifies SRA accessions by experimental modality  
 - Enables strategic parsing of Assembly and SRA results  
 - Generates publication-ready visuals 
+
+See the **[GAMA user guide](docs/GAMA_user_guide.pdf)** for a comprehensive overview of functions and methods.
 
 ---
 
@@ -261,6 +263,6 @@ It is particularly suited to investigations of underutilised and non-model plant
 
 ## Licence
 
-See the `LICENSE` file for details.
+See the `LICENSE` files for details.
 
 ---
