@@ -36,12 +36,10 @@ assigns curated modality classes and subclasses.
 }
 \details{
 For each experiment, the function:
-\itemize{
-\item extracts the raw \code{LIBRARY_STRATEGY} value from the SRA XML
-\item normalises strategy strings
-\item assigns ontology-based \code{class} and \code{subclass}
-\item records GEO linkage fields (\code{geo_linked}, \code{gse_ids}, \code{gsm_ids})
-}
+\itemize{ \item extracts the raw \code{LIBRARY_STRATEGY} value from the SRA XML
+\item normalises strategy strings \item assigns ontology-based \code{class} and
+\code{subclass} \item records GEO linkage fields (\code{geo_linked}, \code{gse_ids},
+\code{gsm_ids}) }
 
 Optional filters can restrict output to particular classes/subclasses, or
 GEO-linked experiments only.

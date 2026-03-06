@@ -52,5 +52,5 @@ plot_sra_availability(SRA_SUMMARY)
 }
 }
 \seealso{
-\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}, \code{\link[=plot_sra_geo_availability]{plot_sra_geo_availability()}}
+\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}, \code{\link[=plot_sra_geo]{plot_sra_geo()}}
 }

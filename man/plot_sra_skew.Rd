@@ -35,7 +35,8 @@ plot_sra_skew(
 
 \item{colours}{Named character vector for box fill and line colours.}
 
-\item{show_labels}{Logical; if TRUE (default), label each box with eff and n.}
+\item{show_labels}{Logical; if TRUE (default), label each box with eff and
+n.}
 
 \item{label_digits}{Integer; decimal places for eff labels.}
 
@@ -45,11 +46,12 @@ plot_sra_skew(
 A ggplot object.
 }
 \description{
-Visualises replication skew using the summary output of summarise_sra_skew().
-Boxplots are drawn from pre-computed five-number summaries on a log10 y-axis
-and optionally labelled as 'eff=\if{html}{\out{<x>}} (n=\if{html}{\out{<y>}})'. Optionally overlays per-unit
-points (one point per BioProject/BioSample) jittered horizontally when a
-cached UID-level profile is available as attr(SKEW, 'sra_profile').
+Visualises replication skew using the summary output of
+summarise_sra_skew(). Boxplots are drawn from pre-computed five-number
+summaries on a log10 y-axis and optionally labelled as 'eff=\if{html}{\out{<x>}} (n=\if{html}{\out{<y>}})'.
+Optionally overlays per-unit points (one point per BioProject/BioSample)
+jittered horizontally when a cached UID-level profile is available as
+attr(SKEW, 'sra_profile').
 }
 \examples{
 \dontrun{

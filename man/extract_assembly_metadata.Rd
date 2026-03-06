@@ -7,7 +7,8 @@
 extract_assembly_metadata(results, species = NULL, best = FALSE)
 }
 \arguments{
-\item{results}{A list returned by \code{\link[=query_species]{query_species()}}, containing Assembly IDs.}
+\item{results}{A list returned by \code{\link[=query_species]{query_species()}}, containing Assembly
+IDs.}
 
 \item{species}{\code{NULL} (default) to return assemblies for all species, or a
 character vector specifying which species to extract.}
@@ -17,8 +18,8 @@ character vector specifying which species to extract.}
 \value{
 A tibble with one row per assembly (or one row per species when
 \code{best = TRUE}). Fields include species, accession, assembly level, N50,
-coverage, BioSample/BioProject accessions, submitter, release date, and
-FTP path (where available). The tibble has class \code{gdt_tbl} and carries a
+coverage, BioSample/BioProject accessions, submitter, release date, and FTP
+path (where available). The tibble has class \code{gdt_tbl} and carries a
 \code{query_info} attribute for provenance.
 }
 \description{
@@ -28,8 +29,8 @@ returned in a tidy tibble and optionally reduced to a single 'best' assembly
 per species.
 }
 \details{
-When \code{best = TRUE}, the best assembly is selected using
-structural-weighting (assembly level) and N50 as a tie-breaker.
+When \code{best = TRUE}, the best assembly is selected using structural-weighting
+(assembly level) and N50 as a tie-breaker.
 }
 \examples{
 \dontrun{

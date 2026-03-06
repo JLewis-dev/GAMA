@@ -25,14 +25,14 @@ output. If NULL, all species in x are returned.}
 \value{
 A tibble/data.frame with one row per species containing:
 \code{species}, \code{BioProject}/\code{BioSample} (number of distinct units with records),
-\code{class}, \code{min}, \code{q25}, \code{med}, \code{q75}, \code{max} (experiments per unit), and
-\code{eff} (effective number of units; inverse Simpson index).
+\code{class}, \code{min}, \code{q25}, \code{med}, \code{q75}, \code{max} (experiments per unit), and \code{eff}
+(effective number of units; inverse Simpson index).
 }
 \description{
 Quantifies replication skew across independent units (BioProject or
 BioSample) using the cached UID-level SRA profile produced by
-summarise_sra_availability(). Optionally computes skew within a
-single modality class.
+summarise_sra_availability(). Optionally computes skew within a single
+modality class.
 }
 \details{
 Profile cache (consumed by this function):
@@ -40,10 +40,11 @@ The input must carry a cached UID-level profile as attribute 'sra_profile'
 containing (at minimum) 'species', 'entrez_uid', 'biosample', 'bioproject',
 and 'class'. Each row in the profile corresponds to an Entrez UID.
 
-The \code{eff} column is the \emph{effective number of units} (Hill number of order 2),
-computed as the inverse Simpson index: \code{eff = 1 / sum(p^2)}, where \code{p} is the
-proportion of experiments in each BioProject/BioSample. Larger values indicate
-a more even spread; values near 1 indicate strong concentration in few units.
+The \code{eff} column is the \emph{effective number of units} (Hill number of order
+2), computed as the inverse Simpson index: \code{eff = 1 / sum(p^2)}, where \code{p}
+is the proportion of experiments in each BioProject/BioSample. Larger values
+indicate a more even spread; values near 1 indicate strong concentration in
+few units.
 }
 \examples{
 \dontrun{

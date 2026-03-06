@@ -7,14 +7,14 @@
 #' as stacked bar segments for each species.
 #'
 #' @param SUMMARY A tibble returned by [summarise_availability()], containing
-#'   species-level composite scores and component values (`A`, `S`, `B`).
+#' species-level composite scores and component values (`A`, `S`, `B`).
 #' @param rank Ordering of species on the x-axis. One of 'highest' (default),
-#'   'lowest', 'A-Z', 'Z-A', or 'input'.
+#' 'lowest', 'A-Z', 'Z-A', or 'input'.
 #' @param abbreviate Logical; if `TRUE` (default), abbreviate species names to
-#'   'G. species' style labels.
+#' 'G. species' style labels.
 #' @param theme_fn A ggplot2 theme function (e.g. [ggplot2::theme_minimal()]).
 #' @param colours Named character vector of fill colours for the 'Assembly',
-#'   'SRA', and 'BioSample' segments.
+#' 'SRA', and 'BioSample' segments.
 #'
 #' @return A ggplot object showing stacked bar segments for each species.
 #'
@@ -106,19 +106,19 @@ BioSample = '#56C5A8'
 #' [summarise_sra_availability()].
 #'
 #' @param SRA A wide-format SRA summary table returned by
-#'   [summarise_sra_availability()].
+#' [summarise_sra_availability()].
 #' @param species `NULL` (default) to plot all species, or a character vector
-#'   of species to include.
+#' of species to include.
 #' @param rank Ordering of species. One of 'highest' (default), 'lowest',
-#'   'A-Z', 'Z-A', or 'input'.
+#' 'A-Z', 'Z-A', or 'input'.
 #' @param abbreviate Logical; if `TRUE` (default), abbreviate species names.
 #' @param theme_fn A ggplot2 theme function.
 #' @param colours Named character vector of class colours.
 #'
 #' @return A ggplot object showing proportional SRA modality profiles across
-#'   species.
+#' species.
 #'
-#' @seealso [summarise_sra_availability()], [plot_sra_geo_availability()]
+#' @seealso [summarise_sra_availability()], [plot_sra_geo()]
 #'
 #' @examples
 #' \dontrun{
@@ -249,43 +249,47 @@ plot_sra_availability <- function(
 #' representing the GEO-linked fraction. Labels show `GEO-linked / Total` for
 #' each modality.
 #'
-#' Operates on the wide-format output of [summarise_sra_availability()] when
-#' `include_geo = TRUE`.
+#' Operates on the direct output of [summarise_sra_availability()].
+#' GEO-linked counts are derived from the cached `attr(SRA, 'sra_profile')`,
+#' which stores per-experiment `geo_linked` values regardless of
+#' `include_geo`.
 #'
-#' If `species` is `NULL`, plots are generated for all species in the table.
-#' A single species returns a ggplot object; multiple species returns a named
+#' If `species` is `NULL`, plots are generated for all species in the table. A
+#' single species returns a ggplot object; multiple species return a named
 #' list of ggplot objects.
 #'
 #' @param SRA A wide-format SRA summary table returned by
-#'   [summarise_sra_availability()] when `include_geo = TRUE`.
+#' [summarise_sra_availability()].
 #' @param species `NULL` (default) for all species, or a character vector of
-#'   species to plot.
+#' species to plot.
 #' @param classes Character vector of modality classes to display. Values are
-#'   intersected with the fixed plotting order used internally.
+#' intersected with the fixed plotting order used internally.
 #' @param rank Ordering of species (when `species = NULL`), or ordering applied
-#'   to the requested species vector. One of 'highest', 'lowest', 'A-Z', 'Z-A',
-#'   or 'input'.
+#' to the requested species vector. One of 'highest', 'lowest', 'A-Z', 'Z-A',
+#' or 'input'.
 #' @param theme_fn A ggplot2 theme function.
 #' @param colours Named character vector of class colours.
 #' @param alpha_vals Named numeric vector giving alpha values for GEO-linked
-#'   vs not GEO-linked segments.
+#' vs not GEO-linked segments.
 #'
 #' @return A ggplot object (single species) or a named list of ggplot objects
-#'   (multiple species).
+#' (multiple species).
 #'
 #' @seealso [summarise_sra_availability()], [plot_sra_availability()]
 #'
 #' @examples
 #' \dontrun{
 #' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
-#' SRA_GEO <- summarise_sra_availability(RESULTS, include_geo = TRUE)
-#' plot_sra_geo_availability(SRA_GEO, species = 'Vigna vexillata')
+#' SRA_SUMMARY <- summarise_sra_availability(RESULTS)
+#' plot_sra_geo(SRA_SUMMARY, species = 'Vigna vexillata')
 #' }
 #' @export
-plot_sra_geo_availability <- function(
+plot_sra_geo <- function(
     SRA,
     species    = NULL,
-    classes    = c('transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown'),
+    classes    = c(
+      'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown'
+    ),
     rank       = c('highest', 'lowest', 'A-Z', 'Z-A', 'input'),
     theme_fn   = ggplot2::theme_minimal,
     colours    = c(
@@ -298,48 +302,85 @@ plot_sra_geo_availability <- function(
     alpha_vals = c(`Not GEO-linked` = 0.25, `GEO-linked` = 1)
 ) {
   rank <- match.arg(rank)
-  if (!('species' %in% names(SRA))) .gama_stop('Input `SRA` must contain a `species` column.')
-  FIXED_ORDER <- c('unknown', 'other', 'chromatin', 'epigenomic', 'transcriptomic')
+  if (!('species' %in% names(SRA))) {
+    .gama_stop('Input `SRA` must contain a `species` column.')
+  }
+  FIXED_ORDER <- c(
+    'unknown', 'other', 'chromatin', 'epigenomic', 'transcriptomic'
+  )
   classes <- intersect(FIXED_ORDER, classes)
-  geo_cols <- paste0(classes, '_geo')
+  if (!length(classes)) .gama_stop('No valid `classes` selected for plotting.')
   missing_base <- setdiff(classes, names(SRA))
-  if (length(missing_base)) .gama_stop(sprintf('Input `SRA` is missing required class columns: %s.', paste(missing_base, collapse = ', ')))
-  if (!all(geo_cols %in% names(SRA))) .gama_stop('GEO summary columns missing. Run summarise_sra_availability(..., include_geo = TRUE).')
+  if (length(missing_base)) {
+    .gama_stop(sprintf(
+      'Input `SRA` is missing required class columns: %s.',
+      paste(missing_base, collapse = ', ')
+    ))
+  }
+  prof <- attr(SRA, 'sra_profile', exact = TRUE)
+  if (is.null(prof)) {
+    .gama_stop(
+      paste(
+        'Cached `sra_profile` not found.',
+        'Pass the direct output of summarise_sra_availability().'
+      )
+    )
+  }
+  req_prof <- c('species', 'class', 'geo_linked')
+  miss_prof <- setdiff(req_prof, names(prof))
+  if (length(miss_prof)) {
+    .gama_stop(sprintf(
+      paste(
+        'Cached `sra_profile` is missing required columns: %s.',
+        'Update the cached object by re-running',
+        'summarise_sra_availability().'
+      ),
+      paste(miss_prof, collapse = ', ')
+    ))
+  }
+  GEO_COUNTS <- prof |>
+    dplyr::filter(.data$class %in% classes, .data$geo_linked) |>
+    dplyr::count(species, class, name = 'linked') |>
+    tidyr::complete(
+      species = unique(SRA$species),
+      class   = classes,
+      fill    = list(linked = 0L)
+    )
   if (is.null(species)) {
     sp <- SRA$species
     if (rank != 'input') {
       ord <- SRA[, c('species', 'SRA')]
-      if (rank == 'highest') {
-        ord <- ord[order(ord$SRA, decreasing = TRUE), ]
-      } else if (rank == 'lowest') {
-        ord <- ord[order(ord$SRA, decreasing = FALSE), ]
-      } else if (rank == 'A-Z') {
-        ord <- ord[order(ord$species, decreasing = FALSE), ]
-      } else if (rank == 'Z-A') {
-        ord <- ord[order(ord$species, decreasing = TRUE), ]
-      }
+      if (rank == 'highest') ord <- ord[order(ord$SRA, decreasing = TRUE), ]
+      if (rank == 'lowest') ord <- ord[order(ord$SRA, decreasing = FALSE), ]
+      if (rank == 'A-Z') ord <- ord[order(ord$species, decreasing = FALSE), ]
+      if (rank == 'Z-A') ord <- ord[order(ord$species, decreasing = TRUE), ]
       sp <- ord$species
     }
   } else {
     sp <- intersect(species, SRA$species)
     missing_sp <- setdiff(species, SRA$species)
-    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `SRA`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
-    if (!length(sp)) .gama_stop('No matching species found.')
-    if (rank == 'A-Z') {
-      sp <- sort(sp, decreasing = FALSE)
-    } else if (rank == 'Z-A') {
-      sp <- sort(sp, decreasing = TRUE)
+    if (length(missing_sp)) {
+      .gama_warn(sprintf(
+        'Requested species not found in input `SRA`: %s. Dropping.',
+        paste(missing_sp, collapse = ', ')
+      ))
     }
+    if (!length(sp)) .gama_stop('No matching species found.')
+    if (rank == 'A-Z') sp <- sort(sp, decreasing = FALSE)
+    if (rank == 'Z-A') sp <- sort(sp, decreasing = TRUE)
   }
   .plot_one <- function(one_species) {
-    row <- SRA |> dplyr::filter(.data$species == !!one_species)
+    row <- SRA |> dplyr::filter(.data$species == one_species)
     if (!nrow(row)) .gama_stop('No matching species found.')
-    total  <- as.integer(row[1, classes,  drop = TRUE])
-    linked <- as.integer(row[1, geo_cols, drop = TRUE])
-    total[is.na(total)]   <- 0L
+    total <- as.integer(row[1, classes, drop = TRUE])
+    linked <- GEO_COUNTS |>
+      dplyr::filter(.data$species == one_species) |>
+      dplyr::arrange(match(.data$class, classes)) |>
+      dplyr::pull(linked)
+    total[is.na(total)] <- 0L
     linked[is.na(linked)] <- 0L
     prop_linked <- ifelse(total > 0, linked / total, 0)
-    prop_not    <- ifelse(total > 0, 1 - prop_linked, 0)
+    prop_not <- ifelse(total > 0, 1 - prop_linked, 0)
     SUM <- tibble::tibble(
       class       = factor(classes, levels = FIXED_ORDER),
       total       = total,
@@ -349,11 +390,22 @@ plot_sra_geo_availability <- function(
       prop_not    = prop_not
     )
     LONG <- dplyr::bind_rows(
-      SUM |> dplyr::transmute(class, status = 'Not GEO-linked', prop = prop_not),
-      SUM |> dplyr::transmute(class, status = 'GEO-linked',     prop = prop_linked)
+      SUM |> dplyr::transmute(
+        class,
+        status = 'Not GEO-linked',
+        prop   = prop_not
+      ),
+      SUM |> dplyr::transmute(
+        class,
+        status = 'GEO-linked',
+        prop   = prop_linked
+      )
     )
-    LONG$class  <- factor(LONG$class, levels = FIXED_ORDER)
-    LONG$status <- factor(LONG$status, levels = c('Not GEO-linked', 'GEO-linked'))
+    LONG$class <- factor(LONG$class, levels = FIXED_ORDER)
+    LONG$status <- factor(
+      LONG$status,
+      levels = c('Not GEO-linked', 'GEO-linked')
+    )
     ggplot2::ggplot(
       LONG,
       ggplot2::aes(x = class, y = prop, fill = class, alpha = status)
@@ -402,11 +454,12 @@ plot_sra_geo_availability <- function(
 
 #' Plot SRA replication skew
 #'
-#' Visualises replication skew using the summary output of summarise_sra_skew().
-#' Boxplots are drawn from pre-computed five-number summaries on a log10 y-axis
-#' and optionally labelled as 'eff=<x> (n=<y>)'. Optionally overlays per-unit
-#' points (one point per BioProject/BioSample) jittered horizontally when a
-#' cached UID-level profile is available as attr(SKEW, 'sra_profile').
+#' Visualises replication skew using the summary output of
+#' summarise_sra_skew(). Boxplots are drawn from pre-computed five-number
+#' summaries on a log10 y-axis and optionally labelled as 'eff=<x> (n=<y>)'.
+#' Optionally overlays per-unit points (one point per BioProject/BioSample)
+#' jittered horizontally when a cached UID-level profile is available as
+#' attr(SKEW, 'sra_profile').
 #'
 #' @param SKEW A tibble returned by summarise_sra_skew().
 #' @param species NULL (default) to include all species, or a character vector.
@@ -416,7 +469,8 @@ plot_sra_geo_availability <- function(
 #' @param point_colour Colour for the overlaid data points (character).
 #' @param theme_fn A ggplot2 theme function.
 #' @param colours Named character vector for box fill and line colours.
-#' @param show_labels Logical; if TRUE (default), label each box with eff and n.
+#' @param show_labels Logical; if TRUE (default), label each box with eff and
+#'   n.
 #' @param label_digits Integer; decimal places for eff labels.
 #' @param point_alpha Numeric alpha (transparency) for overlaid points.
 #'
@@ -510,7 +564,7 @@ plot_sra_skew <- function(
       unit_col_lower <- tolower(unit_col)
       counts_df <- prof |>
         dplyr::filter(.data$species %in% CORE$species) |>
-        dplyr::count(species, !!rlang::sym(unit_col_lower), name = 'count') |>
+        dplyr::count(species, .data[[unit_col_lower]], name = 'count') |>
         dplyr::mutate(species_label = if (abbreviate) .shorten_species(species) else species) |>
         dplyr::mutate(species_label = factor(species_label, levels = levels(CORE$species_label))) |>
         dplyr::mutate(x = as.numeric(species_label))

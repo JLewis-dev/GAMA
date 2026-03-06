@@ -1,3 +1,19 @@
+# GAMA 0.2.2
+
+## Refactoring
+- Renamed `plot_sra_geo_availability()` to `plot_sra_geo()`
+- GEO linkage fields are now always cached in `summarise_sra_availability()` output via the attached `sra_profile`, regardless of `include_geo`
+- `include_geo = TRUE` now acts only as an output visibility option, appending species-level GEO summary columns without changing what is cached
+
+## Documentation
+- Updated roxygen documentation and examples to reflect the revised GEO caching and `plot_sra_geo()` workflow
+- Added `docs/GAMA_user_guide.pdf` as a comprehensive reference for GAMA functions and methods
+
+## Testing
+- Tested end-to-end SRA availability and GEO overlay workflow
+
+---
+
 # GAMA 0.2.1
 
 ## Refactoring
