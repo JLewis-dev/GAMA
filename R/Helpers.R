@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.2.2'
+.GAMA_VERSION <- '0.2.3'
 
 # NCBI best practice:
 
@@ -128,6 +128,7 @@
 
 utils::globalVariables(c(
   '.data',
+  '.env',
   'A',
   'B',
   'BioProject',

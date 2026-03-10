@@ -154,7 +154,7 @@ plot_sra_availability <- function(
   if (!is.null(species)) {
     missing_sp <- setdiff(species, CORE$species)
     if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `SRA`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
-    CORE <- CORE |> dplyr::filter(.data$species %in% species)
+    CORE <- CORE |> dplyr::filter(.data$species %in% .env$species)
     if (!nrow(CORE)) .gama_stop('No matching species found.')
   }
   TOTAL <- CORE[, c('species', 'SRA')]
@@ -504,7 +504,7 @@ plot_sra_skew <- function(
   if (!is.null(species)) {
     missing_sp <- setdiff(species, CORE0$species)
     if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `SKEW`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
-    CORE0 <- CORE0 |> dplyr::filter(.data$species %in% species)
+    CORE0 <- CORE0 |> dplyr::filter(.data$species %in% .env$species)
     if (!nrow(CORE0)) .gama_stop('No matching species found in `SKEW` for the requested filter.')
   }
   class_vals <- unique(CORE0$class)

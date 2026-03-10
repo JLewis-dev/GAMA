@@ -1,3 +1,16 @@
+# GAMA 0.2.3
+
+## Reliability
+- Fixed filtering in `extract_sra_metadata()`, `plot_sra_availability()`, and `plot_sra_skew()`
+- This bug occurred because `class`, `subclass`, and `species` were used both as function arguments and as metadata column names
+- Updated affected filters to use explicit `.env$...` references
+
+## Testing
+- Re-tested `extract_sra_metadata()` and confirmed that `class =` and `subclass =` filters now work correctly
+- Re-ran SRA availability, GEO overlay, and skew plotting workflows to confirm expected behaviour
+
+---
+
 # GAMA 0.2.2
 
 ## Refactoring

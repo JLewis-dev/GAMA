@@ -497,10 +497,10 @@ only_geo = FALSE) {
   }
   META <- .sra_metadata_core(results, species = species)
   if (!is.null(class)) {
-    META <- META |> dplyr::filter(.data$class %in% class)
+    META <- META |> dplyr::filter(.data$class %in% .env$class)
   }
   if (!is.null(subclass)) {
-    META <- META |> dplyr::filter(.data$subclass %in% subclass)
+    META <- META |> dplyr::filter(.data$subclass %in% .env$subclass)
   }
   if (isTRUE(only_geo)) {
     META <- META |> dplyr::filter(.data$geo_linked)
