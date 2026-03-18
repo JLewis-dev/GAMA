@@ -1,33 +1,14 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.2.3'
+.GAMA_VERSION <- '0.2.4'
 
-# NCBI best practice:
+# NCBI configuration
 
-# - set options(ENTREZ_EMAIL=...) for responsible use
-# - set rentrez::set_entrez_key() to increase rate limits
-# - throttle requests, especially in loops and batch operations
-# Configure NCBI access parameters (email and API key)
-
-# NCBI etiquette
-
-.gama_ncbi_config <- function(email = NULL, api_key = NULL) {
-  if (!is.null(email) && nzchar(email)) {
-    options(ENTREZ_EMAIL = email)
-  }
+.gama_ncbi_config <- function(api_key = NULL) {
   if (!is.null(api_key) && nzchar(api_key)) {
     rentrez::set_entrez_key(api_key)
   }
   invisible(TRUE)
-}
-
-.ncbi_has_key <- function() {
-  key <- Sys.getenv('ENTREZ_KEY', unset = NA_character_)
-  !is.na(key) && nzchar(key)
-}
-
-.ncbi_throttle <- function(keyed = .ncbi_has_key()) {
-  Sys.sleep(if (isTRUE(keyed)) 0.12 else 0.35)
 }
 
 # NCBI defaults
@@ -54,26 +35,55 @@
 
 # Safe rentrez wrappers
 
-.safe_search <- purrr::safely(rentrez::entrez_search)
-
-.ncbi_search <- function(db, sp) {
-  .ncbi_throttle()
-  .safe_search(
-    db          = db,
-    term        = paste0(sp, '[Organism]'),
-    retmax      = .NCBI_RETMAX,
-    use_history = TRUE
-  )$result
-}
-
-.safe_entrez_summary <- function(db, id, retries = 10, wait = 0.5) {
+.safe_entrez_search <- function(db, term, retmax = .NCBI_RETMAX, use_history = TRUE, retries = 10, wait = 0.5) {
   for (i in seq_len(retries)) {
-    .ncbi_throttle()
-    out <- try(rentrez::entrez_summary(db = db, id = id), silent = TRUE)
+    out <- try(
+    rentrez::entrez_search(
+      db          = db,
+      term        = term,
+      retmax      = retmax,
+      use_history = use_history
+    ),
+    silent = TRUE
+    )
     if (!inherits(out, 'try-error') && !is.null(out)) return(out)
     Sys.sleep(wait * i)
   }
-  .gama_stop('NCBI esummary repeatedly failed for: ', paste(id, collapse = ', '))
+  .gama_stop('NCBI esearch repeatedly failed for ', db, ': ', term)
+}
+
+.ncbi_search <- function(db, sp) {
+  .safe_entrez_search(
+  db          = db,
+  term        = paste0(sp, '[Organism]'),
+  retmax      = .NCBI_RETMAX,
+  use_history = TRUE
+  )
+}
+
+.safe_entrez_summary <- function(db, ..., retries = 10, wait = 0.5) {
+  for (i in seq_len(retries)) {
+    out <- try(rentrez::entrez_summary(db = db, ...), silent = TRUE)
+    if (!inherits(out, 'try-error') && !is.null(out)) return(out)
+    Sys.sleep(wait * i)
+  }
+  .gama_stop('NCBI esummary repeatedly failed for db = ', db, '.')
+}
+
+.search_count <- function(x) {
+  as.integer(x$count %||% 0L)
+}
+
+.search_ids <- function(x) {
+  x$ids %||% character()
+}
+
+.search_has_history <- function(x) {
+  !is.null(x$web_history)
+}
+
+.search_is_truncated <- function(x) {
+  .search_count(x) > length(.search_ids(x))
 }
 
 .fetch_esummary_batched <- function(db, ids, batch_size = 100) {
@@ -83,11 +93,57 @@
   out <- vector('list', length(ids))
   names(out) <- ids
   for (b in batches) {
-    res <- .safe_entrez_summary(db, b)
+    res <- .safe_entrez_summary(db, id = b)
     res <- .normalise_esummary_list(res, b)
     out[b] <- res[b]
   }
   out
+}
+
+.esummary_uid <- function(x, fallback = NA_character_) {
+  uid <- .flatten_to_char(x$uid %||% x$id %||% x$Id)
+  if (is.na(uid) || !nzchar(uid)) fallback else uid
+}
+
+.normalise_esummary_history_list <- function(SUMS) {
+  if (is.null(SUMS)) return(stats::setNames(vector('list', 0), character()))
+  out <- if (inherits(SUMS, 'esummary')) list(SUMS) else as.list(SUMS)
+  if (!length(out)) return(stats::setNames(vector('list', 0), character()))
+  nms <- names(out) %||% rep('', length(out))
+  nms <- vapply(seq_along(out), function(i) {
+    if (!is.na(nms[[i]]) && nzchar(nms[[i]])) return(nms[[i]])
+    .esummary_uid(out[[i]], fallback = as.character(i))
+  }, character(1))
+  names(out) <- nms
+  out
+}
+
+.fetch_esummary_history_batched <- function(db, web_history, count, batch_size = 100) {
+  count <- as.integer(count %||% 0L)
+  if (!count || is.null(web_history)) return(stats::setNames(vector('list', 0), character()))
+  starts <- seq.int(0L, count - 1L, by = batch_size)
+  out <- list()
+  for (start in starts) {
+    size <- min(batch_size, count - start)
+    res <- .safe_entrez_summary(
+    db          = db,
+    web_history = web_history,
+    retstart    = start,
+    retmax      = size
+    )
+    out <- c(out, .normalise_esummary_history_list(res))
+  }
+  out
+}
+
+.fetch_search_summaries <- function(db, search, batch_size = 100) {
+  count <- .search_count(search)
+  ids   <- .search_ids(search)
+  if (count == 0L) return(stats::setNames(vector('list', 0), character()))
+  if (length(ids) && count <= length(ids)) return(.fetch_esummary_batched(db, ids, batch_size = batch_size))
+  if (.search_has_history(search)) return(.fetch_esummary_history_batched(db, search$web_history, count, batch_size = batch_size))
+  if (length(ids)) return(.fetch_esummary_batched(db, ids, batch_size = batch_size))
+  stats::setNames(vector('list', 0), character())
 }
 
 .normalise_esummary_list <- function(SUMS, IDS) {

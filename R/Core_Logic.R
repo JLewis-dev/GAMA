@@ -38,18 +38,17 @@
 )
 
 .score_species <- function(assembly, sra, biosample) {
-  if (is.null(assembly) || (assembly$count %||% 0L) == 0L) {
+  if (is.null(assembly) || .search_count(assembly) == 0L) {
     best_score  <- 0
     total_score <- 0
     richness    <- 0
   } else {
-    IDS <- assembly$ids %||% character()
-    if (!length(IDS)) {
+    SUMS <- .fetch_search_summaries('assembly', assembly)
+    if (!length(SUMS)) {
       best_score  <- 0
       total_score <- 0
       richness    <- 0
     } else {
-      SUMS <- .fetch_esummary_batched('assembly', IDS)
       LEVELS <- sapply(SUMS, .extract_assembly_level)
       STRUCT <- .ASSEMBLY_WEIGHTS[LEVELS]
       STRUCT[is.na(STRUCT)] <- 0
@@ -570,8 +569,8 @@ title_raw = NA_character_) {
     if (!length(species)) .gama_stop('No matching species found.')
     results <- results[species]
   }
-  SRA_IDS <- unique(unlist(purrr::map(results, ~ .x$sra$ids %||% character())))
-  if (!length(SRA_IDS)) {
+  HAS_SRA <- vapply(results, function(x) .search_count(x$sra) > 0L, logical(1))
+  if (!any(HAS_SRA)) {
     return(tibble::tibble(
     species       = character(),
     entrez_uid    = character(),
@@ -586,22 +585,26 @@ title_raw = NA_character_) {
     gsm_ids       = character()
     ))
   }
-  ID_TO_SPECIES <- unlist(purrr::map(names(results), function(sp) {
-    ids <- results[[sp]]$sra$ids %||% character()
-    if (!length(ids)) return(character())
-    stats::setNames(rep(sp, length(ids)), ids)
-  }))
-  batch_size <- 200
-  BATCHES <- split(SRA_IDS, ceiling(seq_along(SRA_IDS) / batch_size))
-  pb <- .pb_init(length(BATCHES))
+  batch_total <- sum(vapply(results[HAS_SRA], function(x) {
+    sra <- x$sra
+    count <- .search_count(sra)
+    ids <- .search_ids(sra)
+    if (count == 0L) return(0L)
+    if (length(ids) && count <= length(ids)) return(as.integer(ceiling(length(ids) / 100L)))
+    if (.search_has_history(sra)) return(as.integer(ceiling(count / 100L)))
+    if (length(ids)) return(as.integer(ceiling(length(ids) / 100L)))
+    0L
+  }, integer(1)))
+  pb <- .pb_init(max(1L, batch_total))
   OUT <- list()
-  for (i in seq_along(BATCHES)) {
-    .pb_tick(pb, i)
-    ids  <- BATCHES[[i]]
-    SUMS <- .fetch_esummary_batched('sra', ids)
-    SUMS <- .normalise_esummary_list(SUMS, ids)
-    for (acc in names(SUMS)) {
-      x <- SUMS[[acc]]
+  idx <- 0L
+  tick <- 0L
+  append_sums <- function(SUMS, sp, OUT, idx) {
+    if (!length(SUMS)) return(list(OUT = OUT, idx = idx))
+    for (j in seq_along(SUMS)) {
+      x <- SUMS[[j]]
+      acc <- names(SUMS)[j]
+      if (is.na(acc) || !nzchar(acc)) acc <- .esummary_uid(x)
       strategy_raw  <- .extract_xml_tag(x$expxml, 'LIBRARY_STRATEGY')
       strategy_norm <- .normalise_strategy(strategy_raw)
       cls           <- .classify_strategy(strategy_norm, .ONTOLOGY)
@@ -633,8 +636,8 @@ title_raw = NA_character_) {
       geo_linked <- .is_geo_linked(geo$GSE, geo$GSM)
       gse_ids <- .collapse_acc(geo$GSE)
       gsm_ids <- .collapse_acc(geo$GSM)
-      sp <- ID_TO_SPECIES[[acc]] %||% NA_character_
-      OUT[[acc]] <- tibble::tibble(
+      idx <- idx + 1L
+      OUT[[idx]] <- tibble::tibble(
       species       = sp,
       entrez_uid    = acc,
       biosample     = sra_ids$biosample,
@@ -647,6 +650,57 @@ title_raw = NA_character_) {
       gse_ids       = gse_ids,
       gsm_ids       = gsm_ids
       )
+    }
+    list(OUT = OUT, idx = idx)
+  }
+  for (i in seq_along(results)) {
+    sp <- names(results)[i]
+    sra <- results[[i]]$sra
+    if (is.null(sra) || .search_count(sra) == 0L) next
+    ids <- .search_ids(sra)
+    if (length(ids) && .search_count(sra) <= length(ids)) {
+      BATCHES <- split(ids, ceiling(seq_along(ids) / 100L))
+      for (b in BATCHES) {
+        SUMS <- .safe_entrez_summary('sra', id = b)
+        SUMS <- .normalise_esummary_list(SUMS, b)
+        tmp <- append_sums(SUMS, sp, OUT, idx)
+        OUT <- tmp$OUT
+        idx <- tmp$idx
+        tick <- tick + 1L
+        .pb_tick(pb, tick)
+      }
+      next
+    }
+    if (.search_has_history(sra)) {
+      STARTS <- seq.int(0L, .search_count(sra) - 1L, by = 100L)
+      for (start in STARTS) {
+        size <- min(100L, .search_count(sra) - start)
+        SUMS <- .safe_entrez_summary(
+        db          = 'sra',
+        web_history = sra$web_history,
+        retstart    = start,
+        retmax      = size
+        )
+        SUMS <- .normalise_esummary_history_list(SUMS)
+        tmp <- append_sums(SUMS, sp, OUT, idx)
+        OUT <- tmp$OUT
+        idx <- tmp$idx
+        tick <- tick + 1L
+        .pb_tick(pb, tick)
+      }
+      next
+    }
+    if (length(ids)) {
+      BATCHES <- split(ids, ceiling(seq_along(ids) / 100L))
+      for (b in BATCHES) {
+        SUMS <- .safe_entrez_summary('sra', id = b)
+        SUMS <- .normalise_esummary_list(SUMS, b)
+        tmp <- append_sums(SUMS, sp, OUT, idx)
+        OUT <- tmp$OUT
+        idx <- tmp$idx
+        tick <- tick + 1L
+        .pb_tick(pb, tick)
+      }
     }
   }
   .pb_close(pb)

@@ -36,16 +36,21 @@
 query_species <- function(species) {
   species     <- unique(species)
   n           <- length(species)
-  pb          <- .pb_init(n)
+  pb          <- .pb_init(3L * n)
   RESULTS     <- lapply(seq_along(species), function(i) {
     sp        <- species[i]
-    RES       <- list(
-    assembly  = .ncbi_search('assembly',  sp),
-    sra       = .ncbi_search('sra',       sp),
-    biosample = .ncbi_search('biosample', sp)
+    tick      <- 3L * (i - 1L)
+    assembly  <- .ncbi_search('assembly',  sp)
+    .pb_tick(pb, tick + 1L)
+    sra       <- .ncbi_search('sra',       sp)
+    .pb_tick(pb, tick + 2L)
+    biosample <- .ncbi_search('biosample', sp)
+    .pb_tick(pb, tick + 3L)
+    list(
+    assembly  = assembly,
+    sra       = sra,
+    biosample = biosample
     )
-    .pb_tick(pb, i)
-    RES
   })
   .pb_close(pb)
   no_hits <- species[vapply(RESULTS, function(x) {
@@ -376,11 +381,25 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
       ftp_path      = NA_character_
       ))
     }
-    IDS  <- asm$ids %||% character()
-    SUMS <- .fetch_esummary_batched('assembly', IDS)
-    SUMS <- .normalise_esummary_list(SUMS, IDS)
-    do.call(dplyr::bind_rows, lapply(names(SUMS), function(acc) {
-      x <- SUMS[[acc]]
+    SUMS <- .fetch_search_summaries('assembly', asm, batch_size = 100)
+    if (!length(SUMS)) {
+      return(tibble::tibble(
+      species       = sp,
+      accession     = NA_character_,
+      level         = NA_character_,
+      n50           = NA_real_,
+      coverage      = NA_real_,
+      biosample     = NA_character_,
+      bioproject    = NA_character_,
+      submitter     = NA_character_,
+      release_date  = NA_character_,
+      ftp_path      = NA_character_
+      ))
+    }
+    do.call(dplyr::bind_rows, lapply(seq_along(SUMS), function(j) {
+      x <- SUMS[[j]]
+      acc <- names(SUMS)[j]
+      if (is.na(acc) || !nzchar(acc)) acc <- .esummary_uid(x)
       tibble::tibble(
       species       = sp,
       accession     = acc,
@@ -398,32 +417,18 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
   .pb_close(pb)
   META <- dplyr::bind_rows(META)
   if (!best) return(.as_gdt_table(META, results))
-  BEST <- lapply(seq_along(results), function(i) {
-    sp  <- names(results)[i]
-    res <- results[[i]]
-    asm <- res$assembly
-    if (is.null(asm) || (asm$count %||% 0L) == 0L) {
-      return(tibble::tibble(species = sp, accession = NA_character_))
-    }
-    IDS  <- asm$ids %||% character()
-    SUMS <- .fetch_esummary_batched('assembly', IDS)
-    SUMS <- .normalise_esummary_list(SUMS, IDS)
-    LEVELS <- sapply(SUMS, .extract_assembly_level)
-    STRUCT <- .ASSEMBLY_WEIGHTS[LEVELS]
+  BEST <- lapply(split(META, META$species), function(x) {
+    STRUCT <- .ASSEMBLY_WEIGHTS[x$level]
     STRUCT[is.na(STRUCT)] <- 0
-    N50 <- sapply(SUMS, .extract_n50)
+    N50 <- x$n50
     max_struct <- max(STRUCT)
     tied_idx   <- which(STRUCT == max_struct)
     best_idx <- if (length(tied_idx) > 1) {
       tied_idx[which.max(N50[tied_idx])]
     } else tied_idx
-    tibble::tibble(
-    species   = sp,
-    accession = IDS[best_idx]
-    )
+    x[best_idx, , drop = FALSE]
   })
-  BEST <- dplyr::bind_rows(BEST)
-  OUT  <- dplyr::inner_join(META, BEST, by = c('species', 'accession'))
+  OUT <- dplyr::bind_rows(BEST)
   .as_gdt_table(OUT, results)
 }
 

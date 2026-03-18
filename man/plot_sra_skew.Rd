@@ -9,13 +9,13 @@ plot_sra_skew(
   species = NULL,
   rank = c("highest", "lowest", "A-Z", "Z-A", "input"),
   abbreviate = TRUE,
-  show_points = TRUE,
-  point_colour = "#56C5A8",
   theme_fn = ggplot2::theme_minimal,
   colours = c(box = "#E3F9F2", line = "black"),
+  show_points = TRUE,
+  point_colour = "#56C5A8",
+  point_alpha = 0.25,
   show_labels = TRUE,
-  label_digits = 1L,
-  point_alpha = 0.25
+  label_digits = 1L
 )
 }
 \arguments{
@@ -27,20 +27,20 @@ plot_sra_skew(
 
 \item{abbreviate}{Logical; if TRUE (default), abbreviate species labels.}
 
+\item{theme_fn}{A ggplot2 theme function.}
+
+\item{colours}{Named character vector for box fill and line colours.}
+
 \item{show_points}{Logical; if TRUE (default), overlay per-unit points.}
 
 \item{point_colour}{Colour for the overlaid data points (character).}
 
-\item{theme_fn}{A ggplot2 theme function.}
-
-\item{colours}{Named character vector for box fill and line colours.}
+\item{point_alpha}{Numeric alpha (transparency) for overlaid points.}
 
 \item{show_labels}{Logical; if TRUE (default), label each box with eff and
 n.}
 
 \item{label_digits}{Integer; decimal places for eff labels.}
-
-\item{point_alpha}{Numeric alpha (transparency) for overlaid points.}
 }
 \value{
 A ggplot object.

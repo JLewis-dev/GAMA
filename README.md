@@ -42,16 +42,11 @@ pak::pak('JLewis-dev/GAMA')
 library(GAMA)
 ```
 
-### 2. Configure NCBI access (recommended)
-
-To improve rate limits and ensure responsible use of NCBI services:
+### 2. Configure NCBI access to improve rate limits (recommended)
 
 ``` r
-options(ENTREZ_EMAIL = 'your.email@example.com')
-#rentrez::set_entrez_key('YOUR_API_KEY')
+rentrez::set_entrez_key('YOUR_API_KEY')
 ```
-
-Uncomment and add your API key if you have one.
 
 ### 3. Query NCBI databases using a list of species
 

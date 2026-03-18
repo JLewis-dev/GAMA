@@ -465,14 +465,14 @@ plot_sra_geo <- function(
 #' @param species NULL (default) to include all species, or a character vector.
 #' @param rank One of 'highest' (default), 'lowest', 'A-Z', 'Z-A', or 'input'.
 #' @param abbreviate Logical; if TRUE (default), abbreviate species labels.
-#' @param show_points Logical; if TRUE (default), overlay per-unit points.
-#' @param point_colour Colour for the overlaid data points (character).
 #' @param theme_fn A ggplot2 theme function.
 #' @param colours Named character vector for box fill and line colours.
+#' @param show_points Logical; if TRUE (default), overlay per-unit points.
+#' @param point_colour Colour for the overlaid data points (character).
+#' @param point_alpha Numeric alpha (transparency) for overlaid points.
 #' @param show_labels Logical; if TRUE (default), label each box with eff and
 #'   n.
 #' @param label_digits Integer; decimal places for eff labels.
-#' @param point_alpha Numeric alpha (transparency) for overlaid points.
 #'
 #' @return A ggplot object.
 #'
@@ -489,13 +489,13 @@ plot_sra_skew <- function(
     species      = NULL,
     rank         = c('highest', 'lowest', 'A-Z', 'Z-A', 'input'),
     abbreviate   = TRUE,
-    show_points  = TRUE,
-    point_colour = '#56C5A8',
     theme_fn     = ggplot2::theme_minimal,
     colours      = c(box = '#E3F9F2', line = 'black'),
+    show_points  = TRUE,
+    point_colour = '#56C5A8',
+    point_alpha  = 0.25,
     show_labels  = TRUE,
-    label_digits = 1L,
-    point_alpha  = 0.25
+    label_digits = 1L
 ) {
   rank <- match.arg(rank)
   if (!all(c('species', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff') %in% names(SKEW))) .gama_stop('Input must be the output of summarise_sra_skew().')

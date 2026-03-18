@@ -1,3 +1,27 @@
+# GAMA 0.2.4
+
+## Reliability
+- Replaced safe-search path with retrying `entrez_search()` wrappers
+- Added `web_history`-aware summary retrieval for large Entrez result sets
+
+## Refactoring
+- Switched metadata retrieval to species-local batching
+- Simplified NCBI configuration to API key support only
+- Removed GAMA request throttling and related legacy code
+- Eliminated redundant Assembly summary refetching during metadata extraction
+- Removed redundant legacy SRA batch-size code
+
+## Progress reporting
+- Updated `query_species()` to tick once per completed Assembly, SRA, and BioSample search
+
+## Documentation
+- Updated the GAMA user guide to reflect revised NCBI configuration and history-aware retrieval behaviour
+
+## Testing
+- Confirmed functionality with end-to-end workflow tests
+
+---
+
 # GAMA 0.2.3
 
 ## Reliability
