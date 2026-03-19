@@ -2,7 +2,7 @@
 **Genomic Availability & Metadata Analysis Tool**
 
 > ⚠️ **Development Status: Active / Early Stage**  
-> GAMA is currently in early development. Interfaces, outputs, and scoring methods may change.  
+> GAMA is currently in early development. Interfaces, methods, and outputs may change.  
 > Users are encouraged to validate results independently and report issues.
 
 GAMA is an R-based framework for surveying publicly accessible sequencing data across NCBI Assembly, SRA, and BioSample. Its aim is to support feasibility assessments for *in silico* research on underutilised plants.
@@ -42,11 +42,13 @@ pak::pak('JLewis-dev/GAMA')
 library(GAMA)
 ```
 
-### 2. Configure NCBI access to improve rate limits (recommended)
+### 2. Configure NCBI access to improve rate limits (optional)
 
 ``` r
-rentrez::set_entrez_key('YOUR_API_KEY')
+#rentrez::set_entrez_key('YOUR_API_KEY')
 ```
+
+Uncomment and add your API key if you have one.
 
 ### 3. Query NCBI databases using a list of species
 

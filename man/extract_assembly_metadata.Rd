@@ -17,7 +17,7 @@ character vector specifying which species to extract.}
 }
 \value{
 A tibble with one row per assembly (or one row per species when
-\code{best = TRUE}). Fields include species, accession, assembly level, N50,
+\code{best = TRUE}). Fields include species, entrez_uid, assembly level, N50,
 coverage, BioSample/BioProject accessions, submitter, release date, and FTP
 path (where available). The tibble has class \code{gdt_tbl} and carries a
 \code{query_info} attribute for provenance.

@@ -337,7 +337,7 @@ include_geo = FALSE) {
 #' @param best Logical; if `TRUE`, return only the best assembly per species.
 #'
 #' @return A tibble with one row per assembly (or one row per species when
-#' `best = TRUE`). Fields include species, accession, assembly level, N50,
+#' `best = TRUE`). Fields include species, entrez_uid, assembly level, N50,
 #' coverage, BioSample/BioProject accessions, submitter, release date, and FTP
 #' path (where available). The tibble has class `gdt_tbl` and carries a
 #' `query_info` attribute for provenance.
@@ -370,7 +370,7 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
     if (is.null(asm) || (asm$count %||% 0L) == 0L) {
       return(tibble::tibble(
       species       = sp,
-      accession     = NA_character_,
+      entrez_uid    = NA_character_,
       level         = NA_character_,
       n50           = NA_real_,
       coverage      = NA_real_,
@@ -385,7 +385,7 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
     if (!length(SUMS)) {
       return(tibble::tibble(
       species       = sp,
-      accession     = NA_character_,
+      entrez_uid    = NA_character_,
       level         = NA_character_,
       n50           = NA_real_,
       coverage      = NA_real_,
@@ -402,7 +402,7 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
       if (is.na(acc) || !nzchar(acc)) acc <- .esummary_uid(x)
       tibble::tibble(
       species       = sp,
-      accession     = acc,
+      entrez_uid    = acc,
       level         = .extract_assembly_level(x),
       n50           = .extract_n50(x),
       coverage      = as.numeric(.flatten_to_char(x$coverage)),

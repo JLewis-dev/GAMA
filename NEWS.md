@@ -1,3 +1,13 @@
+# GAMA 0.2.5
+
+## API changes
+- Renamed `extract_assembly_metadata()` output column `accession` to `entrez_uid` for semantic correctness
+
+## Documentation
+- Updated the user guide accordingly
+
+---
+
 # GAMA 0.2.4
 
 ## Reliability

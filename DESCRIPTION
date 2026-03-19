@@ -1,6 +1,6 @@
 Package: GAMA
 Title: Genomic Availability & Metadata Analysis Tool
-Version: 0.2.4
+Version: 0.2.5
 Authors@R:
     person('James', 'Lewis',
            email = 'James.Lewis-2022@outlook.com',
