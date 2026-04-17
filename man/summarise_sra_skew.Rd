@@ -48,9 +48,13 @@ few units.
 }
 \examples{
 \dontrun{
+RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 SRA_SUMMARY <- summarise_sra_availability(RESULTS)
-SKEW <- summarise_sra_skew(SRA_SUMMARY)
+SKEW <- summarise_sra_skew(SRA_SUMMARY, class = 'transcriptomic')
 print(SKEW)
 }
 
+}
+\seealso{
+\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}, \code{\link[=plot_sra_skew]{plot_sra_skew()}}
 }

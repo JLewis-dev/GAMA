@@ -37,9 +37,8 @@ When \code{best = TRUE}, the best assembly is selected using structural-weightin
 RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 ASM <- extract_assembly_metadata(RESULTS, best = TRUE)
 print(ASM)
-attr(ASM, 'query_info')
 }
 }
 \seealso{
-\code{\link[=query_species]{query_species()}}
+\code{\link[=query_species]{query_species()}}, \code{\link[=summarise_availability]{summarise_availability()}}
 }

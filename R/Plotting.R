@@ -18,7 +18,7 @@
 #'
 #' @return A ggplot object showing stacked bar segments for each species.
 #'
-#' @seealso [query_species()], [summarise_availability()]
+#' @seealso [summarise_availability()]
 #'
 #' @examples
 #' \dontrun{
@@ -118,7 +118,7 @@ BioSample = '#56C5A8'
 #' @return A ggplot object showing proportional SRA modality profiles across
 #' species.
 #'
-#' @seealso [summarise_sra_availability()], [plot_sra_geo()]
+#' @seealso [summarise_sra_availability()]
 #'
 #' @examples
 #' \dontrun{
@@ -275,7 +275,7 @@ plot_sra_availability <- function(
 #' @return A ggplot object (single species) or a named list of ggplot objects
 #' (multiple species).
 #'
-#' @seealso [summarise_sra_availability()], [plot_sra_availability()]
+#' @seealso [summarise_sra_availability()]
 #'
 #' @examples
 #' \dontrun{
@@ -476,10 +476,13 @@ plot_sra_geo <- function(
 #'
 #' @return A ggplot object.
 #'
+#' @seealso [summarise_sra_skew()]
+#'
 #' @examples
 #' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 #' SRA_SUMMARY <- summarise_sra_availability(RESULTS)
-#' SKEW  <- summarise_sra_skew(SRA_SUMMARY)
+#' SKEW  <- summarise_sra_skew(SRA_SUMMARY, class = 'transcriptomic')
 #' plot_sra_skew(SKEW)
 #' }
 #'

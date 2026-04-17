@@ -4,18 +4,25 @@
 \alias{query_species}
 \title{Query NCBI databases using species list}
 \usage{
-query_species(species)
+query_species(species, synonyms = NULL)
 }
 \arguments{
 \item{species}{Character vector of binomial species names (e.g.
 'Vigna angularis'). Duplicates are removed with \code{\link[=unique]{unique()}}.}
+
+\item{synonyms}{\code{NULL} (default) for no synonym collapse, or a named list
+or named character vector mapping canonical species names to one or more
+synonymous names. Query results for each canonical species are merged across
+all supplied names using unique database record identifiers.}
 }
 \value{
-A named list with one element per species. Each element is a list
-with components \code{assembly}, \code{sra}, and \code{biosample} containing
+A named list with one element per canonical species. Each element is
+a list with components \code{assembly}, \code{sra}, and \code{biosample} containing
 database-specific search results (including counts and record identifiers,
-depending on the internal search implementation). The output has a
-\code{query_info} attribute storing query provenance.
+depending on the internal search implementation). When \code{synonyms} is used,
+aliases are merged under the canonical species name without double counting
+repeated record identifiers. The output has a \code{query_info} attribute storing
+query provenance.
 }
 \description{
 Queries NCBI Assembly, SRA, and BioSample and returns per-species search
@@ -26,18 +33,24 @@ the \code{query_info} attribute.
 \code{query_species()} is the entry point for the NCBI search phase. Each species
 is queried independently across the supported databases, and results are
 stored in a per-species list with components \code{assembly}, \code{sra}, and
-\code{biosample}.
+\code{biosample}. When \code{synonyms} is supplied, results are collapsed under the
+canonical species names using unique database record identifiers.
 
 The returned object has an attribute \code{query_info} containing the tool
-version, query timestamp (UTC), database names, and the search terms used.
+version, query timestamp (UTC), database names, queried terms, and any
+synonym groups used for canonical collapse.
 }
 \examples{
 \dontrun{
-RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+RESULTS <- query_species(
+  c('Vigna angularis', 'Vigna reflexo-pilosa', 'Vigna vexillata'),
+  synonyms = list('Vigna reflexo-pilosa' = 'Vigna glabrescens')
+)
 str(RESULTS, max.level = 2)
 attr(RESULTS, 'query_info')
 }
 }
 \seealso{
-\code{\link[=summarise_availability]{summarise_availability()}}
+\code{\link[=summarise_availability]{summarise_availability()}}, \code{\link[=summarise_sra_availability]{summarise_sra_availability()}},
+\code{\link[=extract_assembly_metadata]{extract_assembly_metadata()}}, \code{\link[=extract_sra_metadata]{extract_sra_metadata()}}
 }

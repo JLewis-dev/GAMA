@@ -44,5 +44,5 @@ plot_availability(SUMMARY)
 }
 }
 \seealso{
-\code{\link[=query_species]{query_species()}}, \code{\link[=summarise_availability]{summarise_availability()}}
+\code{\link[=summarise_availability]{summarise_availability()}}
 }

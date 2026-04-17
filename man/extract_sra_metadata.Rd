@@ -53,7 +53,6 @@ SRA <- extract_sra_metadata(
   class = 'genomic'
 )
 print(SRA)
-attr(SRA, 'query_info')
 }
 }
 \seealso{

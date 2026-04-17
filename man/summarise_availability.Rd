@@ -34,7 +34,6 @@ over from the \code{results} object.
 RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 SUMMARY <- summarise_availability(RESULTS)
 print(SUMMARY)
-attr(SUMMARY, 'query_info')
 }
 }
 \seealso{

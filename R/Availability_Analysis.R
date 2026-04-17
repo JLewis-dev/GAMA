@@ -10,39 +10,52 @@
 #' `query_species()` is the entry point for the NCBI search phase. Each species
 #' is queried independently across the supported databases, and results are
 #' stored in a per-species list with components `assembly`, `sra`, and
-#' `biosample`.
+#' `biosample`. When `synonyms` is supplied, results are collapsed under the
+#' canonical species names using unique database record identifiers.
 #'
 #' The returned object has an attribute `query_info` containing the tool
-#' version, query timestamp (UTC), database names, and the search terms used.
+#' version, query timestamp (UTC), database names, queried terms, and any
+#' synonym groups used for canonical collapse.
 #'
 #' @param species Character vector of binomial species names (e.g.
 #' 'Vigna angularis'). Duplicates are removed with [unique()].
+#' @param synonyms `NULL` (default) for no synonym collapse, or a named list
+#' or named character vector mapping canonical species names to one or more
+#' synonymous names. Query results for each canonical species are merged across
+#' all supplied names using unique database record identifiers.
 #'
-#' @return A named list with one element per species. Each element is a list
-#' with components `assembly`, `sra`, and `biosample` containing
+#' @return A named list with one element per canonical species. Each element is
+#' a list with components `assembly`, `sra`, and `biosample` containing
 #' database-specific search results (including counts and record identifiers,
-#' depending on the internal search implementation). The output has a
-#' `query_info` attribute storing query provenance.
+#' depending on the internal search implementation). When `synonyms` is used,
+#' aliases are merged under the canonical species name without double counting
+#' repeated record identifiers. The output has a `query_info` attribute storing
+#' query provenance.
 #'
-#' @seealso [summarise_availability()]
+#' @seealso [summarise_availability()], [summarise_sra_availability()],
+#' [extract_assembly_metadata()], [extract_sra_metadata()]
 #'
 #' @examples
 #' \dontrun{
-#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' RESULTS <- query_species(
+#'   c('Vigna angularis', 'Vigna reflexo-pilosa', 'Vigna vexillata'),
+#'   synonyms = list('Vigna reflexo-pilosa' = 'Vigna glabrescens')
+#' )
 #' str(RESULTS, max.level = 2)
 #' attr(RESULTS, 'query_info')
 #' }
 #' @export
-query_species <- function(species) {
-  species     <- unique(species)
-  n           <- length(species)
-  pb          <- .pb_init(3L * n)
-  RESULTS     <- lapply(seq_along(species), function(i) {
-    sp        <- species[i]
-    tick      <- 3L * (i - 1L)
-    assembly  <- .ncbi_search('assembly',  sp)
+query_species <- function(species, synonyms = NULL) {
+  SPEC <- .prepare_synonym_map(species, synonyms = synonyms)
+  QUERY_TERMS <- unique(unlist(SPEC$query_terms, use.names = FALSE))
+  n <- length(QUERY_TERMS)
+  pb <- .pb_init(3L * n)
+  SEARCHES <- lapply(seq_along(QUERY_TERMS), function(i) {
+    sp <- QUERY_TERMS[i]
+    tick <- 3L * (i - 1L)
+    assembly <- .ncbi_search('assembly', sp)
     .pb_tick(pb, tick + 1L)
-    sra       <- .ncbi_search('sra',       sp)
+    sra <- .ncbi_search('sra', sp)
     .pb_tick(pb, tick + 2L)
     biosample <- .ncbi_search('biosample', sp)
     .pb_tick(pb, tick + 3L)
@@ -53,7 +66,28 @@ query_species <- function(species) {
     )
   })
   .pb_close(pb)
-  no_hits <- species[vapply(RESULTS, function(x) {
+  names(SEARCHES) <- QUERY_TERMS
+  RESULTS <- lapply(SPEC$species, function(sp) {
+    terms <- SPEC$query_terms[[sp]]
+    list(
+    assembly  = .collapse_searches(lapply(terms, function(term) SEARCHES[[term]]$assembly)),
+    sra       = .collapse_searches(lapply(terms, function(term) SEARCHES[[term]]$sra)),
+    biosample = .collapse_searches(lapply(terms, function(term) SEARCHES[[term]]$biosample))
+    )
+  })
+  names(RESULTS) <- SPEC$species
+  merged <- names(SPEC$synonyms)[lengths(SPEC$synonyms) > 0L]
+  if (length(merged) > 0L) {
+    if (length(merged) <= 10L) {
+      lab <- vapply(merged, function(sp) {
+        paste0(sp, ' <- ', paste(SPEC$synonyms[[sp]], collapse = ', '))
+      }, character(1))
+      .gama_msg('Collapsing synonym queries under canonical species names: ', paste(lab, collapse = '; '), '.')
+    } else {
+      .gama_msg('Collapsing synonym queries for ', length(merged), ' species.')
+    }
+  }
+  no_hits <- SPEC$species[vapply(RESULTS, function(x) {
     a <- x$assembly$count %||% 0L
     s <- x$sra$count %||% 0L
     b <- x$biosample$count %||% 0L
@@ -63,13 +97,14 @@ query_species <- function(species) {
     if (length(no_hits) <= 10L) {
       .gama_msg('No records found across Assembly/SRA/BioSample for: ', paste(no_hits, collapse = ', '), '.')
     } else {
-      .gama_msg('No records found across Assembly/SRA/BioSample for ', length(no_hits), ' of ', n, ' species.')
+      .gama_msg('No records found across Assembly/SRA/BioSample for ', length(no_hits), ' of ', length(SPEC$species), ' species.')
     }
   }
-  names(RESULTS) <- species
   attr(RESULTS, 'query_info') <- .make_query_info(
-  species = species,
-  dbs     = c('assembly', 'sra', 'biosample')
+  species     = SPEC$species,
+  dbs         = c('assembly', 'sra', 'biosample'),
+  query_terms = SPEC$query_terms,
+  synonyms    = SPEC$synonyms
   )
   RESULTS
 }
@@ -103,7 +138,6 @@ query_species <- function(species) {
 #' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 #' SUMMARY <- summarise_availability(RESULTS)
 #' print(SUMMARY)
-#' attr(SUMMARY, 'query_info')
 #' }
 #' @export
 summarise_availability <- function(results) {
@@ -165,8 +199,8 @@ summarise_availability <- function(results) {
 #' UID-level profile as attribute `sra_profile` (see “Profile cache”), plus
 #' metadata in `sra_profile_info`.
 #'
-#' @seealso [summarise_sra_skew()], [extract_sra_metadata()],
-#' [plot_sra_availability()], [plot_sra_geo()]
+#' @seealso [query_species()], [plot_sra_availability()], [plot_sra_geo()],
+#' [summarise_sra_skew()], [extract_sra_metadata()]
 #'
 #' @examples
 #' \dontrun{
@@ -342,14 +376,13 @@ include_geo = FALSE) {
 #' path (where available). The tibble has class `gdt_tbl` and carries a
 #' `query_info` attribute for provenance.
 #'
-#' @seealso [query_species()]
+#' @seealso [query_species()], [summarise_availability()]
 #'
 #' @examples
 #' \dontrun{
 #' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 #' ASM <- extract_assembly_metadata(RESULTS, best = TRUE)
 #' print(ASM)
-#' attr(ASM, 'query_info')
 #' }
 #' @export
 extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
@@ -469,7 +502,6 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
 #'   class = 'genomic'
 #' )
 #' print(SRA)
-#' attr(SRA, 'query_info')
 #' }
 #' @export
 extract_sra_metadata <- function(results,
@@ -547,10 +579,13 @@ only_geo = FALSE) {
 #' `class`, `min`, `q25`, `med`, `q75`, `max` (experiments per unit), and `eff`
 #' (effective number of units; inverse Simpson index).
 #'
+#' @seealso [summarise_sra_availability()], [plot_sra_skew()]
+#'
 #' @examples
 #' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 #' SRA_SUMMARY <- summarise_sra_availability(RESULTS)
-#' SKEW <- summarise_sra_skew(SRA_SUMMARY)
+#' SKEW <- summarise_sra_skew(SRA_SUMMARY, class = 'transcriptomic')
 #' print(SKEW)
 #' }
 #'

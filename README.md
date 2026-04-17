@@ -72,14 +72,14 @@ plot_availability(SUMMARY)
 ### 6. Summarise SRA modality composition
 
 ``` r
-META <- summarise_sra_availability(RESULTS)
-print(META)
+SRA_SUMMARY <- summarise_sra_availability(RESULTS)
+print(SRA_SUMMARY)
 ```
 
 ### 7. Visualise SRA modality composition
 
 ``` r
-plot_sra_availability(META)
+plot_sra_availability(SRA_SUMMARY)
 ```
 
 ### 8. Extract filtered Assembly accession metadata

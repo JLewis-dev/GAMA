@@ -55,9 +55,13 @@ attr(SKEW, 'sra_profile').
 }
 \examples{
 \dontrun{
+RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 SRA_SUMMARY <- summarise_sra_availability(RESULTS)
-SKEW  <- summarise_sra_skew(SRA_SUMMARY)
+SKEW  <- summarise_sra_skew(SRA_SUMMARY, class = 'transcriptomic')
 plot_sra_skew(SKEW)
 }
 
+}
+\seealso{
+\code{\link[=summarise_sra_skew]{summarise_sra_skew()}}
 }

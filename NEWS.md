@@ -1,3 +1,27 @@
+# GAMA 0.2.6
+
+## Features
+- Added synonym-aware querying to `query_species()` via a new `synonyms` argument
+- Query results can now be collapsed under canonical species names across Assembly, SRA, and BioSample using unique database record identifiers
+- Synonym-collapsed results are returned as one bucket per canonical species without double counting repeated record IDs
+
+## Refactoring
+- Added internal helpers for synonym parsing, validation, canonical mapping, and search-result collapse
+- Standardised collapsed search outputs so synonym-merged results retain a consistent internal structure for downstream workflows
+
+## Provenance
+- Expanded `query_info` to record queried terms and synonym groups in addition to tool version, query timestamp, and database names
+
+## Documentation
+- Expanded roxygen `@seealso` cross-references across user-facing functions for clearer upstream/downstream navigation
+- Updated `query_species()` roxygen to describe and demonstrate the new `synonyms` argument
+- Updated the GAMA user guide to include the new argument
+
+## Testing
+- Confirmed functionality with end-to-end workflow tests
+
+---
+
 # GAMA 0.2.5
 
 ## API changes

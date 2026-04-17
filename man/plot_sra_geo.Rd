@@ -64,5 +64,5 @@ plot_sra_geo(SRA_SUMMARY, species = 'Vigna vexillata')
 }
 }
 \seealso{
-\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}, \code{\link[=plot_sra_availability]{plot_sra_availability()}}
+\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}
 }

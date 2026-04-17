@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.2.5'
+.GAMA_VERSION <- '0.2.6'
 
 # NCBI configuration
 
@@ -38,13 +38,13 @@
 .safe_entrez_search <- function(db, term, retmax = .NCBI_RETMAX, use_history = TRUE, retries = 10, wait = 0.5) {
   for (i in seq_len(retries)) {
     out <- try(
-    rentrez::entrez_search(
-      db          = db,
-      term        = term,
-      retmax      = retmax,
-      use_history = use_history
-    ),
-    silent = TRUE
+      rentrez::entrez_search(
+        db          = db,
+        term        = term,
+        retmax      = retmax,
+        use_history = use_history
+      ),
+      silent = TRUE
     )
     if (!inherits(out, 'try-error') && !is.null(out)) return(out)
     Sys.sleep(wait * i)
@@ -54,10 +54,10 @@
 
 .ncbi_search <- function(db, sp) {
   .safe_entrez_search(
-  db          = db,
-  term        = paste0(sp, '[Organism]'),
-  retmax      = .NCBI_RETMAX,
-  use_history = TRUE
+    db          = db,
+    term        = paste0(sp, '[Organism]'),
+    retmax      = .NCBI_RETMAX,
+    use_history = TRUE
   )
 }
 
@@ -126,10 +126,10 @@
   for (start in starts) {
     size <- min(batch_size, count - start)
     res <- .safe_entrez_summary(
-    db          = db,
-    web_history = web_history,
-    retstart    = start,
-    retmax      = size
+      db          = db,
+      web_history = web_history,
+      retstart    = start,
+      retmax      = size
     )
     out <- c(out, .normalise_esummary_history_list(res))
   }
@@ -168,6 +168,119 @@
 }
 
 # Nomenclature
+
+.as_clean_species <- function(x) {
+  x <- as.character(x)
+  x <- trimws(x)
+  x[!is.na(x) & nzchar(x)]
+}
+
+.as_synonym_list <- function(synonyms) {
+  if (is.null(synonyms)) return(list())
+  if (is.list(synonyms)) {
+    nms <- names(synonyms) %||% character()
+    if (!length(synonyms) || length(nms) != length(synonyms) || any(is.na(nms) | !nzchar(trimws(nms)))) {
+      .gama_stop('`synonyms` must be a named list or named character vector.')
+    }
+    out <- lapply(synonyms, .as_clean_species)
+    names(out) <- trimws(nms)
+    return(out)
+  }
+  vals <- as.character(synonyms)
+  nms <- names(synonyms) %||% character()
+  keep <- !is.na(vals) & nzchar(trimws(vals))
+  vals <- trimws(vals[keep])
+  nms <- trimws(nms[keep])
+  if (!length(vals) || length(nms) != length(vals) || any(is.na(nms) | !nzchar(nms))) {
+    .gama_stop('`synonyms` must be a named list or named character vector.')
+  }
+  canon <- unique(nms)
+  out <- stats::setNames(vector('list', length(canon)), canon)
+  for (i in seq_along(canon)) out[[i]] <- vals[nms == canon[[i]]]
+  out
+}
+
+.prepare_synonym_map <- function(species, synonyms = NULL) {
+  species <- unique(.as_clean_species(species))
+  if (!length(species)) .gama_stop('`species` must contain at least one valid species name.')
+  syn <- .as_synonym_list(synonyms)
+  if (!length(syn)) {
+    query_terms <- stats::setNames(as.list(species), species)
+    synonym_map <- stats::setNames(vector('list', length(species)), species)
+    return(list(
+      species     = species,
+      query_terms = query_terms,
+      synonyms    = synonym_map
+    ))
+  }
+  syn <- lapply(seq_along(syn), function(i) {
+    canonical <- names(syn)[i]
+    aliases <- unique(setdiff(.as_clean_species(syn[[i]]), canonical))
+    aliases
+  })
+  names(syn) <- names(.as_synonym_list(synonyms))
+  members <- unlist(Map(function(canonical, aliases) c(canonical, aliases), names(syn), syn), use.names = FALSE)
+  dup <- unique(members[duplicated(members)])
+  if (length(dup) > 0L) {
+    .gama_stop('Species names cannot appear in more than one synonym group: ', paste(dup, collapse = ', '), '.')
+  }
+  active <- vapply(seq_along(syn), function(i) {
+    members_i <- c(names(syn)[i], syn[[i]])
+    any(members_i %in% species)
+  }, logical(1))
+  inactive <- names(syn)[!active]
+  if (length(inactive) > 0L) {
+    .gama_warn('Ignoring synonym groups with no matching entry in `species`: ', paste(inactive, collapse = ', '), '.')
+  }
+  syn <- syn[active]
+  mapped <- species
+  for (i in seq_along(syn)) {
+    canonical <- names(syn)[i]
+    members_i <- c(canonical, syn[[i]])
+    mapped[mapped %in% members_i] <- canonical
+  }
+  species_out <- unique(mapped)
+  query_terms <- stats::setNames(as.list(species_out), species_out)
+  synonym_map <- stats::setNames(vector('list', length(species_out)), species_out)
+  syn_lookup <- syn
+  for (sp in species_out) {
+    if (sp %in% names(syn_lookup)) {
+      query_terms[[sp]] <- unique(c(sp, syn_lookup[[sp]]))
+      synonym_map[[sp]] <- syn_lookup[[sp]]
+    }
+  }
+  list(
+    species     = species_out,
+    query_terms = query_terms,
+    synonyms    = synonym_map
+  )
+}
+
+.normalise_search_result <- function(x) {
+  list(
+    count       = as.integer(.search_count(x)),
+    ids         = .search_ids(x),
+    web_history = x$web_history %||% NULL
+  )
+}
+
+.collapse_searches <- function(searches) {
+  if (!length(searches)) {
+    return(list(
+      count       = 0L,
+      ids         = character(),
+      web_history = NULL
+    ))
+  }
+  searches <- lapply(searches, .normalise_search_result)
+  if (length(searches) == 1L) return(searches[[1]])
+  ids <- unique(unlist(lapply(searches, .search_ids), use.names = FALSE))
+  list(
+    count       = as.integer(length(ids)),
+    ids         = ids,
+    web_history = NULL
+  )
+}
 
 .shorten_species <- function(x) {
   vapply(
@@ -275,12 +388,17 @@ utils::globalVariables(c(
   NA_character_
 }
 
-.make_query_info <- function(species, dbs) {
+.make_query_info <- function(species, dbs, query_terms = NULL, synonyms = NULL) {
+  if (is.null(query_terms)) query_terms <- stats::setNames(as.list(species), species)
+  if (is.null(synonyms)) synonyms <- stats::setNames(vector('list', length(species)), species)
+  query_terms <- query_terms[species]
+  synonyms <- synonyms[species]
   list(
     tool_version   = .GAMA_VERSION,
     query_time_utc = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
     databases      = dbs,
-    terms          = stats::setNames(as.list(paste0(species, '[Organism]')), species)
+    terms          = lapply(query_terms, function(x) paste0(x, '[Organism]')),
+    synonyms       = synonyms
   )
 }
 
@@ -308,7 +426,8 @@ utils::globalVariables(c(
 #'
 #' @return The input object, invisibly.
 #'
-#' @seealso [summarise_availability()], [summarise_sra_availability()]
+#' @seealso [summarise_availability()], [summarise_sra_availability()],
+#' [extract_assembly_metadata()], [extract_sra_metadata()]
 #'
 #' @examples
 #' \dontrun{
