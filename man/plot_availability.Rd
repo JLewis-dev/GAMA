@@ -16,16 +16,16 @@ plot_availability(
 \item{SUMMARY}{A tibble returned by \code{\link[=summarise_availability]{summarise_availability()}}, containing
 species-level composite scores and component values (\code{A}, \code{S}, \code{B}).}
 
-\item{rank}{Ordering of species on the x-axis. One of 'highest' (default),
-'lowest', 'A-Z', 'Z-A', or 'input'.}
+\item{rank}{Ordering of species on the x-axis. One of \code{highest} (default),
+\code{lowest}, \code{A-Z}, \code{Z-A}, or \code{input}.}
 
 \item{abbreviate}{Logical; if \code{TRUE} (default), abbreviate species names to
-'G. species' style labels.}
+\verb{G. species} style labels.}
 
 \item{theme_fn}{A ggplot2 theme function (e.g. \code{\link[ggplot2:ggtheme]{ggplot2::theme_minimal()}}).}
 
-\item{colours}{Named character vector of fill colours for the 'Assembly',
-'SRA', and 'BioSample' segments.}
+\item{colours}{Named character vector of fill colours for the \code{Assembly},
+\code{SRA}, and \code{BioSample} segments.}
 }
 \value{
 A ggplot object showing stacked bar segments for each species.

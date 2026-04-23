@@ -2,13 +2,13 @@
 % Please edit documentation in R/Availability_Analysis.R
 \name{query_species}
 \alias{query_species}
-\title{Query NCBI databases using species list}
+\title{Query NCBI databases using a list of species names}
 \usage{
 query_species(species, synonyms = NULL)
 }
 \arguments{
 \item{species}{Character vector of binomial species names (e.g.
-'Vigna angularis'). Duplicates are removed with \code{\link[=unique]{unique()}}.}
+\verb{Vigna angularis}). Duplicates are removed with \code{\link[=unique]{unique()}}.}
 
 \item{synonyms}{\code{NULL} (default) for no synonym collapse, or a named list
 or named character vector mapping canonical species names to one or more
@@ -37,7 +37,7 @@ stored in a per-species list with components \code{assembly}, \code{sra}, and
 canonical species names using unique database record identifiers.
 
 The returned object has an attribute \code{query_info} containing the tool
-version, query timestamp (UTC), database names, queried terms, and any
+version, timestamp (UTC), databases queried, search terms, and any
 synonym groups used for canonical collapse.
 }
 \examples{

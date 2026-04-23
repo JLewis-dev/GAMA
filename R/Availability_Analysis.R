@@ -1,6 +1,6 @@
 # AVAILABILITY ANALYSIS =======================================================
 
-#' Query NCBI databases using species list
+#' Query NCBI databases using a list of species names
 #'
 #' Queries NCBI Assembly, SRA, and BioSample and returns per-species search
 #' results in a named list. A provenance record is attached to the output as
@@ -14,11 +14,11 @@
 #' canonical species names using unique database record identifiers.
 #'
 #' The returned object has an attribute `query_info` containing the tool
-#' version, query timestamp (UTC), database names, queried terms, and any
+#' version, timestamp (UTC), databases queried, search terms, and any
 #' synonym groups used for canonical collapse.
 #'
 #' @param species Character vector of binomial species names (e.g.
-#' 'Vigna angularis'). Duplicates are removed with [unique()].
+#' `Vigna angularis`). Duplicates are removed with [unique()].
 #' @param synonyms `NULL` (default) for no synonym collapse, or a named list
 #' or named character vector mapping canonical species names to one or more
 #' synonymous names. Query results for each canonical species are merged across
@@ -106,28 +106,39 @@ query_species <- function(species, synonyms = NULL) {
   query_terms = SPEC$query_terms,
   synonyms    = SPEC$synonyms
   )
+  RESULTS <- .set_gama_object(RESULTS, 'query_species')
   RESULTS
 }
 
 #' Summarise accession counts and compute data richness
 #'
 #' Collapses the output of [query_species()] into a species-level summary table
-#' of accession counts (Assembly, SRA, BioSample) and composite data richness
-#' scores.
+#' of accession counts (Assembly, SRA, BioSample) and data richness scores.
 #'
 #' @details
 #' For each species, accession counts are extracted from the underlying query
-#' results and combined with a composite scoring system computed by the
-#' internal scoring engine. The returned tibble is given class `gdt_tbl` and
-#' retains query provenance via the `query_info` attribute, which is carried
-#' over from the `results` object.
+#' results and summarised into a single row. The returned tibble is given class
+#' `gdt_tbl` and retains query provenance via the `query_info` attribute
+#' carried over from the `results` object.
+#'
+#' The `score` column is computed as `A + S + B`, where `A`, `S`, and `B`
+#' are transformed contributions from Assembly, SRA, and BioSample
+#' availability. `A = best + ln(1 + total - best)`, with assembly weights of
+#' Complete = 10, Chromosome = 8, Scaffold = 5, and Contig = 2; `best` is
+#' the maximum-weight assembly, with ties broken by highest N50, and `total`
+#' is the sum of all assembly weights. `S = 2 * ln(1 + SRA)`, and
+#' `B = ln(1 + BioSample)`. This formulation prioritises high-quality
+#' assemblies while applying diminishing returns to highly sampled taxa.
 #'
 #' @param results A list returned by [query_species()].
 #'
 #' @return A tibble with one row per species and the following columns:
-#' \itemize{ \item `species`: species name \item `Assembly`, `SRA`,
-#' `BioSample`: accession counts per database \item `A`, `S`, `B`: component
-#' scores used for the composite \item `score`: composite data richness score }
+#' \itemize{
+#' \item `species`: species name
+#' \item `Assembly`, `SRA`, `BioSample`: accession counts per database
+#' \item `A`, `S`, `B`: component scores used for the composite
+#' \item `score`: composite data richness score
+#' }
 #' The tibble has class `gdt_tbl` and carries a `query_info` attribute for
 #' provenance.
 #'
@@ -141,6 +152,7 @@ query_species <- function(species, synonyms = NULL) {
 #' }
 #' @export
 summarise_availability <- function(results) {
+  results <- .gama_require_output(results, 'query_species')
   SPECIES <- names(results)
   COMPONENTS <- lapply(results, function(x) .score_species(x$assembly, x$sra, x$biosample))
   OUT <- tibble::tibble(
@@ -153,7 +165,7 @@ summarise_availability <- function(results) {
   B         = purrr::map_dbl(COMPONENTS, 'biosample_score'),
   score     = purrr::map_dbl(COMPONENTS, 'score')
   )
-  .as_gdt_table(OUT, results)
+  .as_gdt_table(OUT, results, 'summarise_availability')
 }
 
 #' Summarise SRA modality composition
@@ -178,7 +190,7 @@ summarise_availability <- function(results) {
 #' GEO overlay:
 #' GEO linkage fields are always cached in `attr(x, 'sra_profile')` regardless
 #' of `include_geo`. When `include_geo = TRUE`, species-level GEO summary
-#' columns are appended as '<class>_geo' columns, alongside a GEO-compatible
+#' columns are appended as `<class>_geo` columns, alongside a GEO-compatible
 #' denominator summary (`denom_total`, `geo_linked_denom`) and proportion
 #' (`geo_prop`). The GEO-compatible denominator is defined as: transcriptomic +
 #' epigenomic + chromatin + other + unknown.
@@ -193,10 +205,10 @@ summarise_availability <- function(results) {
 #' @return A tibble with one row per species containing class-level counts and
 #' totals. When `all = TRUE`, subclass-level counts are included. When
 #' `include_geo = TRUE`, GEO summary columns are appended (e.g. `denom_total`,
-#' `geo_linked_denom`, `geo_prop`, and '<class>_geo'). GEO linkage fields are
+#' `geo_linked_denom`, `geo_prop`, and `<class>_geo`). GEO linkage fields are
 #' cached regardless in `attr(x, 'sra_profile')`. The tibble has class
 #' `gdt_tbl` and carries a `query_info` attribute. It also carries a cached
-#' UID-level profile as attribute `sra_profile` (see “Profile cache”), plus
+#' UID-level profile as attribute `sra_profile` (see `Profile cache`), plus
 #' metadata in `sra_profile_info`.
 #'
 #' @seealso [query_species()], [plot_sra_availability()], [plot_sra_geo()],
@@ -213,6 +225,7 @@ summarise_sra_availability <- function(results,
 species     = NULL,
 all         = FALSE,
 include_geo = FALSE) {
+  results <- .gama_require_output(results, 'query_species')
   SPECIES_ALL <- names(results)
   SPECIES_USE <- if (is.null(species)) {
     SPECIES_ALL
@@ -234,7 +247,7 @@ include_geo = FALSE) {
       OUT$geo_prop <- numeric()
       for (m in MODES) OUT[[paste0(m, '_geo')]] <- integer()
     }
-    OUT <- .as_gdt_table(OUT, results)
+    OUT <- .as_gdt_table(OUT, results, 'summarise_sra_availability')
     attr(OUT, 'sra_profile') <- tibble::tibble(
     species    = character(),
     entrez_uid = character(),
@@ -343,7 +356,7 @@ include_geo = FALSE) {
       }
     }
   }
-  OUT <- .as_gdt_table(OUT, results)
+  OUT <- .as_gdt_table(OUT, results, 'summarise_sra_availability')
   attr(OUT, 'sra_profile') <- PROFILE
   attr(OUT, 'sra_profile_info') <- list(
   cached_at_utc    = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
@@ -386,6 +399,7 @@ include_geo = FALSE) {
 #' }
 #' @export
 extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
+  results <- .gama_require_output(results, 'query_species')
   if (!is.null(species)) {
     species <- as.character(species)
     species <- species[!is.na(species) & nzchar(species)]
@@ -449,7 +463,7 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
   })
   .pb_close(pb)
   META <- dplyr::bind_rows(META)
-  if (!best) return(.as_gdt_table(META, results))
+  if (!best) return(.as_gdt_table(META, results, 'extract_assembly_metadata'))
   BEST <- lapply(split(META, META$species), function(x) {
     STRUCT <- .ASSEMBLY_WEIGHTS[x$level]
     STRUCT[is.na(STRUCT)] <- 0
@@ -462,23 +476,32 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
     x[best_idx, , drop = FALSE]
   })
   OUT <- dplyr::bind_rows(BEST)
-  .as_gdt_table(OUT, results)
+  .as_gdt_table(OUT, results, 'extract_assembly_metadata')
 }
 
 #' Extract filtered SRA metadata
 #'
-#' Retrieves experiment-level SRA metadata for one or more species using the
-#' internal SRA metadata engine, then normalises sequencing strategy labels and
-#' assigns curated modality classes and subclasses.
+#' Retrieves experiment-level SRA metadata for one or more species, then
+#' assigns curated modality classes and subclasses together with GEO linkage
+#' fields.
 #'
-#' For each experiment, the function:
-#' \itemize{ \item extracts the raw `LIBRARY_STRATEGY` value from the SRA XML
-#' \item normalises strategy strings \item assigns ontology-based `class` and
-#' `subclass` \item records GEO linkage fields (`geo_linked`, `gse_ids`,
-#' `gsm_ids`) }
+#' Optional filters restrict the output to particular modality classes,
+#' subclasses, or GEO-linked experiments only.
 #'
-#' Optional filters can restrict output to particular classes/subclasses, or
-#' GEO-linked experiments only.
+#' @details
+#' Accepted modality filters follow the internal GAMA classification scheme.
+#' Top-level classes and their subclasses are:
+#'
+#' \describe{
+#' \item{`genomic`}{`amplicon-seq`, `clone-based`, `RAD-seq`,
+#' `targeted-capture`, `WGS`}
+#' \item{`transcriptomic`}{`long-read`, `RNA-seq`, `small-RNA`}
+#' \item{`epigenomic`}{`ATAC-seq`, `bisulfite-seq`, `CUT&RUN`,
+#' `CUT&Tag`, `ChIP-seq`, `DNase-seq`, `FAIRE-seq`, `MNase-seq`,
+#' `SELEX`}
+#' \item{`chromatin`}{`3C-based`, `ChIA-PET`, `Hi-C`, `TCC`}
+#' \item{`other`}{`other`}
+#' }
 #'
 #' @param results A list returned by [query_species()], containing SRA IDs.
 #' @param species `NULL` (default) to include all species, or a character
@@ -509,6 +532,7 @@ species  = NULL,
 class    = NULL,
 subclass = NULL,
 only_geo = FALSE) {
+  results <- .gama_require_output(results, 'query_species')
   if (!is.null(species)) {
     species <- as.character(species)
     species <- species[!is.na(species) & nzchar(species)]
@@ -530,7 +554,7 @@ only_geo = FALSE) {
     gse_ids       = character(),
     gsm_ids       = character()
     )
-    return(.as_gdt_table(META, results))
+    return(.as_gdt_table(META, results, 'extract_sra_metadata'))
   }
   META <- .sra_metadata_core(results, species = species)
   if (!is.null(class)) {
@@ -545,20 +569,20 @@ only_geo = FALSE) {
   if (nrow(META) == 0L && (!is.null(species) || !is.null(class) || !is.null(subclass) || isTRUE(only_geo))) {
     .gama_msg('No SRA metadata records found for requested filters; returning empty table.')
   }
-  .as_gdt_table(META, results)
+  .as_gdt_table(META, results, 'extract_sra_metadata')
 }
 
 #' Summarise SRA replication skew across BioProjects / BioSamples
 #'
 #' Quantifies replication skew across independent units (BioProject or
 #' BioSample) using the cached UID-level SRA profile produced by
-#' summarise_sra_availability(). Optionally computes skew within a single
-#' modality class.
+#' [summarise_sra_availability()]. Optional filters restrict the analysis to a
+#' single modality class.
 #'
 #' Profile cache (consumed by this function):
-#' The input must carry a cached UID-level profile as attribute 'sra_profile'
-#' containing (at minimum) 'species', 'entrez_uid', 'biosample', 'bioproject',
-#' and 'class'. Each row in the profile corresponds to an Entrez UID.
+#' The input must carry a cached UID-level profile as attribute `sra_profile`
+#' containing (at minimum) `species`, `entrez_uid`, `biosample`, `bioproject`,
+#' and `class`. Each row in the profile corresponds to an Entrez UID.
 #'
 #' @details
 #' The `eff` column is the *effective number of units* (Hill number of order
@@ -568,10 +592,10 @@ only_geo = FALSE) {
 #' few units.
 #'
 #' @param x A data.frame/tibble returned by summarise_sra_availability()
-#' that has a cached profile attached as attribute 'sra_profile'.
+#' that has a cached profile attached as attribute `sra_profile`.
 #' @param species Optional character vector of species names to filter the
-#' output. If NULL, all species in x are returned.
-#' @param unit Character scalar; either 'bioproject' (default) or 'biosample'.
+#' output. If `NULL`, all species in x are returned.
+#' @param unit Character scalar; either `bioproject` (default) or `biosample`.
 #' @param class Optional character scalar specifying a single modality class.
 #'
 #' @return A tibble/data.frame with one row per species containing:
@@ -591,15 +615,17 @@ only_geo = FALSE) {
 #'
 #' @export
 summarise_sra_skew <- function(x, species = NULL, unit = c('bioproject', 'biosample'), class = NULL) {
+  x <- .gama_require_output(x, 'summarise_sra_availability')
   if (missing(unit)) unit <- 'bioproject'
   if (length(unit) != 1L) .gama_stop('`unit` must be a single value: \'bioproject\' or \'biosample\'.')
   unit <- match.arg(unit)
   if (!is.null(class) && length(class) != 1L) .gama_stop('`class` must be a single modality class (or NULL). Use one class per call.')
-  prof <- attr(x, 'sra_profile', exact = TRUE)
-  if (is.null(prof)) .gama_stop('No cached SRA profile found on `x` (expected attribute \'sra_profile\'). Run summarise_sra_availability() first and pass its output.')
-  required_cols <- c('species', 'class', 'biosample', 'bioproject')
-  missing_cols <- setdiff(required_cols, colnames(prof))
-  if (length(missing_cols) > 0L) .gama_stop(paste0('Cached profile is missing required columns: ', paste(missing_cols, collapse = ', '), '.'))
+  prof <- .gama_require_cache(
+    x,
+    attr_name = 'sra_profile',
+    required_cols = c('species', 'class', 'biosample', 'bioproject'),
+    source = 'summarise_sra_availability'
+  )
   if (is.null(species)) {
     if ('species' %in% names(x)) {
       species_all <- sort(unique(as.character(x$species)))
@@ -614,11 +640,19 @@ summarise_sra_skew <- function(x, species = NULL, unit = c('bioproject', 'biosam
   out_unit_label <- if (identical(unit, 'bioproject')) 'BioProject' else 'BioSample'
   out_cols <- c('species', out_unit_label, 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff')
   if (!length(species_all)) {
-    out <- as.data.frame(stats::setNames(replicate(length(out_cols), vector('list', 0), simplify = FALSE), out_cols))
+    out <- as.data.frame(
+      stats::setNames(
+        replicate(length(out_cols), vector('list', 0), simplify = FALSE),
+        out_cols
+      )
+    )
     for (nm in setdiff(out_cols, c('species', out_unit_label, 'class'))) out[[nm]] <- numeric(0)
     out[['species']] <- character(0)
     out[[out_unit_label]] <- integer(0)
     out[['class']] <- character(0)
+    out <- .as_gdt_table(out, x, 'summarise_sra_skew')
+    attr(out, 'sra_profile') <- prof[0, , drop = FALSE]
+    attr(out, 'sra_profile_info') <- attr(x, 'sra_profile_info', exact = TRUE)
     return(out)
   }
   prof_use <- prof[prof$species %in% species_all, , drop = FALSE]
@@ -630,17 +664,31 @@ summarise_sra_skew <- function(x, species = NULL, unit = c('bioproject', 'biosam
     counts <- counts[counts > 0]
     if (length(counts) == 0L) {
       return(data.frame(
-        species = sp, ucount = 0L,
-        min = NA_real_, q25 = NA_real_, med = NA_real_, q75 = NA_real_, max = NA_real_, eff = NA_real_,
+        species = sp,
+        ucount = 0L,
+        min = NA_real_,
+        q25 = NA_real_,
+        med = NA_real_,
+        q75 = NA_real_,
+        max = NA_real_,
+        eff = NA_real_,
         stringsAsFactors = FALSE
       ))
     }
-    qs <- as.numeric(stats::quantile(counts, probs = c(0.25, 0.5, 0.75), names = FALSE, type = 7))
+    qs <- as.numeric(
+      stats::quantile(counts, probs = c(0.25, 0.5, 0.75), names = FALSE, type = 7)
+    )
     p <- counts / sum(counts)
     eff <- 1 / sum(p^2)
     data.frame(
-      species = sp, ucount = length(counts),
-      min = min(counts), q25 = qs[1], med = qs[2], q75 = qs[3], max = max(counts), eff = eff,
+      species = sp,
+      ucount = length(counts),
+      min = min(counts),
+      q25 = qs[1],
+      med = qs[2],
+      q75 = qs[3],
+      max = max(counts),
+      eff = eff,
       stringsAsFactors = FALSE
     )
   }
@@ -655,10 +703,8 @@ summarise_sra_skew <- function(x, species = NULL, unit = c('bioproject', 'biosam
     out$species <- as.character(out$species)
   }
   out <- out[c('species', out_unit_label, 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff')]
-  qi_in <- attr(x, 'query_info', exact = TRUE)
-  if (!is.null(qi_in)) attr(out, 'query_info') <- qi_in
+  out <- .as_gdt_table(out, x, 'summarise_sra_skew')
   attr(out, 'sra_profile') <- prof_use
   attr(out, 'sra_profile_info') <- attr(x, 'sra_profile_info', exact = TRUE)
-  class(out) <- c('gdt_tbl', class(out))
   out
 }

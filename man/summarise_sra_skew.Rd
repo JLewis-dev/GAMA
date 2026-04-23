@@ -13,12 +13,12 @@ summarise_sra_skew(
 }
 \arguments{
 \item{x}{A data.frame/tibble returned by summarise_sra_availability()
-that has a cached profile attached as attribute 'sra_profile'.}
+that has a cached profile attached as attribute \code{sra_profile}.}
 
 \item{species}{Optional character vector of species names to filter the
-output. If NULL, all species in x are returned.}
+output. If \code{NULL}, all species in x are returned.}
 
-\item{unit}{Character scalar; either 'bioproject' (default) or 'biosample'.}
+\item{unit}{Character scalar; either \code{bioproject} (default) or \code{biosample}.}
 
 \item{class}{Optional character scalar specifying a single modality class.}
 }
@@ -31,14 +31,14 @@ A tibble/data.frame with one row per species containing:
 \description{
 Quantifies replication skew across independent units (BioProject or
 BioSample) using the cached UID-level SRA profile produced by
-summarise_sra_availability(). Optionally computes skew within a single
-modality class.
+\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}. Optional filters restrict the analysis to a
+single modality class.
 }
 \details{
 Profile cache (consumed by this function):
-The input must carry a cached UID-level profile as attribute 'sra_profile'
-containing (at minimum) 'species', 'entrez_uid', 'biosample', 'bioproject',
-and 'class'. Each row in the profile corresponds to an Entrez UID.
+The input must carry a cached UID-level profile as attribute \code{sra_profile}
+containing (at minimum) \code{species}, \code{entrez_uid}, \code{biosample}, \code{bioproject},
+and \code{class}. Each row in the profile corresponds to an Entrez UID.
 
 The \code{eff} column is the \emph{effective number of units} (Hill number of order
 2), computed as the inverse Simpson index: \code{eff = 1 / sum(p^2)}, where \code{p}

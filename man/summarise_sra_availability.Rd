@@ -26,10 +26,10 @@ fields are cached regardless).}
 A tibble with one row per species containing class-level counts and
 totals. When \code{all = TRUE}, subclass-level counts are included. When
 \code{include_geo = TRUE}, GEO summary columns are appended (e.g. \code{denom_total},
-\code{geo_linked_denom}, \code{geo_prop}, and '\if{html}{\out{<class>}}_geo'). GEO linkage fields are
+\code{geo_linked_denom}, \code{geo_prop}, and \verb{<class>_geo}). GEO linkage fields are
 cached regardless in \code{attr(x, 'sra_profile')}. The tibble has class
 \code{gdt_tbl} and carries a \code{query_info} attribute. It also carries a cached
-UID-level profile as attribute \code{sra_profile} (see “Profile cache”), plus
+UID-level profile as attribute \code{sra_profile} (see \verb{Profile cache}), plus
 metadata in \code{sra_profile_info}.
 }
 \description{
@@ -54,7 +54,7 @@ consumes \code{attr(x, 'sra_profile')} from the output of this function.
 GEO overlay:
 GEO linkage fields are always cached in \code{attr(x, 'sra_profile')} regardless
 of \code{include_geo}. When \code{include_geo = TRUE}, species-level GEO summary
-columns are appended as '\if{html}{\out{<class>}}_geo' columns, alongside a GEO-compatible
+columns are appended as \verb{<class>_geo} columns, alongside a GEO-compatible
 denominator summary (\code{denom_total}, \code{geo_linked_denom}) and proportion
 (\code{geo_prop}). The GEO-compatible denominator is defined as: transcriptomic +
 epigenomic + chromatin + other + unknown.

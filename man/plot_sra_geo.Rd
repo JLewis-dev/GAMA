@@ -26,8 +26,8 @@ species to plot.}
 intersected with the fixed plotting order used internally.}
 
 \item{rank}{Ordering of species (when \code{species = NULL}), or ordering applied
-to the requested species vector. One of 'highest', 'lowest', 'A-Z', 'Z-A',
-or 'input'.}
+to the requested species vector. One of \code{highest}, \code{lowest}, \code{A-Z}, \code{Z-A},
+or \code{input}.}
 
 \item{theme_fn}{A ggplot2 theme function.}
 
@@ -41,10 +41,10 @@ A ggplot object (single species) or a named list of ggplot objects
 (multiple species).
 }
 \description{
-Visualises GEO linkage as an overlay on SRA modality classes. Each modality
-is displayed as a 100\% bar in a neutral background, with the modality colour
-representing the GEO-linked fraction. Labels show \code{GEO-linked / Total} for
-each modality.
+Visualises GEO linkage across SRA modality classes, excluding \code{genomic}.
+Each modality is displayed as a 100\% bar with a translucent background
+fill, while the coloured segment represents the GEO-linked fraction.
+Labels show \code{GEO-linked / Total} for each modality.
 }
 \details{
 Operates on the direct output of \code{\link[=summarise_sra_availability]{summarise_sra_availability()}}.

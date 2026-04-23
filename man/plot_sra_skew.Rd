@@ -19,45 +19,51 @@ plot_sra_skew(
 )
 }
 \arguments{
-\item{SKEW}{A tibble returned by summarise_sra_skew().}
+\item{SKEW}{A tibble returned by \code{\link[=summarise_sra_skew]{summarise_sra_skew()}}.}
 
-\item{species}{NULL (default) to include all species, or a character vector.}
+\item{species}{\code{NULL} (default) to include all species, or a character
+vector of species to plot.}
 
-\item{rank}{One of 'highest' (default), 'lowest', 'A-Z', 'Z-A', or 'input'.}
+\item{rank}{Ordering of species. One of \code{highest} (default), \code{lowest},
+\code{A-Z}, \code{Z-A}, or \code{input}.}
 
-\item{abbreviate}{Logical; if TRUE (default), abbreviate species labels.}
+\item{abbreviate}{Logical; if \code{TRUE} (default), abbreviate species labels.}
 
 \item{theme_fn}{A ggplot2 theme function.}
 
 \item{colours}{Named character vector for box fill and line colours.}
 
-\item{show_points}{Logical; if TRUE (default), overlay per-unit points.}
+\item{show_points}{Logical; if \code{TRUE} (default), overlay per-unit points
+when cached profiles are available.}
 
-\item{point_colour}{Colour for the overlaid data points (character).}
+\item{point_colour}{Character scalar giving the colour of overlaid points.}
 
-\item{point_alpha}{Numeric alpha (transparency) for overlaid points.}
+\item{point_alpha}{Numeric alpha value for overlaid points.}
 
-\item{show_labels}{Logical; if TRUE (default), label each box with eff and
-n.}
+\item{show_labels}{Logical; if \code{TRUE} (default), label each box with
+\code{eff} and \code{n}.}
 
-\item{label_digits}{Integer; decimal places for eff labels.}
+\item{label_digits}{Integer; decimal places for \code{eff} labels.}
 }
 \value{
 A ggplot object.
 }
 \description{
 Visualises replication skew using the summary output of
-summarise_sra_skew(). Boxplots are drawn from pre-computed five-number
-summaries on a log10 y-axis and optionally labelled as 'eff=\if{html}{\out{<x>}} (n=\if{html}{\out{<y>}})'.
-Optionally overlays per-unit points (one point per BioProject/BioSample)
-jittered horizontally when a cached UID-level profile is available as
-attr(SKEW, 'sra_profile').
+\code{\link[=summarise_sra_skew]{summarise_sra_skew()}}. Boxplots are drawn from pre-computed summary
+statistics on a log10 y-axis.
+}
+\details{
+Optional labels show \verb{eff=<x> (n=<y>)} for each species. When a cached
+UID-level profile is available as \code{attr(SKEW, 'sra_profile')}, per-unit
+points (one point per BioProject/BioSample) can be overlaid with
+horizontal jitter.
 }
 \examples{
 \dontrun{
 RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 SRA_SUMMARY <- summarise_sra_availability(RESULTS)
-SKEW  <- summarise_sra_skew(SRA_SUMMARY, class = 'transcriptomic')
+SKEW <- summarise_sra_skew(SRA_SUMMARY, class = 'transcriptomic')
 plot_sra_skew(SKEW)
 }
 

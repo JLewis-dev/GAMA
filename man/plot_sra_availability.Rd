@@ -21,8 +21,8 @@ plot_sra_availability(
 \item{species}{\code{NULL} (default) to plot all species, or a character vector
 of species to include.}
 
-\item{rank}{Ordering of species. One of 'highest' (default), 'lowest',
-'A-Z', 'Z-A', or 'input'.}
+\item{rank}{Ordering of species. One of \code{highest} (default), \code{lowest},
+\code{A-Z}, \code{Z-A}, or \code{input}.}
 
 \item{abbreviate}{Logical; if \code{TRUE} (default), abbreviate species names.}
 
@@ -36,9 +36,9 @@ species.
 }
 \description{
 Visualises species-level SRA modality composition using stacked horizontal
-bars. Each bar shows the proportional contribution of major SRA classes
-(genomic, transcriptomic, epigenomic, chromatin, other, unknown), with total
-SRA counts labelled.
+bars. Each bar shows the proportional contribution of major experimental
+classes (\code{genomic}, \code{transcriptomic}, \code{epigenomic}, \code{chromatin}, \code{other},
+\code{unknown}), with total SRA counts labelled.
 }
 \details{
 Operates on the wide-format summary returned by

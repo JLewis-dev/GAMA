@@ -30,19 +30,27 @@ strategy fields, ontology assignments, and GEO linkage columns. The tibble
 has class \code{gdt_tbl} and carries a \code{query_info} attribute for provenance.
 }
 \description{
-Retrieves experiment-level SRA metadata for one or more species using the
-internal SRA metadata engine, then normalises sequencing strategy labels and
-assigns curated modality classes and subclasses.
+Retrieves experiment-level SRA metadata for one or more species, then
+assigns curated modality classes and subclasses together with GEO linkage
+fields.
 }
 \details{
-For each experiment, the function:
-\itemize{ \item extracts the raw \code{LIBRARY_STRATEGY} value from the SRA XML
-\item normalises strategy strings \item assigns ontology-based \code{class} and
-\code{subclass} \item records GEO linkage fields (\code{geo_linked}, \code{gse_ids},
-\code{gsm_ids}) }
+Optional filters restrict the output to particular modality classes,
+subclasses, or GEO-linked experiments only.
 
-Optional filters can restrict output to particular classes/subclasses, or
-GEO-linked experiments only.
+Accepted modality filters follow the internal GAMA classification scheme.
+Top-level classes and their subclasses are:
+
+\describe{
+\item{\code{genomic}}{\code{amplicon-seq}, \code{clone-based}, \code{RAD-seq},
+\code{targeted-capture}, \code{WGS}}
+\item{\code{transcriptomic}}{\code{long-read}, \code{RNA-seq}, \code{small-RNA}}
+\item{\code{epigenomic}}{\code{ATAC-seq}, \code{bisulfite-seq}, \code{CUT&RUN},
+\code{CUT&Tag}, \code{ChIP-seq}, \code{DNase-seq}, \code{FAIRE-seq}, \code{MNase-seq},
+\code{SELEX}}
+\item{\code{chromatin}}{\verb{3C-based}, \code{ChIA-PET}, \code{Hi-C}, \code{TCC}}
+\item{\code{other}}{\code{other}}
+}
 }
 \examples{
 \dontrun{

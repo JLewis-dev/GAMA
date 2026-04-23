@@ -1,3 +1,21 @@
+# GAMA 0.2.7
+
+## Reliability
+- Standardised input validation and error messaging across user-facing summary and plotting functions
+- Added object-aware errors for incompatible GAMA and non-GAMA objects, missing columns, and missing cached profiles
+
+## Refactoring
+- Added internal object-type tags to support downstream validation
+- Centralised validation and cache-check logic in helpers
+
+## Documentation
+- Revised roxygen descriptions and updated the user guide accordingly
+
+## Testing
+- Ran checks across compatible and incompatible input paths to confirm the new messaging logic and core functionality
+
+---
+
 # GAMA 0.2.6
 
 ## Features

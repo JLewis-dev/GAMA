@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.2.6'
+.GAMA_VERSION <- '0.2.7'
 
 # NCBI configuration
 
@@ -372,6 +372,103 @@ utils::globalVariables(c(
   stop(.gama_prefix(), paste0(..., collapse = ''), call. = call.)
 }
 
+# Object identity and validation
+
+.set_gama_object <- function(x, object_name) {
+  attr(x, 'gama_object') <- object_name
+  x
+}
+
+.detect_gama_object <- function(x) {
+  tag <- attr(x, 'gama_object', exact = TRUE)
+  if (is.character(tag) && length(tag) == 1L && nzchar(tag)) return(tag)
+  if (is.list(x) && !inherits(x, c('data.frame', 'tbl_df', 'tbl'))) {
+    ok <- length(x) > 0L && all(vapply(x, function(el) {
+      is.list(el) && all(c('assembly', 'sra', 'biosample') %in% names(el))
+    }, logical(1)))
+    if (ok) return('query_species')
+  }
+  if (inherits(x, 'data.frame')) {
+    nms <- names(x)
+    if (all(c('species', 'Assembly', 'SRA', 'BioSample', 'A', 'S', 'B', 'score') %in% nms)) {
+      return('summarise_availability')
+    }
+    if (all(c('species', 'SRA', 'genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown') %in% nms)) {
+      return('summarise_sra_availability')
+    }
+    if (all(c('species', 'entrez_uid', 'level', 'n50', 'coverage', 'biosample', 'bioproject', 'submitter', 'release_date', 'ftp_path') %in% nms)) {
+      return('extract_assembly_metadata')
+    }
+    if (all(c('species', 'entrez_uid', 'biosample', 'bioproject', 'strategy_raw', 'strategy_norm', 'class', 'subclass', 'geo_linked', 'gse_ids', 'gsm_ids') %in% nms)) {
+      return('extract_sra_metadata')
+    }
+    if (all(c('species', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff') %in% nms) && any(c('BioProject', 'BioSample') %in% nms)) {
+      return('summarise_sra_skew')
+    }
+  }
+  'incompatible'
+}
+
+.gama_input_error <- function(expected, detected = NULL, detail = NULL) {
+  detected <- detected %||% 'incompatible'
+  if (identical(detected, 'incompatible')) {
+    suffix <- 'detected incompatible object.'
+  } else if (!is.null(detail) && nzchar(detail)) {
+    suffix <- paste0('detected ', detected, ' object ', detail)
+  } else {
+    suffix <- paste0('detected ', detected, ' object.')
+  }
+  .gama_stop('Input must be the output of ', expected, '(); ', suffix)
+}
+
+.gama_require_output <- function(x, expected, required_cols = NULL) {
+  detected <- .detect_gama_object(x)
+  if (!identical(detected, expected)) {
+    .gama_input_error(expected, detected = detected)
+  }
+  if (!is.null(required_cols)) {
+    missing <- setdiff(required_cols, names(x))
+    if (length(missing) > 0L) {
+      .gama_input_error(
+        expected,
+        detected = detected,
+        detail = paste0('missing required columns: ', paste(missing, collapse = ', '), '.')
+      )
+    }
+  }
+  x
+}
+
+.gama_require_cache <- function(x, attr_name, required_cols = NULL, source) {
+  detected <- .detect_gama_object(x)
+  if (!identical(detected, source)) {
+    .gama_input_error(source, detected = detected)
+  }
+  cache <- attr(x, attr_name, exact = TRUE)
+  if (is.null(cache)) {
+    .gama_input_error(
+      source,
+      detected = detected,
+      detail = paste0("missing required cache '", attr_name, "'.")
+    )
+  }
+  if (!is.null(required_cols)) {
+    missing <- setdiff(required_cols, names(cache))
+    if (length(missing) > 0L) {
+      .gama_input_error(
+        source,
+        detected = detected,
+        detail = paste0(
+          "cache '", attr_name, "' missing required columns: ",
+          paste(missing, collapse = ', '),
+          '.'
+        )
+      )
+    }
+  }
+  cache
+}
+
 # Provenance
 
 .flatten_to_char <- function(x) {
@@ -402,10 +499,11 @@ utils::globalVariables(c(
   )
 }
 
-.as_gdt_table <- function(tbl, results) {
-  qi <- attr(results, 'query_info')
+.as_gdt_table <- function(tbl, results, object_name = NULL) {
+  qi <- attr(results, 'query_info', exact = TRUE)
   if (is.null(qi)) .gama_warn('No query_info found on results object.')
   attr(tbl, 'query_info') <- qi
+  if (!is.null(object_name)) tbl <- .set_gama_object(tbl, object_name)
   class(tbl) <- c('gdt_tbl', class(tbl))
   tbl
 }
@@ -414,7 +512,7 @@ utils::globalVariables(c(
 #'
 #' Prints a `gdt_tbl` object with attached query provenance. When present, the
 #' `query_info` attribute is displayed above the table, showing the tool
-#' version, query timestamp (UTC), and queried databases.
+#' version, timestamp (UTC), and databases queried.
 #'
 #' @details
 #' Extends the default tibble printing behaviour by prepending a single-line

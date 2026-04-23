@@ -1,6 +1,6 @@
 Package: GAMA
 Title: Genomic Availability & Metadata Analysis Tool
-Version: 0.2.6
+Version: 0.2.7
 Authors@R:
     person('James', 'Lewis',
            email = 'James.Lewis-2022@outlook.com',
@@ -27,6 +27,6 @@ Imports:
     tidyr,
     xml2
 Depends:
-    R (> 4.2.0)
+    R (>= 4.2.0)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3

@@ -8,13 +8,13 @@
 #'
 #' @param SUMMARY A tibble returned by [summarise_availability()], containing
 #' species-level composite scores and component values (`A`, `S`, `B`).
-#' @param rank Ordering of species on the x-axis. One of 'highest' (default),
-#' 'lowest', 'A-Z', 'Z-A', or 'input'.
+#' @param rank Ordering of species on the x-axis. One of `highest` (default),
+#' `lowest`, `A-Z`, `Z-A`, or `input`.
 #' @param abbreviate Logical; if `TRUE` (default), abbreviate species names to
-#' 'G. species' style labels.
+#' `G. species` style labels.
 #' @param theme_fn A ggplot2 theme function (e.g. [ggplot2::theme_minimal()]).
-#' @param colours Named character vector of fill colours for the 'Assembly',
-#' 'SRA', and 'BioSample' segments.
+#' @param colours Named character vector of fill colours for the `Assembly`,
+#' `SRA`, and `BioSample` segments.
 #'
 #' @return A ggplot object showing stacked bar segments for each species.
 #'
@@ -41,8 +41,7 @@ BioSample = '#56C5A8'
 ) {
   rank <- match.arg(rank)
   req_cols <- c('species', 'score', 'A', 'S', 'B')
-  missing <- setdiff(req_cols, names(SUMMARY))
-  if (length(missing)) .gama_stop(sprintf('Input `SUMMARY` is missing required columns: %s.', paste(missing, collapse = ', ')))
+  SUMMARY <- .gama_require_output(SUMMARY, 'summarise_availability', required_cols = req_cols)
   SUMMARY$species_label <- if (abbreviate) .shorten_species(SUMMARY$species) else SUMMARY$species
   SUMMARY$species_label <- factor(
   SUMMARY$species_label,
@@ -98,9 +97,9 @@ BioSample = '#56C5A8'
 #' Plot SRA modality composition
 #'
 #' Visualises species-level SRA modality composition using stacked horizontal
-#' bars. Each bar shows the proportional contribution of major SRA classes
-#' (genomic, transcriptomic, epigenomic, chromatin, other, unknown), with total
-#' SRA counts labelled.
+#' bars. Each bar shows the proportional contribution of major experimental
+#' classes (`genomic`, `transcriptomic`, `epigenomic`, `chromatin`, `other`,
+#' `unknown`), with total SRA counts labelled.
 #'
 #' Operates on the wide-format summary returned by
 #' [summarise_sra_availability()].
@@ -109,8 +108,8 @@ BioSample = '#56C5A8'
 #' [summarise_sra_availability()].
 #' @param species `NULL` (default) to plot all species, or a character vector
 #' of species to include.
-#' @param rank Ordering of species. One of 'highest' (default), 'lowest',
-#' 'A-Z', 'Z-A', or 'input'.
+#' @param rank Ordering of species. One of `highest` (default), `lowest`,
+#' `A-Z`, `Z-A`, or `input`.
 #' @param abbreviate Logical; if `TRUE` (default), abbreviate species names.
 #' @param theme_fn A ggplot2 theme function.
 #' @param colours Named character vector of class colours.
@@ -144,8 +143,7 @@ plot_sra_availability <- function(
 ) {
   rank <- match.arg(rank)
   req_cols <- c('species', 'SRA', 'genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown')
-  missing <- setdiff(req_cols, names(SRA))
-  if (length(missing)) .gama_stop(sprintf('Input `SRA` is missing required columns: %s.', paste(missing, collapse = ', ')))
+  SRA <- .gama_require_output(SRA, 'summarise_sra_availability', required_cols = req_cols)
   CORE <- SRA |>
     dplyr::select(
       species, SRA, genomic, transcriptomic, epigenomic, chromatin, other,
@@ -244,10 +242,10 @@ plot_sra_availability <- function(
 
 #' Plot SRA modality GEO linkage overlay
 #'
-#' Visualises GEO linkage as an overlay on SRA modality classes. Each modality
-#' is displayed as a 100% bar in a neutral background, with the modality colour
-#' representing the GEO-linked fraction. Labels show `GEO-linked / Total` for
-#' each modality.
+#' Visualises GEO linkage across SRA modality classes, excluding `genomic`.
+#' Each modality is displayed as a 100% bar with a translucent background
+#' fill, while the coloured segment represents the GEO-linked fraction.
+#' Labels show `GEO-linked / Total` for each modality.
 #'
 #' Operates on the direct output of [summarise_sra_availability()].
 #' GEO-linked counts are derived from the cached `attr(SRA, 'sra_profile')`,
@@ -265,8 +263,8 @@ plot_sra_availability <- function(
 #' @param classes Character vector of modality classes to display. Values are
 #' intersected with the fixed plotting order used internally.
 #' @param rank Ordering of species (when `species = NULL`), or ordering applied
-#' to the requested species vector. One of 'highest', 'lowest', 'A-Z', 'Z-A',
-#' or 'input'.
+#' to the requested species vector. One of `highest`, `lowest`, `A-Z`, `Z-A`,
+#' or `input`.
 #' @param theme_fn A ggplot2 theme function.
 #' @param colours Named character vector of class colours.
 #' @param alpha_vals Named numeric vector giving alpha values for GEO-linked
@@ -302,42 +300,22 @@ plot_sra_geo <- function(
     alpha_vals = c(`Not GEO-linked` = 0.25, `GEO-linked` = 1)
 ) {
   rank <- match.arg(rank)
-  if (!('species' %in% names(SRA))) {
-    .gama_stop('Input `SRA` must contain a `species` column.')
-  }
   FIXED_ORDER <- c(
     'unknown', 'other', 'chromatin', 'epigenomic', 'transcriptomic'
   )
   classes <- intersect(FIXED_ORDER, classes)
   if (!length(classes)) .gama_stop('No valid `classes` selected for plotting.')
-  missing_base <- setdiff(classes, names(SRA))
-  if (length(missing_base)) {
-    .gama_stop(sprintf(
-      'Input `SRA` is missing required class columns: %s.',
-      paste(missing_base, collapse = ', ')
-    ))
-  }
-  prof <- attr(SRA, 'sra_profile', exact = TRUE)
-  if (is.null(prof)) {
-    .gama_stop(
-      paste(
-        'Cached `sra_profile` not found.',
-        'Pass the direct output of summarise_sra_availability().'
-      )
-    )
-  }
-  req_prof <- c('species', 'class', 'geo_linked')
-  miss_prof <- setdiff(req_prof, names(prof))
-  if (length(miss_prof)) {
-    .gama_stop(sprintf(
-      paste(
-        'Cached `sra_profile` is missing required columns: %s.',
-        'Update the cached object by re-running',
-        'summarise_sra_availability().'
-      ),
-      paste(miss_prof, collapse = ', ')
-    ))
-  }
+  SRA <- .gama_require_output(
+    SRA,
+    'summarise_sra_availability',
+    required_cols = c('species', classes)
+  )
+  prof <- .gama_require_cache(
+    SRA,
+    attr_name = 'sra_profile',
+    required_cols = c('species', 'class', 'geo_linked'),
+    source = 'summarise_sra_availability'
+  )
   GEO_COUNTS <- prof |>
     dplyr::filter(.data$class %in% classes, .data$geo_linked) |>
     dplyr::count(species, class, name = 'linked') |>
@@ -455,24 +433,29 @@ plot_sra_geo <- function(
 #' Plot SRA replication skew
 #'
 #' Visualises replication skew using the summary output of
-#' summarise_sra_skew(). Boxplots are drawn from pre-computed five-number
-#' summaries on a log10 y-axis and optionally labelled as 'eff=<x> (n=<y>)'.
-#' Optionally overlays per-unit points (one point per BioProject/BioSample)
-#' jittered horizontally when a cached UID-level profile is available as
-#' attr(SKEW, 'sra_profile').
+#' [summarise_sra_skew()]. Boxplots are drawn from pre-computed summary
+#' statistics on a log10 y-axis.
 #'
-#' @param SKEW A tibble returned by summarise_sra_skew().
-#' @param species NULL (default) to include all species, or a character vector.
-#' @param rank One of 'highest' (default), 'lowest', 'A-Z', 'Z-A', or 'input'.
-#' @param abbreviate Logical; if TRUE (default), abbreviate species labels.
+#' Optional labels show `eff=<x> (n=<y>)` for each species. When a cached
+#' UID-level profile is available as `attr(SKEW, 'sra_profile')`, per-unit
+#' points (one point per BioProject/BioSample) can be overlaid with
+#' horizontal jitter.
+#'
+#' @param SKEW A tibble returned by [summarise_sra_skew()].
+#' @param species `NULL` (default) to include all species, or a character
+#'   vector of species to plot.
+#' @param rank Ordering of species. One of `highest` (default), `lowest`,
+#'   `A-Z`, `Z-A`, or `input`.
+#' @param abbreviate Logical; if `TRUE` (default), abbreviate species labels.
 #' @param theme_fn A ggplot2 theme function.
 #' @param colours Named character vector for box fill and line colours.
-#' @param show_points Logical; if TRUE (default), overlay per-unit points.
-#' @param point_colour Colour for the overlaid data points (character).
-#' @param point_alpha Numeric alpha (transparency) for overlaid points.
-#' @param show_labels Logical; if TRUE (default), label each box with eff and
-#'   n.
-#' @param label_digits Integer; decimal places for eff labels.
+#' @param show_points Logical; if `TRUE` (default), overlay per-unit points
+#'   when cached profiles are available.
+#' @param point_colour Character scalar giving the colour of overlaid points.
+#' @param point_alpha Numeric alpha value for overlaid points.
+#' @param show_labels Logical; if `TRUE` (default), label each box with
+#'   `eff` and `n`.
+#' @param label_digits Integer; decimal places for `eff` labels.
 #'
 #' @return A ggplot object.
 #'
@@ -482,7 +465,7 @@ plot_sra_geo <- function(
 #' \dontrun{
 #' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 #' SRA_SUMMARY <- summarise_sra_availability(RESULTS)
-#' SKEW  <- summarise_sra_skew(SRA_SUMMARY, class = 'transcriptomic')
+#' SKEW <- summarise_sra_skew(SRA_SUMMARY, class = 'transcriptomic')
 #' plot_sra_skew(SKEW)
 #' }
 #'
@@ -501,8 +484,22 @@ plot_sra_skew <- function(
     label_digits = 1L
 ) {
   rank <- match.arg(rank)
-  if (!all(c('species', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff') %in% names(SKEW))) .gama_stop('Input must be the output of summarise_sra_skew().')
-  unit_col <- if ('BioProject' %in% names(SKEW)) 'BioProject' else if ('BioSample' %in% names(SKEW)) 'BioSample' else .gama_stop('Expected a BioProject or BioSample column in `SKEW`.')
+  SKEW <- .gama_require_output(
+    SKEW,
+    'summarise_sra_skew',
+    required_cols = c('species', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff')
+  )
+  unit_col <- if ('BioProject' %in% names(SKEW)) {
+    'BioProject'
+  } else if ('BioSample' %in% names(SKEW)) {
+    'BioSample'
+  } else {
+    .gama_input_error(
+      'summarise_sra_skew',
+      detected = 'summarise_sra_skew',
+      detail = 'missing `BioProject` or `BioSample` column.'
+    )
+  }
   CORE0 <- SKEW |> dplyr::select(species, dplyr::all_of(unit_col), class, min, q25, med, q75, max, eff)
   if (!is.null(species)) {
     missing_sp <- setdiff(species, CORE0$species)

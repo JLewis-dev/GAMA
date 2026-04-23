@@ -11,23 +11,33 @@ summarise_availability(results)
 }
 \value{
 A tibble with one row per species and the following columns:
-\itemize{ \item \code{species}: species name \item \code{Assembly}, \code{SRA},
-\code{BioSample}: accession counts per database \item \code{A}, \code{S}, \code{B}: component
-scores used for the composite \item \code{score}: composite data richness score }
+\itemize{
+\item \code{species}: species name
+\item \code{Assembly}, \code{SRA}, \code{BioSample}: accession counts per database
+\item \code{A}, \code{S}, \code{B}: component scores used for the composite
+\item \code{score}: composite data richness score
+}
 The tibble has class \code{gdt_tbl} and carries a \code{query_info} attribute for
 provenance.
 }
 \description{
 Collapses the output of \code{\link[=query_species]{query_species()}} into a species-level summary table
-of accession counts (Assembly, SRA, BioSample) and composite data richness
-scores.
+of accession counts (Assembly, SRA, BioSample) and data richness scores.
 }
 \details{
 For each species, accession counts are extracted from the underlying query
-results and combined with a composite scoring system computed by the
-internal scoring engine. The returned tibble is given class \code{gdt_tbl} and
-retains query provenance via the \code{query_info} attribute, which is carried
-over from the \code{results} object.
+results and summarised into a single row. The returned tibble is given class
+\code{gdt_tbl} and retains query provenance via the \code{query_info} attribute
+carried over from the \code{results} object.
+
+The \code{score} column is computed as \code{A + S + B}, where \code{A}, \code{S}, and \code{B}
+are transformed contributions from Assembly, SRA, and BioSample
+availability. \code{A = best + ln(1 + total - best)}, with assembly weights of
+Complete = 10, Chromosome = 8, Scaffold = 5, and Contig = 2; \code{best} is
+the maximum-weight assembly, with ties broken by highest N50, and \code{total}
+is the sum of all assembly weights. \code{S = 2 * ln(1 + SRA)}, and
+\code{B = ln(1 + BioSample)}. This formulation prioritises high-quality
+assemblies while applying diminishing returns to highly sampled taxa.
 }
 \examples{
 \dontrun{

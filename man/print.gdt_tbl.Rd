@@ -17,7 +17,7 @@ The input object, invisibly.
 \description{
 Prints a \code{gdt_tbl} object with attached query provenance. When present, the
 \code{query_info} attribute is displayed above the table, showing the tool
-version, query timestamp (UTC), and queried databases.
+version, timestamp (UTC), and databases queried.
 }
 \details{
 Extends the default tibble printing behaviour by prepending a single-line
