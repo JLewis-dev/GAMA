@@ -1,3 +1,21 @@
+# GAMA 0.2.8
+
+## Reliability
+- Patched SRA modality subclass capitalisation so `other` and `unknown` are treated consistently as lower-case labels
+- Added clearer error messaging for invalid `class`, `subclass`, and `unit` argument parameters, including suggestion logic
+
+## API changes
+- Removed the `classes` argument from `plot_sra_geo()`
+- `plot_sra_geo()` now uses a fixed GEO-oriented modality display set
+
+## Documentation
+- Updated roxygen documentation and the GAMA user guide accordingly
+
+## Testing
+- Tested canonical, normalised, fuzzy, and unmatched parameter inputs using real `query_species()` workflows
+
+---
+
 # GAMA 0.2.7
 
 ## Reliability

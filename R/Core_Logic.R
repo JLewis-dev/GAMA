@@ -174,7 +174,7 @@
 
 .classify_strategy <- function(term, ontology) {
   if (is.na(term) || !nzchar(term) || .is_unknown(term)) {
-    return(list(class = 'unknown', subclass = 'Unknown'))
+    return(list(class = 'unknown', subclass = 'unknown'))
   }
   for (class in names(ontology)) {
     for (subclass in names(ontology[[class]])) {
@@ -183,7 +183,7 @@
       }
     }
   }
-  list(class = 'other', subclass = 'Other')
+  list(class = 'other', subclass = 'other')
 }
 
 .classify_strategy_fallback <- function(strategy_raw,
@@ -192,7 +192,7 @@ source_raw,
 selection_raw,
 title_raw = NA_character_) {
   if (!.is_unknown(strategy_raw) && !.is_unknown(strategy_norm) && !.is_other_strategy(strategy_norm)) {
-    return(list(class = 'other', subclass = 'Other'))
+    return(list(class = 'other', subclass = 'other'))
   }
   src <- .normalise_strategy(source_raw)
   sel <- .normalise_strategy(selection_raw)
@@ -211,7 +211,7 @@ title_raw = NA_character_) {
       return(list(class = 'transcriptomic', subclass = 'small-RNA'))
     }
     if (!is.na(ttl) && grepl('\\biso\\s*seq\\b|\\bisoseq\\b|\\bdirect rna\\b', ttl)) {
-      return(list(class = 'transcriptomic', subclass = 'Long-read'))
+      return(list(class = 'transcriptomic', subclass = 'long-read'))
     }
     return(list(class = 'transcriptomic', subclass = 'RNA-seq'))
   }
@@ -226,8 +226,8 @@ title_raw = NA_character_) {
     if (!is.na(ttl) && grepl('\\bfaire\\b', ttl)) return(list(class = 'epigenomic', subclass = 'FAIRE-seq'))
     if (!is.na(ttl) && grepl('\\bmnase\\b', ttl)) return(list(class = 'epigenomic', subclass = 'MNase-seq'))
     if (!is.na(ttl) && grepl('\\bchip\\b', ttl)) return(list(class = 'epigenomic', subclass = 'ChIP-seq'))
-    if (!is.na(ttl) && grepl('\\bbisulfite\\b|\\bwgbs\\b|\\brrbs\\b|\\bmethyl\\b', ttl)) return(list(class = 'epigenomic', subclass = 'Bisulfite-seq'))
-    return(list(class = 'epigenomic', subclass = 'Other'))
+    if (!is.na(ttl) && grepl('\\bbisulfite\\b|\\bwgbs\\b|\\brrbs\\b|\\bmethyl\\b', ttl)) return(list(class = 'epigenomic', subclass = 'bisulfite-seq'))
+    return(list(class = 'epigenomic', subclass = 'other'))
   }
   if (!is.na(ttl) && grepl('\\batac\\b|\\bdnase\\b|\\bfaire\\b|\\bmnase\\b|\\bchip\\b|\\bcut tag\\b|\\bcutandtag\\b|\\bcut run\\b|\\bcutandrun\\b', ttl)) {
     if (grepl('\\bcut tag\\b|\\bcutandtag\\b', ttl)) return(list(class = 'epigenomic', subclass = 'CUT&Tag'))
@@ -239,14 +239,14 @@ title_raw = NA_character_) {
     if (grepl('\\bchip\\b', ttl)) return(list(class = 'epigenomic', subclass = 'ChIP-seq'))
   }
   if (!is.na(ttl) && grepl('\\bbisulfite\\b|\\bwgbs\\b|\\brrbs\\b|\\bmethyl\\b', ttl)) {
-    return(list(class = 'epigenomic', subclass = 'Bisulfite-seq'))
+    return(list(class = 'epigenomic', subclass = 'bisulfite-seq'))
   }
   if (!is.na(src) && grepl('\\bchromatin\\b|\\bchromosome conformation\\b|\\bconformation\\b', src)) {
     if (!is.na(ttl) && grepl('\\bhi c\\b|\\bhic\\b', ttl)) return(list(class = 'chromatin', subclass = 'Hi-C'))
     if (!is.na(ttl) && grepl('\\bchia pet\\b', ttl)) return(list(class = 'chromatin', subclass = 'ChIA-PET'))
     if (!is.na(ttl) && grepl('\\btcc\\b', ttl)) return(list(class = 'chromatin', subclass = 'TCC'))
     if (!is.na(ttl) && grepl('\\b3c\\b|\\b4c\\b|\\b5c\\b|\\bcapture c\\b|\\bpromoter capture\\b|\\bhichip\\b|\\bplac\\b', ttl)) return(list(class = 'chromatin', subclass = '3C-based'))
-    return(list(class = 'chromatin', subclass = 'Other'))
+    return(list(class = 'chromatin', subclass = 'other'))
   }
   if (!is.na(ttl) && grepl('\\bhi c\\b|\\bhic\\b|\\bchia pet\\b|\\btcc\\b|\\b3c\\b|\\b4c\\b|\\b5c\\b|\\bcapture c\\b|\\bhichip\\b|\\bplac\\b|\\bpromoter capture\\b', ttl)) {
     if (grepl('\\bhi c\\b|\\bhic\\b', ttl)) return(list(class = 'chromatin', subclass = 'Hi-C'))
@@ -255,9 +255,9 @@ title_raw = NA_character_) {
     return(list(class = 'chromatin', subclass = '3C-based'))
   }
   if (.is_unknown(strategy_raw) || .is_unknown(strategy_norm) || .is_other_strategy(strategy_norm)) {
-    return(list(class = 'unknown', subclass = 'Unknown'))
+    return(list(class = 'unknown', subclass = 'unknown'))
   }
-  list(class = 'other', subclass = 'Other')
+  list(class = 'other', subclass = 'other')
 }
 
 .ONTOLOGY <- list(
@@ -276,7 +276,7 @@ title_raw = NA_character_) {
       'genome sequencing',
       'genomic sequencing'
     ),
-    `Amplicon-seq` = c(
+    `amplicon-seq` = c(
       'amplicon',
       'amplicon seq',
       'amplicon sequencing',
@@ -304,7 +304,7 @@ title_raw = NA_character_) {
       'genotyping by sequencing',
       'genotyping by seq'
     ),
-    `Targeted-Capture` = c(
+    `targeted-capture` = c(
       'targeted capture',
       'targeted sequencing',
       'targeted seq',
@@ -320,7 +320,7 @@ title_raw = NA_character_) {
       'panel sequencing',
       'gene panel'
     ),
-    `Clone-based` = c(
+    `clone-based` = c(
       'clone',
       'cloneend',
       'poolclone',
@@ -391,7 +391,7 @@ title_raw = NA_character_) {
       'sirna seq',
       'pirna seq'
     ),
-    `Long-read` = c(
+    `long-read` = c(
       'iso seq',
       'isoseq',
       'direct rna seq',
@@ -402,7 +402,7 @@ title_raw = NA_character_) {
     )
   ),
   epigenomic = list(
-    `Bisulfite-seq` = c(
+    `bisulfite-seq` = c(
       'bisulfite seq',
       'mbd seq',
       'medip seq',
@@ -524,7 +524,7 @@ title_raw = NA_character_) {
     )
   ),
   other = list(
-    `Other` = c(
+    `other` = c(
       'custom',
       'custom sequencing',
       'custom protocol',
@@ -624,12 +624,12 @@ title_raw = NA_character_) {
           if (!is.null(rescue$class) && rescue$class %in% c('genomic', 'transcriptomic', 'epigenomic', 'chromatin')) {
             cls <- rescue
           } else if (.is_unknown(strategy_raw) || .is_unknown(strategy_norm) || .is_other_strategy(strategy_norm)) {
-            cls <- list(class = 'unknown', subclass = 'Unknown')
+            cls <- list(class = 'unknown', subclass = 'unknown')
           }
         }
       }
       if (cls$class == 'other' && (.is_unknown(strategy_raw) || .is_unknown(strategy_norm))) {
-        cls <- list(class = 'unknown', subclass = 'Unknown')
+        cls <- list(class = 'unknown', subclass = 'unknown')
       }
       sra_ids <- .extract_sra_ids(x)
       geo <- .extract_geo_accessions(x$expxml)

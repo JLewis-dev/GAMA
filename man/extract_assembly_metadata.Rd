@@ -25,7 +25,7 @@ path (where available). The tibble has class \code{gdt_tbl} and carries a
 \description{
 Retrieves and structures assembly metadata for one or more species using the
 Assembly identifiers stored in the output of \code{\link[=query_species]{query_species()}}. Metadata are
-returned in a tidy tibble and optionally reduced to a single 'best' assembly
+returned in a tidy tibble and optionally reduced to a single best assembly
 per species.
 }
 \details{

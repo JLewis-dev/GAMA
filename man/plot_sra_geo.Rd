@@ -7,7 +7,6 @@
 plot_sra_geo(
   SRA,
   species = NULL,
-  classes = c("transcriptomic", "epigenomic", "chromatin", "other", "unknown"),
   rank = c("highest", "lowest", "A-Z", "Z-A", "input"),
   theme_fn = ggplot2::theme_minimal,
   colours = c(transcriptomic = "#A8E6CF", epigenomic = "#56C5A8", chromatin = "#2FA083",
@@ -21,9 +20,6 @@ plot_sra_geo(
 
 \item{species}{\code{NULL} (default) for all species, or a character vector of
 species to plot.}
-
-\item{classes}{Character vector of modality classes to display. Values are
-intersected with the fixed plotting order used internally.}
 
 \item{rank}{Ordering of species (when \code{species = NULL}), or ordering applied
 to the requested species vector. One of \code{highest}, \code{lowest}, \code{A-Z}, \code{Z-A},

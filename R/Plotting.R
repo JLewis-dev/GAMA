@@ -260,8 +260,6 @@ plot_sra_availability <- function(
 #' [summarise_sra_availability()].
 #' @param species `NULL` (default) for all species, or a character vector of
 #' species to plot.
-#' @param classes Character vector of modality classes to display. Values are
-#' intersected with the fixed plotting order used internally.
 #' @param rank Ordering of species (when `species = NULL`), or ordering applied
 #' to the requested species vector. One of `highest`, `lowest`, `A-Z`, `Z-A`,
 #' or `input`.
@@ -285,9 +283,6 @@ plot_sra_availability <- function(
 plot_sra_geo <- function(
     SRA,
     species    = NULL,
-    classes    = c(
-      'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown'
-    ),
     rank       = c('highest', 'lowest', 'A-Z', 'Z-A', 'input'),
     theme_fn   = ggplot2::theme_minimal,
     colours    = c(
@@ -300,15 +295,14 @@ plot_sra_geo <- function(
     alpha_vals = c(`Not GEO-linked` = 0.25, `GEO-linked` = 1)
 ) {
   rank <- match.arg(rank)
-  FIXED_ORDER <- c(
-    'unknown', 'other', 'chromatin', 'epigenomic', 'transcriptomic'
+  GEO_CLASSES <- c(
+    'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown'
   )
-  classes <- intersect(FIXED_ORDER, classes)
-  if (!length(classes)) .gama_stop('No valid `classes` selected for plotting.')
+  FIXED_ORDER <- rev(GEO_CLASSES)
   SRA <- .gama_require_output(
     SRA,
     'summarise_sra_availability',
-    required_cols = c('species', classes)
+    required_cols = c('species', GEO_CLASSES)
   )
   prof <- .gama_require_cache(
     SRA,
@@ -317,11 +311,11 @@ plot_sra_geo <- function(
     source = 'summarise_sra_availability'
   )
   GEO_COUNTS <- prof |>
-    dplyr::filter(.data$class %in% classes, .data$geo_linked) |>
+    dplyr::filter(.data$class %in% GEO_CLASSES, .data$geo_linked) |>
     dplyr::count(species, class, name = 'linked') |>
     tidyr::complete(
       species = unique(SRA$species),
-      class   = classes,
+      class   = GEO_CLASSES,
       fill    = list(linked = 0L)
     )
   if (is.null(species)) {
@@ -350,17 +344,17 @@ plot_sra_geo <- function(
   .plot_one <- function(one_species) {
     row <- SRA |> dplyr::filter(.data$species == one_species)
     if (!nrow(row)) .gama_stop('No matching species found.')
-    total <- as.integer(row[1, classes, drop = TRUE])
+    total <- as.integer(row[1, GEO_CLASSES, drop = TRUE])
     linked <- GEO_COUNTS |>
       dplyr::filter(.data$species == one_species) |>
-      dplyr::arrange(match(.data$class, classes)) |>
+      dplyr::arrange(match(.data$class, GEO_CLASSES)) |>
       dplyr::pull(linked)
     total[is.na(total)] <- 0L
     linked[is.na(linked)] <- 0L
     prop_linked <- ifelse(total > 0, linked / total, 0)
     prop_not <- ifelse(total > 0, 1 - prop_linked, 0)
     SUM <- tibble::tibble(
-      class       = factor(classes, levels = FIXED_ORDER),
+      class       = factor(GEO_CLASSES, levels = FIXED_ORDER),
       total       = total,
       linked      = linked,
       label       = paste0(linked, '/', total),

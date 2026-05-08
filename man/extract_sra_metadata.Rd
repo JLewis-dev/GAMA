@@ -50,6 +50,7 @@ Top-level classes and their subclasses are:
 \code{SELEX}}
 \item{\code{chromatin}}{\verb{3C-based}, \code{ChIA-PET}, \code{Hi-C}, \code{TCC}}
 \item{\code{other}}{\code{other}}
+\item{\code{unknown}}{\code{unknown}}
 }
 }
 \examples{

@@ -371,7 +371,7 @@ include_geo = FALSE) {
 #'
 #' Retrieves and structures assembly metadata for one or more species using the
 #' Assembly identifiers stored in the output of [query_species()]. Metadata are
-#' returned in a tidy tibble and optionally reduced to a single 'best' assembly
+#' returned in a tidy tibble and optionally reduced to a single best assembly
 #' per species.
 #'
 #' When `best = TRUE`, the best assembly is selected using structural-weighting
@@ -501,6 +501,7 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
 #' `SELEX`}
 #' \item{`chromatin`}{`3C-based`, `ChIA-PET`, `Hi-C`, `TCC`}
 #' \item{`other`}{`other`}
+#' \item{`unknown`}{`unknown`}
 #' }
 #'
 #' @param results A list returned by [query_species()], containing SRA IDs.
@@ -540,6 +541,13 @@ only_geo = FALSE) {
     if (length(missing) > 0L) .gama_warn('Requested species not found in `results`: ', paste(missing, collapse = ', '), '. Dropping.')
     species <- species[species %in% names(results)]
   }
+  valid_class <- c(names(.ONTOLOGY), 'unknown')
+  valid_subclass <- c(
+    unique(unlist(lapply(.ONTOLOGY, names), use.names = FALSE)),
+    'unknown'
+  )
+  class <- .gama_validate_choices(class, 'class', valid_class)
+  subclass <- .gama_validate_choices(subclass, 'subclass', valid_subclass)
   if (!is.null(species) && !length(species)) {
     META <- tibble::tibble(
     species       = character(),
@@ -617,9 +625,9 @@ only_geo = FALSE) {
 summarise_sra_skew <- function(x, species = NULL, unit = c('bioproject', 'biosample'), class = NULL) {
   x <- .gama_require_output(x, 'summarise_sra_availability')
   if (missing(unit)) unit <- 'bioproject'
-  if (length(unit) != 1L) .gama_stop('`unit` must be a single value: \'bioproject\' or \'biosample\'.')
-  unit <- match.arg(unit)
-  if (!is.null(class) && length(class) != 1L) .gama_stop('`class` must be a single modality class (or NULL). Use one class per call.')
+  unit <- .gama_validate_choices(unit, 'unit', c('bioproject', 'biosample'), multiple = FALSE, allow_null = FALSE)
+  valid_class <- c(names(.ONTOLOGY), 'unknown')
+  class <- .gama_validate_choices(class, 'class', valid_class, multiple = FALSE)
   prof <- .gama_require_cache(
     x,
     attr_name = 'sra_profile',

@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.2.7'
+.GAMA_VERSION <- '0.2.8'
 
 # NCBI configuration
 
@@ -372,7 +372,93 @@ utils::globalVariables(c(
   stop(.gama_prefix(), paste0(..., collapse = ''), call. = call.)
 }
 
-# Object identity and validation
+# Argument validation
+
+.gama_choice_key <- function(x) {
+  x <- trimws(as.character(x))
+  x <- tolower(x)
+  gsub('[^a-z0-9]+', '', x)
+}
+
+.gama_format_values <- function(x) {
+  paste0("'", x, "'", collapse = ', ')
+}
+
+.gama_suggest_choice <- function(x, choices) {
+  choices <- unique(as.character(choices))
+  x_key <- .gama_choice_key(x)
+  choice_keys <- .gama_choice_key(choices)
+  normalised_match <- choices[choice_keys == x_key]
+  if (length(normalised_match) == 1L) return(normalised_match)
+  d <- as.integer(utils::adist(x_key, choice_keys))
+  best <- min(d)
+  if (best > 2L) return(NA_character_)
+  fuzzy_match <- choices[d == best]
+  if (length(fuzzy_match) == 1L) fuzzy_match else NA_character_
+}
+
+.gama_format_suggestions <- function(invalid, suggestions, pairs = length(invalid) > 1L) {
+  suggestions <- unname(suggestions)
+  if (!isTRUE(pairs)) return(.gama_format_values(suggestions))
+  paste0("'", invalid, "' -> '", suggestions, "'", collapse = '; ')
+}
+
+.gama_validate_choices <- function(x, arg, choices, multiple = TRUE, allow_null = TRUE) {
+  if (is.null(x)) {
+    if (isTRUE(allow_null)) return(invisible(NULL))
+    .gama_stop('`', arg, '` must be a single value.')
+  }
+  if (!is.character(x)) .gama_stop('`', arg, '` must be a character vector or NULL.')
+  if (!multiple && length(x) != 1L) .gama_stop('`', arg, '` must be a single value or NULL.')
+  if (any(is.na(x) | !nzchar(trimws(x)))) .gama_stop('`', arg, '` cannot contain missing or empty values.')
+  choices <- unique(as.character(choices))
+  invalid <- setdiff(unique(x), choices)
+  if (!length(invalid)) return(x)
+  suggestions <- vapply(
+    invalid,
+    .gama_suggest_choice,
+    choices = choices,
+    FUN.VALUE = character(1)
+  )
+  has_suggestion <- !is.na(suggestions) & nzchar(suggestions)
+  if (all(has_suggestion)) {
+    msg <- paste0(
+      'Invalid `',
+      arg,
+      '` parameter',
+      if (length(invalid) > 1L) 's' else '',
+      ': ',
+      .gama_format_values(invalid),
+      '. Did you mean ',
+      .gama_format_suggestions(invalid, suggestions),
+      '?'
+    )
+    .gama_stop(msg)
+  }
+  no_suggestion <- invalid[!has_suggestion]
+  msg <- paste0(
+    'Invalid `',
+    arg,
+    '` parameter',
+    if (length(no_suggestion) > 1L) 's' else '',
+    ': ',
+    .gama_format_values(no_suggestion),
+    '. Accepted values are: ',
+    .gama_format_values(choices),
+    '.'
+  )
+  if (any(has_suggestion)) {
+    msg <- paste0(
+      msg,
+      ' Did you mean ',
+      .gama_format_suggestions(invalid[has_suggestion], suggestions[has_suggestion], pairs = TRUE),
+      '?'
+    )
+  }
+  .gama_stop(msg)
+}
+
+# Object validation
 
 .set_gama_object <- function(x, object_name) {
   attr(x, 'gama_object') <- object_name
