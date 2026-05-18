@@ -26,16 +26,160 @@
   NA_real_
 }
 
+.ASSEMBLY_CLASSES <- c('complete', 'chromosome', 'scaffold', 'contig')
+
 .ASSEMBLY_WEIGHTS <- c(
-'Complete Genome'          = 10,
-'Complete Genome (latest)' = 10,
-'Chromosome'               = 8,
-'Chromosome level'         = 8,
-'Scaffold'                 = 5,
-'Scaffold level'           = 5,
-'Contig'                   = 2,
-'Contig level'             = 2
+complete   = 10,
+chromosome = 8,
+scaffold   = 5,
+contig     = 2
 )
+
+.assembly_level_class <- function(x) {
+  if (is.list(x) && !inherits(x, 'data.frame')) {
+    x <- vapply(x, .flatten_to_char, character(1))
+  }
+  x <- as.character(x)
+  out <- rep(NA_character_, length(x))
+  txt <- tolower(x)
+  hit <- !is.na(txt) & grepl('complete', txt)
+  out[hit] <- 'complete'
+  hit <- !is.na(txt) & grepl('chromosome', txt)
+  out[hit] <- 'chromosome'
+  hit <- !is.na(txt) & grepl('scaffold', txt)
+  out[hit] <- 'scaffold'
+  hit <- !is.na(txt) & grepl('contig', txt)
+  out[hit] <- 'contig'
+  out
+}
+
+.assembly_level_weight <- function(x) {
+  cls <- .assembly_level_class(x)
+  out <- unname(.ASSEMBLY_WEIGHTS[cls])
+  out[is.na(out)] <- 0
+  out
+}
+
+.best_assembly_n50 <- function(level, n50) {
+  weight <- .assembly_level_weight(level)
+  if (!length(weight) || all(weight <= 0)) return(NA_real_)
+  n50 <- suppressWarnings(as.numeric(n50))
+  best_weight <- max(weight, na.rm = TRUE)
+  best_n50 <- n50[weight == best_weight]
+  if (!length(best_n50) || all(is.na(best_n50))) return(NA_real_)
+  max(best_n50, na.rm = TRUE)
+}
+
+.assembly_empty_metadata <- function(sp) {
+  tibble::tibble(
+  species       = sp,
+  entrez_uid    = NA_character_,
+  level         = NA_character_,
+  n50           = NA_real_,
+  coverage      = NA_real_,
+  biosample     = NA_character_,
+  bioproject    = NA_character_,
+  submitter     = NA_character_,
+  release_date  = NA_character_,
+  ftp_path      = NA_character_
+  )
+}
+
+.assembly_metadata_core <- function(results, species = NULL) {
+  if (!is.null(species)) {
+    species <- intersect(species, names(results))
+    if (!length(species)) .gama_stop('No matching species found.')
+    results <- results[species]
+  }
+  n <- length(results)
+  if (!n) return(.assembly_empty_metadata(character())[0, ])
+  HAS_ASSEMBLY <- vapply(results, function(x) .search_count(x$assembly) > 0L, logical(1))
+  if (!any(HAS_ASSEMBLY)) return(dplyr::bind_rows(lapply(names(results), .assembly_empty_metadata)))
+  batch_total <- sum(vapply(results[HAS_ASSEMBLY], function(x) {
+    .search_batch_count(x$assembly, batch_size = 100)
+  }, integer(1)))
+  pb <- .pb_init(max(1L, batch_total))
+  OUT <- list()
+  idx <- 0L
+  tick <- 0L
+  append_sums <- function(SUMS, sp, OUT, idx) {
+    if (!length(SUMS)) return(list(OUT = OUT, idx = idx))
+    for (j in seq_along(SUMS)) {
+      x <- SUMS[[j]]
+      acc <- names(SUMS)[j]
+      if (is.na(acc) || !nzchar(acc)) acc <- .esummary_uid(x)
+      idx <- idx + 1L
+      OUT[[idx]] <- tibble::tibble(
+      species       = sp,
+      entrez_uid    = acc,
+      level         = .extract_assembly_level(x),
+      n50           = .extract_n50(x),
+      coverage      = as.numeric(.flatten_to_char(x$coverage)),
+      biosample     = .flatten_to_char(x$biosampleaccn),
+      bioproject    = .flatten_to_char(x$gb_bioprojects$bioprojectaccn),
+      submitter     = .flatten_to_char(x$submitterorganization),
+      release_date  = .flatten_to_char(x$asmreleasedate_genbank),
+      ftp_path      = .flatten_to_char(x$ftppath_genbank)
+      )
+    }
+    list(OUT = OUT, idx = idx)
+  }
+  for (i in seq_along(results)) {
+    sp <- names(results)[i]
+    asm <- results[[i]]$assembly
+    idx_before <- idx
+    if (!is.null(asm) && .search_count(asm) > 0L) {
+      ids <- .search_ids(asm)
+      count <- .search_count(asm)
+      if (length(ids) && count <= length(ids)) {
+        BATCHES <- split(ids, ceiling(seq_along(ids) / 100L))
+        for (b in BATCHES) {
+          SUMS <- .safe_entrez_summary('assembly', id = b)
+          SUMS <- .normalise_esummary_list(SUMS, b)
+          tmp <- append_sums(SUMS, sp, OUT, idx)
+          OUT <- tmp$OUT
+          idx <- tmp$idx
+          tick <- tick + 1L
+          .pb_tick(pb, tick)
+        }
+      } else if (.search_has_history(asm)) {
+        STARTS <- seq.int(0L, count - 1L, by = 100L)
+        for (start in STARTS) {
+          size <- min(100L, count - start)
+          SUMS <- .safe_entrez_summary(
+          db          = 'assembly',
+          web_history = asm$web_history,
+          retstart    = start,
+          retmax      = size
+          )
+          SUMS <- .normalise_esummary_history_list(SUMS)
+          tmp <- append_sums(SUMS, sp, OUT, idx)
+          OUT <- tmp$OUT
+          idx <- tmp$idx
+          tick <- tick + 1L
+          .pb_tick(pb, tick)
+        }
+      } else if (length(ids)) {
+        BATCHES <- split(ids, ceiling(seq_along(ids) / 100L))
+        for (b in BATCHES) {
+          SUMS <- .safe_entrez_summary('assembly', id = b)
+          SUMS <- .normalise_esummary_list(SUMS, b)
+          tmp <- append_sums(SUMS, sp, OUT, idx)
+          OUT <- tmp$OUT
+          idx <- tmp$idx
+          tick <- tick + 1L
+          .pb_tick(pb, tick)
+        }
+      }
+    }
+    if (idx == idx_before) {
+      idx <- idx + 1L
+      OUT[[idx]] <- .assembly_empty_metadata(sp)
+    }
+  }
+  .pb_close(pb)
+  dplyr::bind_rows(OUT)
+}
 
 .score_species <- function(assembly, sra, biosample) {
   if (is.null(assembly) || .search_count(assembly) == 0L) {
@@ -50,13 +194,13 @@
       richness    <- 0
     } else {
       LEVELS <- sapply(SUMS, .extract_assembly_level)
-      STRUCT <- .ASSEMBLY_WEIGHTS[LEVELS]
-      STRUCT[is.na(STRUCT)] <- 0
-      N50 <- sapply(SUMS, .extract_n50)
+      STRUCT <- .assembly_level_weight(LEVELS)
+      N50 <- suppressWarnings(as.numeric(sapply(SUMS, .extract_n50)))
       max_struct <- max(STRUCT)
       tied_idx   <- which(STRUCT == max_struct)
       best_idx <- if (length(tied_idx) > 1) {
-        tied_idx[which.max(N50[tied_idx])]
+        tied_n50 <- N50[tied_idx]
+        if (all(is.na(tied_n50))) tied_idx[1L] else tied_idx[which.max(tied_n50)]
       } else tied_idx
       best_score  <- STRUCT[best_idx]
       total_score <- sum(STRUCT)
@@ -586,14 +730,7 @@ title_raw = NA_character_) {
     ))
   }
   batch_total <- sum(vapply(results[HAS_SRA], function(x) {
-    sra <- x$sra
-    count <- .search_count(sra)
-    ids <- .search_ids(sra)
-    if (count == 0L) return(0L)
-    if (length(ids) && count <= length(ids)) return(as.integer(ceiling(length(ids) / 100L)))
-    if (.search_has_history(sra)) return(as.integer(ceiling(count / 100L)))
-    if (length(ids)) return(as.integer(ceiling(length(ids) / 100L)))
-    0L
+    .search_batch_count(x$sra, batch_size = 100)
   }, integer(1)))
   pb <- .pb_init(max(1L, batch_total))
   OUT <- list()

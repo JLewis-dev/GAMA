@@ -7,7 +7,7 @@
 plot_sra_skew(
   SKEW,
   species = NULL,
-  rank = c("highest", "lowest", "A-Z", "Z-A", "input"),
+  rank = "highest",
   abbreviate = TRUE,
   theme_fn = ggplot2::theme_minimal,
   colours = c(box = "#E3F9F2", line = "black"),

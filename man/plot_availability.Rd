@@ -6,7 +6,7 @@
 \usage{
 plot_availability(
   SUMMARY,
-  rank = c("highest", "lowest", "A-Z", "Z-A", "input"),
+  rank = "highest",
   abbreviate = TRUE,
   theme_fn = ggplot2::theme_minimal,
   colours = c(Assembly = "#E3F9F2", SRA = "#A8E6CF", BioSample = "#56C5A8")
@@ -44,5 +44,6 @@ plot_availability(SUMMARY)
 }
 }
 \seealso{
-\code{\link[=summarise_availability]{summarise_availability()}}
+\code{\link[=summarise_availability]{summarise_availability()}}, \code{\link[=plot_assembly_availability]{plot_assembly_availability()}},
+\code{\link[=plot_sra_availability]{plot_sra_availability()}}
 }

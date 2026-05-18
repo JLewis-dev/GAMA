@@ -1,3 +1,25 @@
+# GAMA 0.2.9
+
+## Features
+- Added `summarise_assembly_availability()` and `plot_assembly_availability()` to complete the NCBI Assembly workflow, bringing it into line with the SRA workflow
+
+## Reliability
+- Expanded object-aware error messaging across summary, plotting, and metadata workflows
+- Improved parameter validation and suggestion logic for invalid user inputs
+
+## Refactoring
+- Added shared helpers for recognised assembly levels, scoring, and `best_n50` selection
+- Extended internal GAMA object tagging to support the new Assembly summary workflow
+
+## Documentation
+- Updated roxygen documentation and the GAMA user guide, including the addition of a new API map
+
+## Testing
+- Tested the new Assembly summary and plotting workflow using real `query_species()` outputs
+- Tested compatible and incompatible input paths to confirm the expanded error messaging
+
+---
+
 # GAMA 0.2.8
 
 ## Reliability

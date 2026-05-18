@@ -18,7 +18,8 @@
 #'
 #' @return A ggplot object showing stacked bar segments for each species.
 #'
-#' @seealso [summarise_availability()]
+#' @seealso [summarise_availability()], [plot_assembly_availability()],
+#' [plot_sra_availability()]
 #'
 #' @examples
 #' \dontrun{
@@ -30,7 +31,7 @@
 #' @export
 plot_availability <- function(
 SUMMARY,
-rank        = c('highest', 'lowest', 'A-Z', 'Z-A', 'input'),
+rank        = 'highest',
 abbreviate  = TRUE,
 theme_fn    = ggplot2::theme_minimal,
 colours     = c(
@@ -39,7 +40,8 @@ SRA       = '#A8E6CF',
 BioSample = '#56C5A8'
 )
 ) {
-  rank <- match.arg(rank)
+  rank <- .gama_validate_parameters(rank, 'rank', .gama_rank_parameters, multiple = FALSE, allow_null = FALSE)
+  abbreviate <- .gama_validate_logical_parameter(abbreviate, 'abbreviate')
   req_cols <- c('species', 'score', 'A', 'S', 'B')
   SUMMARY <- .gama_require_output(SUMMARY, 'summarise_availability', required_cols = req_cols)
   SUMMARY$species_label <- if (abbreviate) .shorten_species(SUMMARY$species) else SUMMARY$species
@@ -94,6 +96,143 @@ BioSample = '#56C5A8'
   )
 }
 
+#' Plot Assembly availability
+#'
+#' Visualises species-level Assembly composition using stacked horizontal bars.
+#' Each bar shows the proportional contribution of recognised assembly levels
+#' (`complete`, `chromosome`, `scaffold`, `contig`), with total Assembly
+#' accession counts labelled.
+#'
+#' Operates on the wide-format summary returned by
+#' [summarise_assembly_availability()].
+#'
+#' @param ASSEMBLY A wide-format Assembly summary table returned by
+#' [summarise_assembly_availability()].
+#' @param species `NULL` (default) to plot all species, or a character vector
+#' of species to include.
+#' @param rank Ordering of species. One of `highest` (default), `lowest`,
+#' `A-Z`, `Z-A`, or `input`.
+#' @param abbreviate Logical; if `TRUE` (default), abbreviate species names.
+#' @param theme_fn A ggplot2 theme function.
+#' @param colours Named character vector of assembly level colours.
+#'
+#' @return A ggplot object showing proportional assembly level profiles across
+#' species.
+#'
+#' @seealso [summarise_assembly_availability()]
+#'
+#' @examples
+#' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' ASM_SUMMARY <- summarise_assembly_availability(RESULTS)
+#' plot_assembly_availability(ASM_SUMMARY)
+#' }
+#' @export
+plot_assembly_availability <- function(
+    ASSEMBLY,
+    species    = NULL,
+    rank       = 'highest',
+    abbreviate = TRUE,
+    theme_fn   = ggplot2::theme_minimal,
+    colours    = c(
+      complete   = '#E3F9F2',
+      chromosome = '#A8E6CF',
+      scaffold   = '#56C5A8',
+      contig     = '#2FA083'
+    )
+) {
+  rank <- .gama_validate_parameters(rank, 'rank', .gama_rank_parameters, multiple = FALSE, allow_null = FALSE)
+  abbreviate <- .gama_validate_logical_parameter(abbreviate, 'abbreviate')
+  LEVELS <- .ASSEMBLY_CLASSES
+  req_cols <- c('species', 'Assembly', LEVELS, 'best_n50')
+  ASSEMBLY <- .gama_require_output(ASSEMBLY, 'summarise_assembly_availability', required_cols = req_cols)
+  CORE <- ASSEMBLY |>
+    dplyr::select(species, Assembly, dplyr::all_of(LEVELS))
+  if (!is.null(species)) {
+    species <- as.character(species)
+    species <- species[!is.na(species) & nzchar(species)]
+    species <- unique(species)
+    missing_sp <- setdiff(species, CORE$species)
+    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `ASSEMBLY`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
+    CORE <- CORE |> dplyr::filter(.data$species %in% .env$species)
+    if (!nrow(CORE)) .gama_stop('No matching species found.')
+  }
+  TOTAL <- CORE[, c('species', 'Assembly')]
+  if (rank == 'highest') {
+    TOTAL <- TOTAL[order(TOTAL$Assembly, decreasing = TRUE), ]
+  } else if (rank == 'lowest') {
+    TOTAL <- TOTAL[order(TOTAL$Assembly, decreasing = FALSE), ]
+  } else if (rank == 'A-Z') {
+    TOTAL <- TOTAL[order(TOTAL$species, decreasing = FALSE), ]
+  } else if (rank == 'Z-A') {
+    TOTAL <- TOTAL[order(TOTAL$species, decreasing = TRUE), ]
+  } else if (rank == 'input') {
+    TOTAL <- TOTAL
+  }
+  species_order <- TOTAL$species
+  LONG <- CORE |>
+    tidyr::pivot_longer(
+      cols      = dplyr::all_of(LEVELS),
+      names_to  = 'level',
+      values_to = 'count'
+    ) |>
+    dplyr::mutate(
+      prop = dplyr::if_else(.data$Assembly > 0, .data$count / .data$Assembly, 0)
+    )
+  LONG$level <- factor(LONG$level, levels = LEVELS)
+  LONG$species_label <- if (abbreviate) {
+    .shorten_species(LONG$species)
+  } else {
+    LONG$species
+  }
+  levels_in_plot <- if (abbreviate) {
+    .shorten_species(species_order)
+  } else {
+    species_order
+  }
+  LONG$species_label <- factor(LONG$species_label, levels = rev(levels_in_plot))
+  p <- ggplot2::ggplot(
+    LONG,
+    ggplot2::aes(x = species_label, y = prop, fill = level)
+  ) +
+    ggplot2::geom_col(width = 0.7) +
+    ggplot2::scale_fill_manual(values = colours) +
+    ggplot2::coord_flip(clip = 'off') +
+    ggplot2::labs(
+      x    = NULL,
+      y    = 'Proportion of Assembly accessions',
+      fill = 'Level:'
+    ) +
+    theme_fn(base_size = 13) +
+    ggplot2::theme(
+      plot.margin        = ggplot2::margin(10, 40, 10, 10),
+      legend.position    = 'top',
+      axis.text.y        = ggplot2::element_text(size = 11, face = 'italic'),
+      axis.text.x        = ggplot2::element_text(size = 11),
+      panel.grid.major.y = ggplot2::element_blank(),
+      plot.title         = ggplot2::element_blank()
+    )
+  totals_df <- TOTAL
+  totals_df$species_label <- if (abbreviate) {
+    .shorten_species(totals_df$species)
+  } else {
+    totals_df$species
+  }
+  totals_df$species_label <- factor(
+    totals_df$species_label,
+    levels = levels(LONG$species_label)
+  )
+  p +
+    ggplot2::geom_text(
+      data = totals_df,
+      ggplot2::aes(x = species_label, y = 1.005, label = Assembly),
+      hjust = 0,
+      size  = 3.5,
+      inherit.aes = FALSE
+    ) +
+    ggplot2::scale_y_continuous(expand = c(0, 0))
+}
+
 #' Plot SRA modality composition
 #'
 #' Visualises species-level SRA modality composition using stacked horizontal
@@ -129,7 +268,7 @@ BioSample = '#56C5A8'
 plot_sra_availability <- function(
     SRA,
     species    = NULL,
-    rank       = c('highest', 'lowest', 'A-Z', 'Z-A', 'input'),
+    rank       = 'highest',
     abbreviate = TRUE,
     theme_fn   = ggplot2::theme_minimal,
     colours    = c(
@@ -141,7 +280,8 @@ plot_sra_availability <- function(
       unknown        = '#BDBDBD'
     )
 ) {
-  rank <- match.arg(rank)
+  rank <- .gama_validate_parameters(rank, 'rank', .gama_rank_parameters, multiple = FALSE, allow_null = FALSE)
+  abbreviate <- .gama_validate_logical_parameter(abbreviate, 'abbreviate')
   req_cols <- c('species', 'SRA', 'genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown')
   SRA <- .gama_require_output(SRA, 'summarise_sra_availability', required_cols = req_cols)
   CORE <- SRA |>
@@ -283,7 +423,7 @@ plot_sra_availability <- function(
 plot_sra_geo <- function(
     SRA,
     species    = NULL,
-    rank       = c('highest', 'lowest', 'A-Z', 'Z-A', 'input'),
+    rank       = 'highest',
     theme_fn   = ggplot2::theme_minimal,
     colours    = c(
       transcriptomic = '#A8E6CF',
@@ -294,7 +434,7 @@ plot_sra_geo <- function(
     ),
     alpha_vals = c(`Not GEO-linked` = 0.25, `GEO-linked` = 1)
 ) {
-  rank <- match.arg(rank)
+  rank <- .gama_validate_parameters(rank, 'rank', .gama_rank_parameters, multiple = FALSE, allow_null = FALSE)
   GEO_CLASSES <- c(
     'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown'
   )
@@ -467,7 +607,7 @@ plot_sra_geo <- function(
 plot_sra_skew <- function(
     SKEW,
     species      = NULL,
-    rank         = c('highest', 'lowest', 'A-Z', 'Z-A', 'input'),
+    rank         = 'highest',
     abbreviate   = TRUE,
     theme_fn     = ggplot2::theme_minimal,
     colours      = c(box = '#E3F9F2', line = 'black'),
@@ -477,7 +617,10 @@ plot_sra_skew <- function(
     show_labels  = TRUE,
     label_digits = 1L
 ) {
-  rank <- match.arg(rank)
+  rank <- .gama_validate_parameters(rank, 'rank', .gama_rank_parameters, multiple = FALSE, allow_null = FALSE)
+  abbreviate <- .gama_validate_logical_parameter(abbreviate, 'abbreviate')
+  show_points <- .gama_validate_logical_parameter(show_points, 'show_points')
+  show_labels <- .gama_validate_logical_parameter(show_labels, 'show_labels')
   SKEW <- .gama_require_output(
     SKEW,
     'summarise_sra_skew',

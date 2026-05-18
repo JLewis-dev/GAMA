@@ -32,6 +32,7 @@ print(SUMMARY)
 }
 }
 \seealso{
-\code{\link[=summarise_availability]{summarise_availability()}}, \code{\link[=summarise_sra_availability]{summarise_sra_availability()}},
-\code{\link[=extract_assembly_metadata]{extract_assembly_metadata()}}, \code{\link[=extract_sra_metadata]{extract_sra_metadata()}}
+\code{\link[=summarise_availability]{summarise_availability()}}, \code{\link[=summarise_assembly_availability]{summarise_assembly_availability()}},
+\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}, \code{\link[=extract_assembly_metadata]{extract_assembly_metadata()}},
+\code{\link[=extract_sra_metadata]{extract_sra_metadata()}}
 }

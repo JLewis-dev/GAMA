@@ -32,8 +32,9 @@
 #' repeated record identifiers. The output has a `query_info` attribute storing
 #' query provenance.
 #'
-#' @seealso [summarise_availability()], [summarise_sra_availability()],
-#' [extract_assembly_metadata()], [extract_sra_metadata()]
+#' @seealso [summarise_availability()], [summarise_assembly_availability()],
+#' [summarise_sra_availability()], [extract_assembly_metadata()],
+#' [extract_sra_metadata()]
 #'
 #' @examples
 #' \dontrun{
@@ -142,7 +143,8 @@ query_species <- function(species, synonyms = NULL) {
 #' The tibble has class `gdt_tbl` and carries a `query_info` attribute for
 #' provenance.
 #'
-#' @seealso [query_species()], [plot_availability()]
+#' @seealso [query_species()], [summarise_assembly_availability()],
+#' [summarise_sra_availability()], [plot_availability()]
 #'
 #' @examples
 #' \dontrun{
@@ -166,6 +168,117 @@ summarise_availability <- function(results) {
   score     = purrr::map_dbl(COMPONENTS, 'score')
   )
   .as_gdt_table(OUT, results, 'summarise_availability')
+}
+
+#' Summarise Assembly availability
+#'
+#' Collapses Assembly metadata into species-level assembly level counts.
+#'
+#' @details
+#' `summarise_assembly_availability()` reports the total number of Assembly
+#' accessions returned by [query_species()] and the number assigned to each
+#' recognised assembly level: `complete`, `chromosome`, `scaffold`, and
+#' `contig`. Assembly level counts are derived from Assembly esummary metadata;
+#' the `Assembly` total is retained from the original query accession count.
+#'
+#' The `best_n50` column is the highest N50 among assemblies at the highest
+#' available recognised assembly level for each species. Assembly levels are
+#' ranked as complete > chromosome > scaffold > contig. Where multiple
+#' assemblies are present at the highest available level, the highest N50
+#' among those assemblies is reported. If no recognised assembly level with an
+#' available N50 is found, `best_n50` is returned as `NA_real_`.
+#'
+#' @param results A list returned by [query_species()].
+#' @param species `NULL` (default) to include all species, or a character
+#' vector specifying which species to include.
+#'
+#' @return A tibble with one row per species and the following columns:
+#' \itemize{
+#' \item `species`: species name
+#' \item `Assembly`: total Assembly accession count
+#' \item `complete`, `chromosome`, `scaffold`, `contig`: assembly level counts
+#' \item `best_n50`: highest N50 among assemblies at the highest available
+#' recognised assembly level
+#' }
+#' The tibble has class `gdt_tbl` and carries a `query_info` attribute for
+#' provenance.
+#'
+#' @seealso [query_species()], [extract_assembly_metadata()],
+#' [plot_assembly_availability()]
+#'
+#' @examples
+#' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' ASM_SUMMARY <- summarise_assembly_availability(RESULTS)
+#' print(ASM_SUMMARY)
+#' }
+#' @export
+summarise_assembly_availability <- function(results, species = NULL) {
+  results <- .gama_require_output(results, 'query_species')
+  SPECIES_ALL <- names(results)
+  SPECIES_USE <- if (is.null(species)) {
+    SPECIES_ALL
+  } else {
+    sp_in <- as.character(species)
+    sp_in <- sp_in[!is.na(sp_in) & nzchar(sp_in)]
+    sp_in <- unique(sp_in)
+    missing <- setdiff(sp_in, SPECIES_ALL)
+    if (length(missing) > 0L) .gama_warn('Requested species not found in `results`: ', paste(missing, collapse = ', '), '. Dropping.')
+    sp_in[sp_in %in% SPECIES_ALL]
+  }
+  LEVELS <- .ASSEMBLY_CLASSES
+  if (!length(SPECIES_USE)) {
+    OUT <- tibble::tibble(
+    species   = character(),
+    Assembly  = integer(),
+    complete  = integer(),
+    chromosome = integer(),
+    scaffold  = integer(),
+    contig    = integer(),
+    best_n50  = numeric()
+    )
+    return(.as_gdt_table(OUT, results, 'summarise_assembly_availability'))
+  }
+  META <- .assembly_metadata_core(results, species = SPECIES_USE)
+  META$level_class <- .assembly_level_class(META$level)
+  CLASS <- META |>
+  dplyr::filter(!is.na(.data$level_class)) |>
+  dplyr::count(species, level_class, name = 'count') |>
+  tidyr::pivot_wider(
+  names_from  = level_class,
+  values_from = count,
+  values_fill = 0
+  )
+  for (m in LEVELS) if (!m %in% names(CLASS)) CLASS[[m]] <- 0L
+  BEST <- META |>
+  dplyr::group_by(species) |>
+  dplyr::summarise(
+  best_n50 = .best_assembly_n50(.data$level, .data$n50),
+  .groups  = 'drop'
+  )
+  COUNTS <- tibble::tibble(
+  species  = SPECIES_USE,
+  Assembly = purrr::map_int(results[SPECIES_USE], ~ .x$assembly$count %||% 0L)
+  )
+  OUT <- COUNTS |>
+  dplyr::left_join(CLASS, by = 'species') |>
+  dplyr::left_join(BEST, by = 'species') |>
+  dplyr::select(species, Assembly, dplyr::all_of(LEVELS), best_n50)
+  OUT <- OUT |>
+  dplyr::mutate(dplyr::across(dplyr::all_of(LEVELS), ~ {
+    y <- as.integer(.x)
+    y[is.na(y)] <- 0L
+    y
+  }))
+  no_data <- OUT$species[OUT$Assembly == 0L]
+  if (length(no_data) > 0L) {
+    if (length(no_data) <= 10L) {
+      .gama_msg('No Assembly records found for: ', paste(no_data, collapse = ', '), '. Returning zeros for counts.')
+    } else {
+      .gama_msg('No Assembly records found for ', length(no_data), ' of ', length(SPECIES_USE), ' species. Returning zeros for counts.')
+    }
+  }
+  .as_gdt_table(OUT, results, 'summarise_assembly_availability')
 }
 
 #' Summarise SRA modality composition
@@ -226,6 +339,8 @@ species     = NULL,
 all         = FALSE,
 include_geo = FALSE) {
   results <- .gama_require_output(results, 'query_species')
+  all <- .gama_validate_logical_parameter(all, 'all')
+  include_geo <- .gama_validate_logical_parameter(include_geo, 'include_geo')
   SPECIES_ALL <- names(results)
   SPECIES_USE <- if (is.null(species)) {
     SPECIES_ALL
@@ -389,7 +504,8 @@ include_geo = FALSE) {
 #' path (where available). The tibble has class `gdt_tbl` and carries a
 #' `query_info` attribute for provenance.
 #'
-#' @seealso [query_species()], [summarise_availability()]
+#' @seealso [query_species()], [summarise_availability()],
+#' [summarise_assembly_availability()], [plot_assembly_availability()]
 #'
 #' @examples
 #' \dontrun{
@@ -400,6 +516,7 @@ include_geo = FALSE) {
 #' @export
 extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
   results <- .gama_require_output(results, 'query_species')
+  best <- .gama_validate_logical_parameter(best, 'best')
   if (!is.null(species)) {
     species <- as.character(species)
     species <- species[!is.na(species) & nzchar(species)]
@@ -407,71 +524,17 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
     if (length(missing) > 0L) .gama_stop('Requested species not found in `results`: ', paste(missing, collapse = ', '), '.')
     results <- results[species]
   }
-  n  <- length(results)
-  pb <- .pb_init(n)
-  META <- lapply(seq_along(results), function(i) {
-    sp  <- names(results)[i]
-    res <- results[[i]]
-    .pb_tick(pb, i)
-    asm <- res$assembly
-    if (is.null(asm) || (asm$count %||% 0L) == 0L) {
-      return(tibble::tibble(
-      species       = sp,
-      entrez_uid    = NA_character_,
-      level         = NA_character_,
-      n50           = NA_real_,
-      coverage      = NA_real_,
-      biosample     = NA_character_,
-      bioproject    = NA_character_,
-      submitter     = NA_character_,
-      release_date  = NA_character_,
-      ftp_path      = NA_character_
-      ))
-    }
-    SUMS <- .fetch_search_summaries('assembly', asm, batch_size = 100)
-    if (!length(SUMS)) {
-      return(tibble::tibble(
-      species       = sp,
-      entrez_uid    = NA_character_,
-      level         = NA_character_,
-      n50           = NA_real_,
-      coverage      = NA_real_,
-      biosample     = NA_character_,
-      bioproject    = NA_character_,
-      submitter     = NA_character_,
-      release_date  = NA_character_,
-      ftp_path      = NA_character_
-      ))
-    }
-    do.call(dplyr::bind_rows, lapply(seq_along(SUMS), function(j) {
-      x <- SUMS[[j]]
-      acc <- names(SUMS)[j]
-      if (is.na(acc) || !nzchar(acc)) acc <- .esummary_uid(x)
-      tibble::tibble(
-      species       = sp,
-      entrez_uid    = acc,
-      level         = .extract_assembly_level(x),
-      n50           = .extract_n50(x),
-      coverage      = as.numeric(.flatten_to_char(x$coverage)),
-      biosample     = .flatten_to_char(x$biosampleaccn),
-      bioproject    = .flatten_to_char(x$gb_bioprojects$bioprojectaccn),
-      submitter     = .flatten_to_char(x$submitterorganization),
-      release_date  = .flatten_to_char(x$asmreleasedate_genbank),
-      ftp_path      = .flatten_to_char(x$ftppath_genbank)
-      )
-    }))
-  })
-  .pb_close(pb)
-  META <- dplyr::bind_rows(META)
+  META <- .assembly_metadata_core(results)
   if (!best) return(.as_gdt_table(META, results, 'extract_assembly_metadata'))
   BEST <- lapply(split(META, META$species), function(x) {
-    STRUCT <- .ASSEMBLY_WEIGHTS[x$level]
-    STRUCT[is.na(STRUCT)] <- 0
+    STRUCT <- .assembly_level_weight(x$level)
+    if (!length(STRUCT) || all(STRUCT <= 0)) return(x[1L, , drop = FALSE])
     N50 <- x$n50
     max_struct <- max(STRUCT)
     tied_idx   <- which(STRUCT == max_struct)
     best_idx <- if (length(tied_idx) > 1) {
-      tied_idx[which.max(N50[tied_idx])]
+      tied_n50 <- N50[tied_idx]
+      if (all(is.na(tied_n50))) tied_idx[1L] else tied_idx[which.max(tied_n50)]
     } else tied_idx
     x[best_idx, , drop = FALSE]
   })
@@ -534,6 +597,7 @@ class    = NULL,
 subclass = NULL,
 only_geo = FALSE) {
   results <- .gama_require_output(results, 'query_species')
+  only_geo <- .gama_validate_logical_parameter(only_geo, 'only_geo')
   if (!is.null(species)) {
     species <- as.character(species)
     species <- species[!is.na(species) & nzchar(species)]
@@ -546,8 +610,20 @@ only_geo = FALSE) {
     unique(unlist(lapply(.ONTOLOGY, names), use.names = FALSE)),
     'unknown'
   )
-  class <- .gama_validate_choices(class, 'class', valid_class)
-  subclass <- .gama_validate_choices(subclass, 'subclass', valid_subclass)
+  class_parameters <- .gama_ontology_parameter_map(.ONTOLOGY, 'class')
+  subclass_parameters <- .gama_ontology_parameter_map(.ONTOLOGY, 'subclass')
+  class <- .gama_validate_parameters(
+    class,
+    'class',
+    valid_class,
+    variants = class_parameters
+  )
+  subclass <- .gama_validate_parameters(
+    subclass,
+    'subclass',
+    valid_subclass,
+    variants = subclass_parameters
+  )
   if (!is.null(species) && !length(species)) {
     META <- tibble::tibble(
     species       = character(),
@@ -625,9 +701,16 @@ only_geo = FALSE) {
 summarise_sra_skew <- function(x, species = NULL, unit = c('bioproject', 'biosample'), class = NULL) {
   x <- .gama_require_output(x, 'summarise_sra_availability')
   if (missing(unit)) unit <- 'bioproject'
-  unit <- .gama_validate_choices(unit, 'unit', c('bioproject', 'biosample'), multiple = FALSE, allow_null = FALSE)
+  unit <- .gama_validate_parameters(unit, 'unit', c('bioproject', 'biosample'), multiple = FALSE, allow_null = FALSE)
   valid_class <- c(names(.ONTOLOGY), 'unknown')
-  class <- .gama_validate_choices(class, 'class', valid_class, multiple = FALSE)
+  class_parameters <- .gama_ontology_parameter_map(.ONTOLOGY, 'class')
+  class <- .gama_validate_parameters(
+    class,
+    'class',
+    valid_class,
+    variants = class_parameters,
+    multiple = FALSE
+  )
   prof <- .gama_require_cache(
     x,
     attr_name = 'sra_profile',

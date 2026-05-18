@@ -19,6 +19,10 @@ GAMA:
 - Enables strategic parsing of Assembly and SRA results  
 - Generates publication-ready visuals 
 
+<p align='center'>
+  <img src='man/figures/API_map.png' alt='GAMA infographic: API map' width='800'>
+</p>
+
 See the **[GAMA user guide](docs/GAMA_user_guide.pdf)** for a comprehensive overview of functions and methods.
 
 ---
@@ -201,7 +205,7 @@ SRA experiments are classified using an ontology derived from large-scale metada
 - WGS  
 - Amplicon-seq  
 - RAD-seq  
-- Targeted-Capture  
+- Targeted-capture  
 - Clone-based  
 
 ### Transcriptomic

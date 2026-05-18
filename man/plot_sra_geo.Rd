@@ -7,7 +7,7 @@
 plot_sra_geo(
   SRA,
   species = NULL,
-  rank = c("highest", "lowest", "A-Z", "Z-A", "input"),
+  rank = "highest",
   theme_fn = ggplot2::theme_minimal,
   colours = c(transcriptomic = "#A8E6CF", epigenomic = "#56C5A8", chromatin = "#2FA083",
     other = "#166A55", unknown = "#BDBDBD"),

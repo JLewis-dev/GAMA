@@ -7,7 +7,7 @@
 plot_sra_availability(
   SRA,
   species = NULL,
-  rank = c("highest", "lowest", "A-Z", "Z-A", "input"),
+  rank = "highest",
   abbreviate = TRUE,
   theme_fn = ggplot2::theme_minimal,
   colours = c(genomic = "#E3F9F2", transcriptomic = "#A8E6CF", epigenomic = "#56C5A8",

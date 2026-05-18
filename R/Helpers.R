@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.2.8'
+.GAMA_VERSION <- '0.2.9'
 
 # NCBI configuration
 
@@ -84,6 +84,16 @@
 
 .search_is_truncated <- function(x) {
   .search_count(x) > length(.search_ids(x))
+}
+
+.search_batch_count <- function(search, batch_size = 100) {
+  count <- .search_count(search)
+  ids <- .search_ids(search)
+  if (count == 0L) return(0L)
+  if (length(ids) && count <= length(ids)) return(as.integer(ceiling(length(ids) / batch_size)))
+  if (.search_has_history(search)) return(as.integer(ceiling(count / batch_size)))
+  if (length(ids)) return(as.integer(ceiling(length(ids) / batch_size)))
+  0L
 }
 
 .fetch_esummary_batched <- function(db, ids, batch_size = 100) {
@@ -299,14 +309,19 @@ utils::globalVariables(c(
   '.data',
   '.env',
   'A',
+  'Assembly',
   'B',
   'BioProject',
   'bioproject',
+  'best_n50',
   'BioSample',
   'biosample',
   'chromatin',
+  'chromosome',
   'class',
+  'complete',
   'count',
+  'contig',
   'database',
   'denom_total',
   'eff',
@@ -322,9 +337,12 @@ utils::globalVariables(c(
   'lab',
   'label',
   'label_y',
+  'level',
+  'level_class',
   'max',
   'med',
   'min',
+  'n50',
   'other',
   'prop',
   'q25',
@@ -333,6 +351,7 @@ utils::globalVariables(c(
   'SRA',
   'score',
   'score_component',
+  'scaffold',
   'segment',
   'species',
   'species_label',
@@ -372,92 +391,6 @@ utils::globalVariables(c(
   stop(.gama_prefix(), paste0(..., collapse = ''), call. = call.)
 }
 
-# Argument validation
-
-.gama_choice_key <- function(x) {
-  x <- trimws(as.character(x))
-  x <- tolower(x)
-  gsub('[^a-z0-9]+', '', x)
-}
-
-.gama_format_values <- function(x) {
-  paste0("'", x, "'", collapse = ', ')
-}
-
-.gama_suggest_choice <- function(x, choices) {
-  choices <- unique(as.character(choices))
-  x_key <- .gama_choice_key(x)
-  choice_keys <- .gama_choice_key(choices)
-  normalised_match <- choices[choice_keys == x_key]
-  if (length(normalised_match) == 1L) return(normalised_match)
-  d <- as.integer(utils::adist(x_key, choice_keys))
-  best <- min(d)
-  if (best > 2L) return(NA_character_)
-  fuzzy_match <- choices[d == best]
-  if (length(fuzzy_match) == 1L) fuzzy_match else NA_character_
-}
-
-.gama_format_suggestions <- function(invalid, suggestions, pairs = length(invalid) > 1L) {
-  suggestions <- unname(suggestions)
-  if (!isTRUE(pairs)) return(.gama_format_values(suggestions))
-  paste0("'", invalid, "' -> '", suggestions, "'", collapse = '; ')
-}
-
-.gama_validate_choices <- function(x, arg, choices, multiple = TRUE, allow_null = TRUE) {
-  if (is.null(x)) {
-    if (isTRUE(allow_null)) return(invisible(NULL))
-    .gama_stop('`', arg, '` must be a single value.')
-  }
-  if (!is.character(x)) .gama_stop('`', arg, '` must be a character vector or NULL.')
-  if (!multiple && length(x) != 1L) .gama_stop('`', arg, '` must be a single value or NULL.')
-  if (any(is.na(x) | !nzchar(trimws(x)))) .gama_stop('`', arg, '` cannot contain missing or empty values.')
-  choices <- unique(as.character(choices))
-  invalid <- setdiff(unique(x), choices)
-  if (!length(invalid)) return(x)
-  suggestions <- vapply(
-    invalid,
-    .gama_suggest_choice,
-    choices = choices,
-    FUN.VALUE = character(1)
-  )
-  has_suggestion <- !is.na(suggestions) & nzchar(suggestions)
-  if (all(has_suggestion)) {
-    msg <- paste0(
-      'Invalid `',
-      arg,
-      '` parameter',
-      if (length(invalid) > 1L) 's' else '',
-      ': ',
-      .gama_format_values(invalid),
-      '. Did you mean ',
-      .gama_format_suggestions(invalid, suggestions),
-      '?'
-    )
-    .gama_stop(msg)
-  }
-  no_suggestion <- invalid[!has_suggestion]
-  msg <- paste0(
-    'Invalid `',
-    arg,
-    '` parameter',
-    if (length(no_suggestion) > 1L) 's' else '',
-    ': ',
-    .gama_format_values(no_suggestion),
-    '. Accepted values are: ',
-    .gama_format_values(choices),
-    '.'
-  )
-  if (any(has_suggestion)) {
-    msg <- paste0(
-      msg,
-      ' Did you mean ',
-      .gama_format_suggestions(invalid[has_suggestion], suggestions[has_suggestion], pairs = TRUE),
-      '?'
-    )
-  }
-  .gama_stop(msg)
-}
-
 # Object validation
 
 .set_gama_object <- function(x, object_name) {
@@ -478,6 +411,9 @@ utils::globalVariables(c(
     nms <- names(x)
     if (all(c('species', 'Assembly', 'SRA', 'BioSample', 'A', 'S', 'B', 'score') %in% nms)) {
       return('summarise_availability')
+    }
+    if (all(c('species', 'Assembly', 'complete', 'chromosome', 'scaffold', 'contig', 'best_n50') %in% nms)) {
+      return('summarise_assembly_availability')
     }
     if (all(c('species', 'SRA', 'genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown') %in% nms)) {
       return('summarise_sra_availability')
@@ -555,6 +491,178 @@ utils::globalVariables(c(
   cache
 }
 
+# Parameter validation
+
+.gama_parameter_key <- function(x) {
+  x <- trimws(as.character(x))
+  x <- tolower(x)
+  gsub('[^a-z0-9]+', '', x)
+}
+
+.gama_format_values <- function(x) {
+  paste0("'", x, "'", collapse = ', ')
+}
+
+.gama_rank_parameters <- c('highest', 'lowest', 'A-Z', 'Z-A', 'input')
+
+.gama_validate_logical_parameter <- function(x, arg) {
+  if (is.logical(x) && length(x) == 1L && !is.na(x)) return(x)
+  .gama_stop('`', arg, '` must be TRUE or FALSE.')
+}
+
+.gama_ontology_parameter_map <- function(ontology, target = c('class', 'subclass')) {
+  target <- match.arg(target)
+  keys <- character()
+  values <- character()
+  add_parameter <- function(parameter, value) {
+    key <- .gama_parameter_key(parameter)
+    keep <- !is.na(key) & nzchar(key)
+    if (!any(keep)) return(invisible(NULL))
+    keys <<- c(keys, key[keep])
+    values <<- c(values, rep(value, sum(keep)))
+    invisible(NULL)
+  }
+  for (class in names(ontology)) {
+    for (subclass in names(ontology[[class]])) {
+      value <- if (identical(target, 'class')) class else subclass
+      add_parameter(subclass, value)
+      variants <- ontology[[class]][[subclass]] %||% character()
+      if (length(variants) > 0L) add_parameter(variants, value)
+    }
+  }
+  if (!length(keys)) return(stats::setNames(character(), character()))
+  grouped <- split(values, keys)
+  out <- vapply(grouped, function(x) {
+    x <- unique(x)
+    if (length(x) == 1L) x else NA_character_
+  }, character(1))
+  out[!is.na(out)]
+}
+
+.gama_suggest_variant_parameter <- function(x, variants) {
+  if (is.null(variants) || !length(variants)) return(NA_character_)
+  key <- .gama_parameter_key(x)
+  hit <- unique(unname(variants[names(variants) == key]))
+  if (length(hit) == 1L) hit else NA_character_
+}
+
+.gama_allow_fuzzy_parameter <- function(x) {
+  key <- .gama_parameter_key(x)
+  nchar(key) > 4L
+}
+
+.gama_suggest_fuzzy_parameter <- function(x, parameters, max_distance = 2L) {
+  if (!.gama_allow_fuzzy_parameter(x)) return(NA_character_)
+  parameters <- unique(as.character(parameters))
+  if (!length(parameters)) return(NA_character_)
+  input_key <- .gama_parameter_key(x)
+  parameter_keys <- .gama_parameter_key(parameters)
+  d <- as.integer(utils::adist(input_key, parameter_keys))
+  best <- min(d)
+  if (best > max_distance) return(NA_character_)
+  hit <- unique(parameters[d == best])
+  if (length(hit) == 1L) hit else NA_character_
+}
+
+.gama_suggest_parameter <- function(x, parameters, variants = NULL) {
+  parameters <- unique(as.character(parameters))
+  input_key <- .gama_parameter_key(x)
+  parameter_keys <- .gama_parameter_key(parameters)
+  normalised_hit <- unique(parameters[parameter_keys == input_key])
+  if (length(normalised_hit) == 1L) return(normalised_hit)
+  variant_hit <- .gama_suggest_variant_parameter(x, variants)
+  if (!is.na(variant_hit) && variant_hit %in% parameters) return(variant_hit)
+  .gama_suggest_fuzzy_parameter(x, parameters)
+}
+
+.gama_format_suggestions <- function(invalid, suggestions, pairs = length(invalid) > 1L) {
+  suggestions <- unname(suggestions)
+  if (!isTRUE(pairs)) return(.gama_format_values(suggestions))
+  paste0("'", invalid, "' -> '", suggestions, "'", collapse = '; ')
+}
+
+.gama_has_normalised_parameter_match <- function(x, parameters) {
+  input_key <- .gama_parameter_key(x)
+  parameter_keys <- .gama_parameter_key(parameters)
+  input_key %in% parameter_keys
+}
+
+.gama_validate_single_parameter <- function(x, arg, parameters) {
+  if (length(x) == 1L) return(invisible(NULL))
+  has_match <- vapply(
+    x,
+    .gama_has_normalised_parameter_match,
+    parameters = parameters,
+    FUN.VALUE = logical(1)
+  )
+  msg <- paste0('`', arg, '` must be a single value.')
+  if (any(!has_match)) {
+    msg <- paste0(msg, ' Accepted values are: ', .gama_format_values(parameters), '.')
+  }
+  .gama_stop(msg)
+}
+
+.gama_character_parameter_type_error <- function(arg, multiple = TRUE, allow_null = TRUE) {
+  msg <- if (isTRUE(multiple)) {
+    paste0('`', arg, '` must be a character vector')
+  } else {
+    paste0('`', arg, '` must be a single character value')
+  }
+  if (isTRUE(allow_null)) msg <- paste0(msg, ' or NULL')
+  .gama_stop(msg, '.')
+}
+
+.gama_validate_parameters <- function(x, arg, parameters, variants = NULL, multiple = TRUE, allow_null = TRUE) {
+  parameters <- unique(as.character(parameters))
+  if (is.null(x)) {
+    if (isTRUE(allow_null)) return(invisible(NULL))
+    .gama_stop(
+      'Invalid `',
+      arg,
+      '` parameter: NULL. Accepted values are: ',
+      .gama_format_values(parameters),
+      '.'
+    )
+  }
+  if (!is.character(x)) .gama_character_parameter_type_error(arg, multiple, allow_null)
+  if (!multiple) .gama_validate_single_parameter(x, arg, parameters)
+  if (any(is.na(x) | !nzchar(trimws(x)))) .gama_stop('`', arg, '` cannot contain missing or empty values.')
+  invalid <- setdiff(unique(x), parameters)
+  if (!length(invalid)) return(x)
+  suggestions <- vapply(
+    invalid,
+    .gama_suggest_parameter,
+    parameters = parameters,
+    variants = variants,
+    FUN.VALUE = character(1)
+  )
+  has_suggestion <- !is.na(suggestions) & nzchar(suggestions)
+  if (length(invalid) == 1L && isTRUE(has_suggestion)) {
+    msg <- paste0(
+      'Invalid `',
+      arg,
+      '` parameter: ',
+      .gama_format_values(invalid),
+      '. Did you mean ',
+      .gama_format_suggestions(invalid, suggestions, pairs = FALSE),
+      '?'
+    )
+    .gama_stop(msg)
+  }
+  msg <- paste0(
+    'Invalid `',
+    arg,
+    '` parameter',
+    if (length(invalid) > 1L) 's' else '',
+    ': ',
+    .gama_format_values(invalid),
+    '. Accepted values are: ',
+    .gama_format_values(parameters),
+    '.'
+  )
+  .gama_stop(msg)
+}
+
 # Provenance
 
 .flatten_to_char <- function(x) {
@@ -610,8 +718,9 @@ utils::globalVariables(c(
 #'
 #' @return The input object, invisibly.
 #'
-#' @seealso [summarise_availability()], [summarise_sra_availability()],
-#' [extract_assembly_metadata()], [extract_sra_metadata()]
+#' @seealso [summarise_availability()], [summarise_assembly_availability()],
+#' [summarise_sra_availability()], [extract_assembly_metadata()],
+#' [extract_sra_metadata()]
 #'
 #' @examples
 #' \dontrun{
