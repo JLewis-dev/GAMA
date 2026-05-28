@@ -1,3 +1,10 @@
-^GAMA\.Rproj$
 ^\.Rproj\.user$
+^GAMA\.Rproj$
+
+^\.github$
+
+^CITATION\.cff$
 ^LICENSE\.md$
+
+^data-raw$
+^docs$

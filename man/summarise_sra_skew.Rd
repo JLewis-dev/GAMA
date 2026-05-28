@@ -4,12 +4,7 @@
 \alias{summarise_sra_skew}
 \title{Summarise SRA replication skew across BioProjects / BioSamples}
 \usage{
-summarise_sra_skew(
-  x,
-  species = NULL,
-  unit = c("bioproject", "biosample"),
-  class = NULL
-)
+summarise_sra_skew(x, species = NULL, unit = "bioproject", class = NULL)
 }
 \arguments{
 \item{x}{A data.frame/tibble returned by summarise_sra_availability()

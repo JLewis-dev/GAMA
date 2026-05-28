@@ -44,6 +44,5 @@ plot_availability(SUMMARY)
 }
 }
 \seealso{
-\code{\link[=summarise_availability]{summarise_availability()}}, \code{\link[=plot_assembly_availability]{plot_assembly_availability()}},
-\code{\link[=plot_sra_availability]{plot_sra_availability()}}
+\code{\link[=summarise_availability]{summarise_availability()}}
 }

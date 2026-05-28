@@ -34,22 +34,23 @@ metadata in \code{sra_profile_info}.
 }
 \description{
 Collapses experiment-level SRA metadata into species-level modality counts
-using ontology-assigned classes and (optionally) subclasses.
+using classes and subclasses assigned using the internal ontology.
 }
 \details{
 By default, the output includes class-level counts for the major modalities
 (genomic, transcriptomic, epigenomic, chromatin, other, unknown), plus the
 total number of SRA experiments per species.
 
-Profile cache (used by \code{\link[=summarise_sra_skew]{summarise_sra_skew()}}):
+Profile cache (used by downstream summaries):
 In addition to the summary table, this function attaches a cached, UID-level
 profile as an attribute \code{sra_profile}. The profile contains (at minimum)
 \code{species}, \code{entrez_uid}, \code{biosample}, \code{bioproject}, \code{class}, \code{subclass}, and
 GEO linkage fields (\code{geo_linked}, \code{gse_ids}, \code{gsm_ids}). This cache is
 intended to be re-used locally for downstream summaries that require
 within-species structure (e.g. replication skew across BioProjects or
-BioSamples) without re-querying NCBI. In particular, \code{\link[=summarise_sra_skew]{summarise_sra_skew()}}
-consumes \code{attr(x, 'sra_profile')} from the output of this function.
+BioSamples) without re-querying NCBI. In particular,
+\code{\link[=summarise_sra_skew]{summarise_sra_skew()}} and \code{\link[=summarise_interaction]{summarise_interaction()}} consume
+\code{attr(x, 'sra_profile')} from the output of this function.
 
 GEO overlay:
 GEO linkage fields are always cached in \code{attr(x, 'sra_profile')} regardless
@@ -67,6 +68,5 @@ print(SRA_SUMMARY)
 }
 }
 \seealso{
-\code{\link[=query_species]{query_species()}}, \code{\link[=plot_sra_availability]{plot_sra_availability()}}, \code{\link[=plot_sra_geo]{plot_sra_geo()}},
-\code{\link[=summarise_sra_skew]{summarise_sra_skew()}}, \code{\link[=extract_sra_metadata]{extract_sra_metadata()}}
+\code{\link[=query_species]{query_species()}}, \code{\link[=plot_sra_availability]{plot_sra_availability()}}
 }

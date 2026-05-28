@@ -47,6 +47,5 @@ print(SUMMARY)
 }
 }
 \seealso{
-\code{\link[=query_species]{query_species()}}, \code{\link[=summarise_assembly_availability]{summarise_assembly_availability()}},
-\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}, \code{\link[=plot_availability]{plot_availability()}}
+\code{\link[=query_species]{query_species()}}, \code{\link[=plot_availability]{plot_availability()}}
 }

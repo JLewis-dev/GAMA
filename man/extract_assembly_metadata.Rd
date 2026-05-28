@@ -40,6 +40,5 @@ print(ASM)
 }
 }
 \seealso{
-\code{\link[=query_species]{query_species()}}, \code{\link[=summarise_availability]{summarise_availability()}},
-\code{\link[=summarise_assembly_availability]{summarise_assembly_availability()}}, \code{\link[=plot_assembly_availability]{plot_assembly_availability()}}
+\code{\link[=query_species]{query_species()}}, \code{\link[=summarise_assembly_availability]{summarise_assembly_availability()}}
 }

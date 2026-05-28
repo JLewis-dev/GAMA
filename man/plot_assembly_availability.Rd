@@ -2,7 +2,7 @@
 % Please edit documentation in R/Plotting.R
 \name{plot_assembly_availability}
 \alias{plot_assembly_availability}
-\title{Plot Assembly availability}
+\title{Plot Assembly composition}
 \usage{
 plot_assembly_availability(
   ASSEMBLY,

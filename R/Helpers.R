@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.2.9'
+.GAMA_VERSION <- '0.3.0'
 
 # NCBI configuration
 
@@ -31,6 +31,33 @@
 
 .pb_close <- function(pb) {
   close(pb)
+}
+
+.pb_state <- function(n, enabled = interactive()) {
+  n <- as.integer(n %||% 0L)
+  if (!isTRUE(enabled) || n <= 0L) return(NULL)
+  state <- new.env(parent = emptyenv())
+  state$total <- n
+  state$current <- 0L
+  state$pb <- .pb_init(n)
+  state
+}
+
+.pb_advance <- function(state, n = 1L) {
+  if (is.null(state) || is.null(state$pb)) return(invisible(NULL))
+  n <- as.integer(n %||% 1L)
+  n <- max(0L, n)
+  state$current <- min(state$total, state$current + n)
+  .pb_tick(state$pb, state$current)
+  invisible(NULL)
+}
+
+.pb_close_state <- function(state, complete = TRUE) {
+  if (is.null(state) || is.null(state$pb)) return(invisible(NULL))
+  if (isTRUE(complete)) .pb_tick(state$pb, state$total)
+  .pb_close(state$pb)
+  state$pb <- NULL
+  invisible(NULL)
 }
 
 # Safe rentrez wrappers
@@ -96,7 +123,8 @@
   0L
 }
 
-.fetch_esummary_batched <- function(db, ids, batch_size = 100) {
+.fetch_esummary_batched <- function(db, ids, batch_size = 100, progress_state = NULL, progress_by = 'batch') {
+  progress_by <- match.arg(progress_by, c('batch', 'record'))
   ids <- ids %||% character()
   if (!length(ids)) return(stats::setNames(vector('list', 0), character()))
   batches <- split(ids, ceiling(seq_along(ids) / batch_size))
@@ -106,6 +134,7 @@
     res <- .safe_entrez_summary(db, id = b)
     res <- .normalise_esummary_list(res, b)
     out[b] <- res[b]
+    .pb_advance(progress_state, if (progress_by == 'record') length(b) else 1L)
   }
   out
 }
@@ -368,7 +397,31 @@ utils::globalVariables(c(
   'xmax',
   'xmin',
   'ymax',
-  'ymin'
+  'ymin',
+  '.interaction_term',
+  'aerial',
+  'anatomy_class',
+  'anatomy_subclass',
+  'anatomy_term',
+  'col_total',
+  'end',
+  'expected',
+  'ground',
+  'in_vitro',
+  'linked',
+  'mixed',
+  'modality_class',
+  'n',
+  'operable',
+  'prop_linked',
+  'prop_not',
+  'reproductive',
+  'residual',
+  'row_total',
+  'term_order',
+  'total_n',
+  'whole',
+  'x_term'
 ))
 
 # Messaging
@@ -418,11 +471,20 @@ utils::globalVariables(c(
     if (all(c('species', 'SRA', 'genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown') %in% nms)) {
       return('summarise_sra_availability')
     }
+    if (all(c('species', 'BioSample', 'operable', 'aerial', 'ground', 'reproductive', 'whole', 'in_vitro', 'other', 'mixed', 'unknown') %in% nms)) {
+      return('summarise_biosample_availability')
+    }
+    if (all(c('species', 'BioSample', 'expected', 'residual') %in% nms) && any(c('class', 'modality_class') %in% nms) && any(c('anatomy_class', 'anatomy_subclass') %in% nms)) {
+      return('summarise_interaction')
+    }
     if (all(c('species', 'entrez_uid', 'level', 'n50', 'coverage', 'biosample', 'bioproject', 'submitter', 'release_date', 'ftp_path') %in% nms)) {
       return('extract_assembly_metadata')
     }
     if (all(c('species', 'entrez_uid', 'biosample', 'bioproject', 'strategy_raw', 'strategy_norm', 'class', 'subclass', 'geo_linked', 'gse_ids', 'gsm_ids') %in% nms)) {
       return('extract_sra_metadata')
+    }
+    if (all(c('species', 'entrez_uid', 'biosample', 'bioproject', 'tissue_raw', 'tissue_norm', 'anatomy_class', 'anatomy_subclass', 'anatomy_term') %in% nms)) {
+      return('extract_biosample_metadata')
     }
     if (all(c('species', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff') %in% nms) && any(c('BioProject', 'BioSample') %in% nms)) {
       return('summarise_sra_skew')
@@ -505,38 +567,11 @@ utils::globalVariables(c(
 
 .gama_rank_parameters <- c('highest', 'lowest', 'A-Z', 'Z-A', 'input')
 
+.gama_sra_skew_unit_parameters <- c('bioproject', 'biosample')
+
 .gama_validate_logical_parameter <- function(x, arg) {
   if (is.logical(x) && length(x) == 1L && !is.na(x)) return(x)
   .gama_stop('`', arg, '` must be TRUE or FALSE.')
-}
-
-.gama_ontology_parameter_map <- function(ontology, target = c('class', 'subclass')) {
-  target <- match.arg(target)
-  keys <- character()
-  values <- character()
-  add_parameter <- function(parameter, value) {
-    key <- .gama_parameter_key(parameter)
-    keep <- !is.na(key) & nzchar(key)
-    if (!any(keep)) return(invisible(NULL))
-    keys <<- c(keys, key[keep])
-    values <<- c(values, rep(value, sum(keep)))
-    invisible(NULL)
-  }
-  for (class in names(ontology)) {
-    for (subclass in names(ontology[[class]])) {
-      value <- if (identical(target, 'class')) class else subclass
-      add_parameter(subclass, value)
-      variants <- ontology[[class]][[subclass]] %||% character()
-      if (length(variants) > 0L) add_parameter(variants, value)
-    }
-  }
-  if (!length(keys)) return(stats::setNames(character(), character()))
-  grouped <- split(values, keys)
-  out <- vapply(grouped, function(x) {
-    x <- unique(x)
-    if (length(x) == 1L) x else NA_character_
-  }, character(1))
-  out[!is.na(out)]
 }
 
 .gama_suggest_variant_parameter <- function(x, variants) {
@@ -612,17 +647,17 @@ utils::globalVariables(c(
   .gama_stop(msg, '.')
 }
 
-.gama_validate_parameters <- function(x, arg, parameters, variants = NULL, multiple = TRUE, allow_null = TRUE) {
+.gama_validate_parameters <- function(x, arg, parameters, variants = NULL, multiple = TRUE, allow_null = TRUE, show_values = TRUE, no_suggestion_hint = NULL) {
   parameters <- unique(as.character(parameters))
   if (is.null(x)) {
     if (isTRUE(allow_null)) return(invisible(NULL))
-    .gama_stop(
-      'Invalid `',
-      arg,
-      '` parameter: NULL. Accepted values are: ',
-      .gama_format_values(parameters),
-      '.'
-    )
+    msg <- paste0('Invalid `', arg, '` parameter: NULL.')
+    if (isTRUE(show_values)) {
+      msg <- paste0(msg, ' Accepted values are: ', .gama_format_values(parameters), '.')
+    } else if (!is.null(no_suggestion_hint) && nzchar(no_suggestion_hint)) {
+      msg <- paste0(msg, ' ', no_suggestion_hint)
+    }
+    .gama_stop(msg)
   }
   if (!is.character(x)) .gama_character_parameter_type_error(arg, multiple, allow_null)
   if (!multiple) .gama_validate_single_parameter(x, arg, parameters)
@@ -656,10 +691,13 @@ utils::globalVariables(c(
     if (length(invalid) > 1L) 's' else '',
     ': ',
     .gama_format_values(invalid),
-    '. Accepted values are: ',
-    .gama_format_values(parameters),
     '.'
   )
+  if (isTRUE(show_values)) {
+    msg <- paste0(msg, ' Accepted values are: ', .gama_format_values(parameters), '.')
+  } else if (!is.null(no_suggestion_hint) && nzchar(no_suggestion_hint)) {
+    msg <- paste0(msg, ' ', no_suggestion_hint)
+  }
   .gama_stop(msg)
 }
 
@@ -719,8 +757,8 @@ utils::globalVariables(c(
 #' @return The input object, invisibly.
 #'
 #' @seealso [summarise_availability()], [summarise_assembly_availability()],
-#' [summarise_sra_availability()], [extract_assembly_metadata()],
-#' [extract_sra_metadata()]
+#' [summarise_sra_availability()], [summarise_biosample_availability()],
+#' [summarise_interaction()]
 #'
 #' @examples
 #' \dontrun{
