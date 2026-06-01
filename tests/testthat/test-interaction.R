@@ -27,7 +27,7 @@ expected_interaction_values <- function(INTERACTION) {
 
 synthetic_interaction_inputs <- function() {
   query_info <- list(
-    tool_version = '0.3.0',
+    tool_version = '0.3.1',
     query_time_utc = '2026-05-22T11:23:11Z',
     databases = c('assembly', 'sra', 'biosample'),
     terms = list('Synthetic species' = 'Synthetic species[Organism]'),

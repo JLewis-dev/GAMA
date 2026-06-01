@@ -1,3 +1,19 @@
+expected_biosample_skew_eff <- function(BIO_SKEW, PROFILE) {
+  vapply(seq_len(nrow(BIO_SKEW)), function(i) {
+    sp <- as.character(BIO_SKEW$species[[i]])
+    anatomy_class_i <- as.character(BIO_SKEW$anatomy_class[[i]])
+    prof <- PROFILE[PROFILE$species == sp, , drop = FALSE]
+    if (!identical(anatomy_class_i, 'all')) prof <- prof[prof$anatomy_class == anatomy_class_i, , drop = FALSE]
+    units <- trimws(as.character(prof$bioproject))
+    units <- units[!is.na(units) & nzchar(units)]
+    counts <- as.numeric(table(units))
+    counts <- counts[counts > 0]
+    if (!length(counts)) return(NA_real_)
+    p <- counts / sum(counts)
+    1 / sum(p^2)
+  }, numeric(1))
+}
+
 test_that('BIO_SUMMARY fixture is a valid summarise_biosample_availability object', {
   BIO_SUMMARY <- load_fixture('BIO_SUMMARY_Arabidopsis_thaliana')
   expect_gdt_tbl(BIO_SUMMARY)
@@ -27,7 +43,7 @@ test_that('BIO_SUMMARY fixture carries BioSample profile caches', {
   BIO_SUMMARY <- load_fixture('BIO_SUMMARY_Arabidopsis_thaliana')
   ANATOMY <- attr(BIO_SUMMARY, 'biosample_anatomy_profile', exact = TRUE)
   CANONICAL <- attr(BIO_SUMMARY, 'biosample_canonical_profile', exact = TRUE)
-  anatomy_cols <- c('species', 'biosample_id', 'anatomy_class', 'anatomy_subclass')
+  anatomy_cols <- c('species', 'biosample_id', 'bioproject', 'anatomy_class', 'anatomy_subclass')
   canonical_cols <- c('species', 'biosample_id', 'anatomy_term', 'anatomy_class', 'anatomy_subclass', 'rank', 'ontology_namespace', 'ontology_id', 'ontology_label')
   expect_false(is.null(ANATOMY))
   expect_false(is.null(CANONICAL))
@@ -38,6 +54,7 @@ test_that('BIO_SUMMARY fixture carries BioSample profile caches', {
   expect_true(all(ANATOMY$species == 'Arabidopsis thaliana'))
   expect_true(all(CANONICAL$species == 'Arabidopsis thaliana'))
   expect_true(any(!is.na(ANATOMY$biosample_id) & nzchar(ANATOMY$biosample_id)))
+  expect_true(any(!is.na(ANATOMY$bioproject) & nzchar(ANATOMY$bioproject)))
   expect_true(any(!is.na(CANONICAL$biosample_id) & nzchar(CANONICAL$biosample_id)))
 })
 
@@ -102,6 +119,92 @@ test_that('BIO_SUMMARY fixture contains recognised canonical anatomy terms', {
 test_that('plot_biosample_availability returns a ggplot object', {
   BIO_SUMMARY <- load_fixture('BIO_SUMMARY_Arabidopsis_thaliana')
   p <- plot_biosample_availability(BIO_SUMMARY)
+  expect_s3_class(p, 'ggplot')
+})
+
+test_that('BIO_SKEW fixture is a valid summarise_biosample_skew object', {
+  BIO_SKEW <- load_fixture('BIO_SKEW_Arabidopsis_thaliana')
+  expect_gdt_tbl(BIO_SKEW)
+  expect_identical(attr(BIO_SKEW, 'gama_object', exact = TRUE), 'summarise_biosample_skew')
+})
+
+test_that('BIO_SKEW fixture contains expected columns', {
+  BIO_SKEW <- load_fixture('BIO_SKEW_Arabidopsis_thaliana')
+  expect_named(BIO_SKEW, c('species', 'BioProject', 'anatomy_class', 'min', 'q25', 'med', 'q75', 'max', 'eff'))
+  expect_identical(BIO_SKEW$species, 'Arabidopsis thaliana')
+})
+
+test_that('BIO_SKEW fixture preserves query provenance', {
+  BIO_SUMMARY <- load_fixture('BIO_SUMMARY_Arabidopsis_thaliana')
+  BIO_SKEW <- load_fixture('BIO_SKEW_Arabidopsis_thaliana')
+  expect_identical(
+    attr(BIO_SKEW, 'query_info', exact = TRUE),
+    attr(BIO_SUMMARY, 'query_info', exact = TRUE)
+  )
+})
+
+test_that('BIO_SKEW fixture carries ID recovery diagnostics', {
+  BIO_SKEW <- load_fixture('BIO_SKEW_Arabidopsis_thaliana')
+  expect_skew_id_recovery(BIO_SKEW, unit = 'BioProject')
+})
+
+test_that('summarise_biosample_skew applies correct inverse Simpson index formula', {
+  PROFILE <- tibble::tibble(
+    species = rep('Synthetic species', 10),
+    biosample_id = paste0('SAM', seq_len(10)),
+    bioproject = rep(c('PRJ1', 'PRJ2', 'PRJ3'), c(5, 3, 2)),
+    anatomy_class = rep('aerial', 10),
+    anatomy_subclass = rep('leaf', 10)
+  )
+  BIO_SUMMARY <- tibble::tibble(
+    species = 'Synthetic species',
+    BioSample = 10L,
+    operable = 10L,
+    aerial = 10L,
+    ground = 0L,
+    reproductive = 0L,
+    whole = 0L,
+    `in vitro` = 0L,
+    other = 0L,
+    mixed = 0L,
+    unknown = 0L
+  )
+  attr(BIO_SUMMARY, 'query_info') <- list(
+    tool_version = '0.3.1',
+    query_time_utc = '2026-05-31T07:30:00Z',
+    databases = c('assembly', 'sra', 'biosample'),
+    terms = list('Synthetic species' = 'Synthetic species[Organism]'),
+    synonyms = list('Synthetic species' = NULL)
+  )
+  attr(BIO_SUMMARY, 'gama_object') <- 'summarise_biosample_availability'
+  attr(BIO_SUMMARY, 'biosample_anatomy_profile') <- PROFILE
+  attr(BIO_SUMMARY, 'biosample_anatomy_profile_info') <- list(
+    cached_at_utc = '2026-05-31T07:30:00Z',
+    profile_time_utc = '2026-05-31T07:30:00Z',
+    id_col = 'biosample_id',
+    fields = names(PROFILE)
+  )
+  class(BIO_SUMMARY) <- unique(c('gdt_tbl', class(BIO_SUMMARY)))
+  BIO_SKEW <- summarise_biosample_skew(BIO_SUMMARY, anatomy_class = 'aerial')
+  p <- c(5, 3, 2) / 10
+  expected_eff <- 1 / sum(p^2)
+  expect_equal(unname(BIO_SKEW$BioProject), 3L)
+  expect_equal(unname(BIO_SKEW$eff), expected_eff)
+})
+
+test_that('BIO_SKEW fixture follows correct inverse Simpson index formula', {
+  BIO_SUMMARY <- load_fixture('BIO_SUMMARY_Arabidopsis_thaliana')
+  BIO_SKEW <- load_fixture('BIO_SKEW_Arabidopsis_thaliana')
+  PROFILE <- attr(BIO_SUMMARY, 'biosample_anatomy_profile', exact = TRUE)
+  expect_equal(
+    unname(BIO_SKEW$eff),
+    unname(expected_biosample_skew_eff(BIO_SKEW, PROFILE))
+  )
+})
+
+test_that('plot_biosample_skew returns a ggplot object', {
+  BIO_SKEW <- load_fixture('BIO_SKEW_Arabidopsis_thaliana')
+  p <- plot_biosample_skew(BIO_SKEW)
   expect_s3_class(p, 'ggplot')
 })
 

@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.3.0'
+.GAMA_VERSION <- '0.3.1'
 
 # NCBI configuration
 
@@ -354,7 +354,6 @@ utils::globalVariables(c(
   'database',
   'denom_total',
   'eff',
-  'eff_units',
   'entrez_uid',
   'epigenomic',
   'genomic',
@@ -387,11 +386,6 @@ utils::globalVariables(c(
   'status',
   'subclass',
   'transcriptomic',
-  'uids_per_unit_max',
-  'uids_per_unit_median',
-  'uids_per_unit_min',
-  'uids_per_unit_q25',
-  'uids_per_unit_q75',
   'unknown',
   'x',
   'xmax',
@@ -427,7 +421,7 @@ utils::globalVariables(c(
 # Messaging
 
 .gama_prefix <- function() {
-  paste0('GAMA v', .GAMA_VERSION, ' | ')
+  paste0('GAMA ', .GAMA_VERSION, ' | ')
 }
 
 .gama_msg <- function(..., verbose = TRUE) {
@@ -442,6 +436,29 @@ utils::globalVariables(c(
 
 .gama_stop <- function(..., call. = FALSE) {
   stop(.gama_prefix(), paste0(..., collapse = ''), call. = call.)
+}
+
+.gama_format_count <- function(x) {
+  format(as.numeric(x), big.mark = ',', scientific = FALSE, trim = TRUE)
+}
+
+.skew_id_recovery_table <- function(species, unit, class, records, included) {
+  species <- as.character(species)
+  records <- as.integer(records)
+  included <- as.integer(included)
+  excluded <- records - included
+  id_recovery_prop <- rep(NA_real_, length(records))
+  has_records <- records > 0L
+  id_recovery_prop[has_records] <- included[has_records] / records[has_records]
+  tibble::tibble(
+    species = species,
+    unit = rep(as.character(unit), length.out = length(species)),
+    class = rep(as.character(class), length.out = length(species)),
+    records = records,
+    included = included,
+    excluded = excluded,
+    id_recovery_prop = id_recovery_prop
+  )
 }
 
 # Object validation
@@ -485,6 +502,9 @@ utils::globalVariables(c(
     }
     if (all(c('species', 'entrez_uid', 'biosample', 'bioproject', 'tissue_raw', 'tissue_norm', 'anatomy_class', 'anatomy_subclass', 'anatomy_term') %in% nms)) {
       return('extract_biosample_metadata')
+    }
+    if (all(c('species', 'BioProject', 'anatomy_class', 'min', 'q25', 'med', 'q75', 'max', 'eff') %in% nms)) {
+      return('summarise_biosample_skew')
     }
     if (all(c('species', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff') %in% nms) && any(c('BioProject', 'BioSample') %in% nms)) {
       return('summarise_sra_skew')
@@ -756,9 +776,7 @@ utils::globalVariables(c(
 #'
 #' @return The input object, invisibly.
 #'
-#' @seealso [summarise_availability()], [summarise_assembly_availability()],
-#' [summarise_sra_availability()], [summarise_biosample_availability()],
-#' [summarise_interaction()]
+#' @seealso [query_species()]
 #'
 #' @examples
 #' \dontrun{
@@ -772,7 +790,7 @@ print.gdt_tbl <- function(x, ...) {
   if (!is.null(qi)) {
     cat(
       paste0(
-        'GAMA v', qi$tool_version,
+        'GAMA ', qi$tool_version,
         ' | Query time (UTC): ', qi$query_time_utc,
         ' | Databases: ', paste(qi$databases, collapse = ', '),
         '\n'

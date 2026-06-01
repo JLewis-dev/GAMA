@@ -230,25 +230,73 @@ contig     = 2
   trimws(x)
 }
 
-.extract_sra_ids <- function(x) {
-  if (is.null(x) || (is.atomic(x) && !nzchar(as.character(x)))) {
-    return(list(
-    biosample  = NA_character_,
-    bioproject = NA_character_
-    ))
-  }
+.sra_accession_matches <- function(x, pattern) {
+  if (is.null(x)) return(character())
   txt <- if (is.list(x)) {
-    paste(unlist(x, recursive = TRUE, use.names = FALSE), collapse = ' ')
+    unlist(x, recursive = TRUE, use.names = FALSE)
   } else {
     as.character(x)
   }
-  txt <- as.character(txt)
+  txt <- txt[!is.na(txt) & nzchar(txt)]
+  if (!length(txt)) return(character())
+  txt <- paste(txt, collapse = ' ')
+  unique(unlist(regmatches(txt, gregexpr(pattern, txt, perl = TRUE))))
+}
+
+.sra_first_accession <- function(x, pattern) {
+  hits <- .sra_accession_matches(x, pattern)
+  if (length(hits)) hits[[1]] else NA_character_
+}
+
+.sra_first_accession_from <- function(x, pattern) {
+  for (i in seq_along(x)) {
+    hit <- .sra_first_accession(x[[i]], pattern)
+    if (!is.na(hit) && nzchar(hit)) return(hit)
+  }
+  NA_character_
+}
+
+.extract_sra_ids <- function(x) {
+  empty <- list(
+  biosample  = NA_character_,
+  bioproject = NA_character_
+  )
+  if (is.null(x)) return(empty)
+  if (is.atomic(x) && (!length(x) || all(is.na(x) | !nzchar(as.character(x))))) return(empty)
   pat_sam <- '\\b(?:SAMN|SAMEA|SAMD)\\d+\\b'
-  pat_prj <- '\\b(?:PRJNA|PRJEB|PRJDB|PRJDA)\\d+\\b'
-  sam_matches <- unique(unlist(regmatches(txt, gregexpr(pat_sam, txt, perl = TRUE))))
-  prj_matches <- unique(unlist(regmatches(txt, gregexpr(pat_prj, txt, perl = TRUE))))
-  sam_val <- if (length(sam_matches)) sam_matches[1] else NA_character_
-  prj_val <- if (length(prj_matches)) prj_matches[1] else NA_character_
+  pat_prj <- '\\b(?:PRJNA|PRJEB|PRJDB|PRJDA|PRJCA)\\d+\\b'
+  if (!is.list(x)) {
+    return(list(
+    biosample  = .sra_first_accession(x, pat_sam),
+    bioproject = .sra_first_accession(x, pat_prj)
+    ))
+  }
+  biosample_sources <- list(
+  x$biosample,
+  x$biosampleacc,
+  x$biosampleaccn,
+  x$biosample_accession,
+  x$sampleacc,
+  x$sample_acc,
+  x$sample_accession,
+  x$sample,
+  x$expxml
+  )
+  bioproject_sources <- list(
+  x$bioproject,
+  x$bioprojectacc,
+  x$bioprojectaccn,
+  x$bioproject_accession,
+  x$project,
+  x$studyacc,
+  x$study_acc,
+  x$study_accession,
+  x$expxml
+  )
+  sam_val <- .sra_first_accession_from(biosample_sources, pat_sam)
+  prj_val <- .sra_first_accession_from(bioproject_sources, pat_prj)
+  if (is.na(sam_val) || !nzchar(sam_val)) sam_val <- .sra_first_accession(x, pat_sam)
+  if (is.na(prj_val) || !nzchar(prj_val)) prj_val <- .sra_first_accession(x, pat_prj)
   list(biosample = sam_val, bioproject = prj_val)
 }
 
@@ -2214,6 +2262,7 @@ title_raw = NA_character_) {
     input_id = character(),
     entrez_uid = character(),
     biosample_id = character(),
+    bioproject = character(),
     parse_status = character(),
     source_channel = character(),
     node_name = character(),
@@ -2321,8 +2370,48 @@ title_raw = NA_character_) {
   doc
 }
 
-.biosample_extract_bioproject <- function(doc) {
-  if (is.null(doc)) return(NA_character_)
+.BIOSAMPLE_BIOPROJECT_ACCESSION_PATTERN <- '\\b(?:PRJNA|PRJEB|PRJDB|PRJDA|PRJCA)\\d+\\b'
+
+.biosample_accession_matches <- function(x, pattern) {
+  if (is.null(x)) return(character())
+  txt <- if (is.list(x) && !inherits(x, 'xml_document')) {
+    unlist(x, recursive = TRUE, use.names = FALSE)
+  } else {
+    as.character(x)
+  }
+  txt <- txt[!is.na(txt) & nzchar(txt)]
+  if (!length(txt)) return(character())
+  txt <- paste(txt, collapse = ' ')
+  unique(unlist(regmatches(txt, gregexpr(pattern, txt, perl = TRUE))))
+}
+
+.biosample_collapse_accessions <- function(x) {
+  x <- unique(as.character(x))
+  x <- x[!is.na(x) & nzchar(x)]
+  if (!length(x)) return(NA_character_)
+  paste(sort(x), collapse = '; ')
+}
+
+.biosample_bioproject_sources <- function(x) {
+  if (is.null(x) || !is.list(x)) return(list())
+  list(
+    x$bioproject,
+    x$bioprojectacc,
+    x$bioprojectaccn,
+    x$bioproject_accession,
+    x$project,
+    x$projectacc,
+    x$project_acc,
+    x$project_accession,
+    x$study,
+    x$studyacc,
+    x$study_acc,
+    x$study_accession
+  )
+}
+
+.biosample_extract_bioproject_from_doc <- function(doc) {
+  if (is.null(doc)) return(character())
   links <- xml2::xml_find_all(doc, './/Link')
   vals <- character()
   if (length(links)) {
@@ -2336,10 +2425,17 @@ title_raw = NA_character_) {
     vals <- xml2::xml_text(links[use], trim = TRUE)
   }
   txt <- paste(c(vals, xml2::xml_text(doc, trim = TRUE)), collapse = ' ')
-  hit <- regmatches(txt, gregexpr('PRJ[A-Z][A-Z0-9]+', txt, perl = TRUE))[[1]]
-  hit <- unique(hit[!is.na(hit) & nzchar(hit)])
-  if (!length(hit)) return(NA_character_)
-  paste(sort(hit), collapse = '; ')
+  .biosample_accession_matches(txt, .BIOSAMPLE_BIOPROJECT_ACCESSION_PATTERN)
+}
+
+.biosample_extract_bioproject <- function(x, doc = NULL) {
+  explicit <- .biosample_accession_matches(
+    .biosample_bioproject_sources(x),
+    .BIOSAMPLE_BIOPROJECT_ACCESSION_PATTERN
+  )
+  xml <- .biosample_extract_bioproject_from_doc(doc)
+  fallback <- .biosample_accession_matches(x, .BIOSAMPLE_BIOPROJECT_ACCESSION_PATTERN)
+  .biosample_collapse_accessions(c(explicit, xml, fallback))
 }
 
 .biosample_extract_attribute_rows <- function(doc) {
@@ -2475,7 +2571,7 @@ title_raw = NA_character_) {
     sampledata_present = TRUE,
     sampledata_xml_ok = TRUE,
     n_attributes = as.integer(n_attr),
-    bioproject = if (isTRUE(keep_bioproject)) .biosample_extract_bioproject(doc) else NA_character_,
+    bioproject = if (isTRUE(keep_bioproject)) .biosample_extract_bioproject(x, doc) else NA_character_,
     title_raw = meta$title_raw,
     description_raw = meta$description_raw,
     organism_raw = meta$organism_raw,
@@ -2551,7 +2647,9 @@ title_raw = NA_character_) {
   if (nrow(attrs_unique)) {
     attrs <- merge(id_map, attrs_unique, by = 'input_id', all.y = TRUE, sort = FALSE)
     attrs$species <- as.character(attrs$species)
-    attrs <- attrs[, c('species','input_id','entrez_uid','biosample_id','parse_status','source_channel','node_name','attribute_name_raw','attribute_name_norm','attribute_name_harmonised','attribute_value_raw','attribute_value_norm','attribute_unit_raw','attribute_index'), drop = FALSE]
+    project_map <- records[, c('species','input_id','bioproject'), drop = FALSE]
+    attrs <- merge(attrs, project_map, by = c('species','input_id'), all.x = TRUE, sort = FALSE)
+    attrs <- attrs[, c('species','input_id','entrez_uid','biosample_id','bioproject','parse_status','source_channel','node_name','attribute_name_raw','attribute_name_norm','attribute_name_harmonised','attribute_value_raw','attribute_value_norm','attribute_unit_raw','attribute_index'), drop = FALSE]
   } else {
     attrs <- .biosample_empty_attributes()
   }
@@ -2559,7 +2657,7 @@ title_raw = NA_character_) {
     have <- unique(attrs$input_id)
     missing <- setdiff(records$input_id, have)
     if (length(missing)) {
-      pad <- records[records$input_id %in% missing, c('species','input_id','entrez_uid','biosample_id','parse_status'), drop = FALSE]
+      pad <- records[records$input_id %in% missing, c('species','input_id','entrez_uid','biosample_id','bioproject','parse_status'), drop = FALSE]
       pad$source_channel <- NA_character_
       pad$node_name <- NA_character_
       pad$attribute_name_raw <- NA_character_
@@ -2587,6 +2685,7 @@ title_raw = NA_character_) {
     input_id = character(),
     entrez_uid = character(),
     biosample_id = character(),
+    bioproject = character(),
     tissue_raw = character(),
     tissue_norm = character(),
     anatomy_term = character(),
@@ -2609,7 +2708,7 @@ title_raw = NA_character_) {
 
 .biosample_classify_tissue_attributes <- function(meta, species = NULL) {
   if (is.null(meta) || !is.data.frame(meta)) .gama_stop('`.biosample_classify_tissue_attributes()`: `meta` must be a data.frame.')
-  req <- c('species', 'input_id', 'entrez_uid', 'biosample_id', 'parse_status', 'attribute_name_norm', 'attribute_name_harmonised', 'attribute_value_raw', 'attribute_value_norm')
+  req <- c('species', 'input_id', 'entrez_uid', 'biosample_id', 'bioproject', 'parse_status', 'attribute_name_norm', 'attribute_name_harmonised', 'attribute_value_raw', 'attribute_value_norm')
   miss <- setdiff(req, names(meta))
   if (length(miss)) .gama_stop('`.biosample_classify_tissue_attributes()`: `meta` missing columns: ', paste(miss, collapse = ', '))
   tissue <- meta |>
@@ -2622,6 +2721,7 @@ title_raw = NA_character_) {
       input_id = as.character(.data$input_id),
       entrez_uid = as.character(.data$entrez_uid),
       biosample_id = .biosample_resolve_key(.data$biosample_id, .data$input_id),
+      bioproject = as.character(.data$bioproject),
       tissue_raw = as.character(.data$attribute_value_raw),
       tissue_norm = as.character(.data$attribute_value_norm)
     ) |>
@@ -2671,6 +2771,7 @@ title_raw = NA_character_) {
       input_id = .data$input_id,
       entrez_uid = .data$entrez_uid,
       biosample_id = .data$biosample_id,
+      bioproject = .data$bioproject,
       tissue_raw = .data$tissue_raw,
       tissue_norm = .data$tissue_norm,
       anatomy_term = .data$anatomy_term,
@@ -2690,17 +2791,19 @@ title_raw = NA_character_) {
   out <- tibble::tibble(
     species = character(),
     biosample_id = character(),
+    bioproject = character(),
     anatomy_class = character(),
     anatomy_subclass = character()
   )
   if (is.null(tissue_classification) || !is.data.frame(tissue_classification) || !nrow(tissue_classification)) return(out)
-  req <- c('species', 'biosample_id', 'anatomy_class', 'anatomy_subclass')
+  req <- c('species', 'biosample_id', 'bioproject', 'anatomy_class', 'anatomy_subclass')
   miss <- setdiff(req, names(tissue_classification))
   if (length(miss)) .gama_stop('`.biosample_anatomy_profile()`: `tissue_classification` missing columns: ', paste(miss, collapse = ', '))
   profiled <- tissue_classification |>
     dplyr::transmute(
       species = as.character(.data$species),
       biosample_id = as.character(.data$biosample_id),
+      bioproject = as.character(.data$bioproject),
       anatomy_class = as.character(.data$anatomy_class),
       anatomy_subclass = as.character(.data$anatomy_subclass)
     ) |>
@@ -2710,6 +2813,7 @@ title_raw = NA_character_) {
   profiled |>
     dplyr::group_by(.data$species, .data$biosample_id) |>
     dplyr::summarise(
+      bioproject = .biosample_collapse_accessions(.data$bioproject),
       anatomy_class = .biosample_collapse_anatomy_profile(.data$anatomy_class, level = 'anatomy_class'),
       anatomy_subclass = .biosample_collapse_anatomy_profile(.data$anatomy_subclass, level = 'anatomy_subclass'),
       .groups = 'drop'
@@ -2722,7 +2826,7 @@ title_raw = NA_character_) {
         'unknown'
       )
     ) |>
-    dplyr::distinct(.data$species, .data$biosample_id, .data$anatomy_class, .data$anatomy_subclass) |>
+    dplyr::distinct(.data$species, .data$biosample_id, .data$bioproject, .data$anatomy_class, .data$anatomy_subclass) |>
     dplyr::arrange(.data$species, .data$biosample_id, .data$anatomy_class, .data$anatomy_subclass)
 }
 
@@ -2730,6 +2834,7 @@ title_raw = NA_character_) {
   out <- tibble::tibble(
     species = character(),
     biosample_id = character(),
+    bioproject = character(),
     anatomy_term = character(),
     anatomy_class = character(),
     anatomy_subclass = character(),
@@ -2739,13 +2844,14 @@ title_raw = NA_character_) {
     ontology_label = character()
   )
   if (is.null(tissue_classification) || !is.data.frame(tissue_classification) || !nrow(tissue_classification)) return(out)
-  req <- c('species', 'biosample_id', 'anatomy_term', 'anatomy_class', 'anatomy_subclass', 'rank', 'ontology_namespace', 'ontology_id', 'ontology_label')
+  req <- c('species', 'biosample_id', 'bioproject', 'anatomy_term', 'anatomy_class', 'anatomy_subclass', 'rank', 'ontology_namespace', 'ontology_id', 'ontology_label')
   miss <- setdiff(req, names(tissue_classification))
   if (length(miss)) .gama_stop('`.biosample_canonical_profile()`: `tissue_classification` missing columns: ', paste(miss, collapse = ', '))
   out <- tissue_classification |>
     dplyr::transmute(
       species = as.character(.data$species),
       biosample_id = as.character(.data$biosample_id),
+      bioproject = as.character(.data$bioproject),
       anatomy_term = as.character(.data$anatomy_term),
       anatomy_class = as.character(.data$anatomy_class),
       anatomy_subclass = as.character(.data$anatomy_subclass),
@@ -2757,7 +2863,7 @@ title_raw = NA_character_) {
     dplyr::filter(!is.na(.data$species), nzchar(.data$species), !is.na(.data$biosample_id), nzchar(.data$biosample_id), !is.na(.data$anatomy_term), nzchar(.data$anatomy_term))
   if (!is.null(species)) out <- out |> dplyr::filter(.data$species %in% .env$species)
   out |>
-    dplyr::distinct(.data$species, .data$biosample_id, .data$anatomy_term, .keep_all = TRUE) |>
+    dplyr::distinct(.data$species, .data$biosample_id, .data$bioproject, .data$anatomy_term, .keep_all = TRUE) |>
     dplyr::arrange(.data$species, .data$anatomy_class, .data$anatomy_term)
 }
 

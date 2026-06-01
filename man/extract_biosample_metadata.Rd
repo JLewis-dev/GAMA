@@ -24,52 +24,50 @@ vector specifying which species to include.}
 \item{anatomy_subclass}{Optional character vector of anatomy subclasses to
 retain.}
 
-\item{anatomy_term}{Optional character vector of anatomy terms to retain.}
+\item{anatomy_term}{Optional character vector of canonical anatomy terms to
+retain.}
 }
 \value{
-A tibble with one row per BioSample anatomy term, including
-identifiers, raw and normalised tissue fields, row-level ontology
-assignments, and BioSample-level \code{anatomy_class_profile} and
-\code{anatomy_subclass_profile} labels. The tibble has class \code{gdt_tbl} and
-carries a \code{query_info} attribute for provenance.
+A tibble with one row per recovered BioSample anatomy term. Columns
+include species, Entrez UID, BioSample accession, BioProject accession, raw
+and normalised tissue fields, row-level anatomy assignments, and collapsed
+BioSample-level \code{anatomy_class_profile} and \code{anatomy_subclass_profile}
+labels. The tibble has class \code{gdt_tbl} and carries a \code{query_info} attribute
+for provenance.
 }
 \description{
-Retrieves record-level BioSample tissue metadata for one or more species,
-then assigns curated anatomy classes, subclasses, and canonical anatomy
-terms.
+Retrieves BioSample sample-source metadata for one or more species, then
+assigns curated anatomy classes, subclasses, and canonical anatomy terms
+using the internal GAMA BioSample ontology.
 }
 \details{
-Optional filters restrict the output to particular anatomy classes,
+Optional filters restrict the output to selected anatomy classes,
 subclasses, or canonical anatomy terms.
-
-Accepted sample-source attributes with missing-like values, and accepted
-values with no curated anatomy match, are retained as \code{unknown}. Broad,
-generic, cross-cutting, or subcellular anatomy values that match the curated
-residual terms are retained as \code{other}.
 
 Accepted anatomy filters follow the internal GAMA BioSample anatomy scheme.
 Top-level classes include \code{aerial}, \code{ground}, \code{reproductive}, \code{whole},
 \code{in_vitro}, \code{other}, and \code{unknown}; \code{whole} denotes whole-plant or
 whole-seedling samples rather than whole sub-anatomy. Subclasses and terms
-follow the curated
-ontology used by \code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}.
+follow the curated ontology used by \code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}.
 
-Unlike \code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}, this function returns
-term-level anatomy assignments and does not replace row-level assignments
-with \code{mixed}. Consequently, a BioSample may appear in multiple rows when
-multiple anatomy terms are detected. The columns \code{anatomy_class_profile} and
-\code{anatomy_subclass_profile} store the BioSample-level collapsed states, where
-\code{mixed} means multi-class or multi-subclass respectively. This preserves the
-recovered tissue assignments while allowing users to recover the accessions
-that contributed to collapsed summary categories.
+Missing-like values and values with no ontological match are retained as
+\code{unknown}. Broad, generic, or subcellular anatomy values are retained as
+\code{other}.
+
+This function preserves term-level anatomy assignments. A single BioSample
+record may therefore appear in multiple rows when more than one anatomy term
+is recovered. The \code{anatomy_class_profile} and \code{anatomy_subclass_profile}
+columns provide the corresponding collapsed BioSample-level class and
+subclass states, including \code{mixed} where multiple classes or subclasses are
+recovered from the same BioSample record.
 }
 \examples{
 \dontrun{
 RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 BIO <- extract_biosample_metadata(
   RESULTS,
-  species = 'Vigna angularis',
-  anatomy_subclass = c('root')
+  species = 'Vigna vexillata',
+  anatomy_subclass = 'leaf'
 )
 print(BIO)
 }

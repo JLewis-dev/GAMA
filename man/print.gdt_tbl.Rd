@@ -32,7 +32,5 @@ print(SUMMARY)
 }
 }
 \seealso{
-\code{\link[=summarise_availability]{summarise_availability()}}, \code{\link[=summarise_assembly_availability]{summarise_assembly_availability()}},
-\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}, \code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}},
-\code{\link[=summarise_interaction]{summarise_interaction()}}
+\code{\link[=query_species]{query_species()}}
 }

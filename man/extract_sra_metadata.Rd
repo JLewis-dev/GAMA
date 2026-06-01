@@ -46,8 +46,7 @@ Top-level classes and their subclasses are:
 \code{targeted-capture}, \code{WGS}}
 \item{\code{transcriptomic}}{\code{long-read}, \code{RNA-seq}, \code{small-RNA}}
 \item{\code{epigenomic}}{\code{ATAC-seq}, \code{bisulfite-seq}, \code{CUT&RUN},
-\code{CUT&Tag}, \code{ChIP-seq}, \code{DNase-seq}, \code{FAIRE-seq}, \code{MNase-seq},
-\code{SELEX}}
+\code{CUT&Tag}, \code{ChIP-seq}, \code{DNase-seq}, \code{FAIRE-seq}, \code{MNase-seq}, \code{SELEX}}
 \item{\code{chromatin}}{\verb{3C-based}, \code{ChIA-PET}, \code{Hi-C}, \code{TCC}}
 \item{\code{other}}{\code{other}}
 \item{\code{unknown}}{\code{unknown}}

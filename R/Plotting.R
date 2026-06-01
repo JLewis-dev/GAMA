@@ -105,7 +105,7 @@ BioSample = '#56C5A8'
 #' Operates on the wide-format summary returned by
 #' [summarise_assembly_availability()].
 #'
-#' @param ASSEMBLY A wide-format Assembly summary table returned by
+#' @param ASM_SUMMARY A wide-format Assembly summary table returned by
 #' [summarise_assembly_availability()].
 #' @param species `NULL` (default) to plot all species, or a character vector
 #' of species to include.
@@ -128,7 +128,7 @@ BioSample = '#56C5A8'
 #' }
 #' @export
 plot_assembly_availability <- function(
-    ASSEMBLY,
+    ASM_SUMMARY,
     species    = NULL,
     rank       = 'highest',
     abbreviate = TRUE,
@@ -144,15 +144,15 @@ plot_assembly_availability <- function(
   abbreviate <- .gama_validate_logical_parameter(abbreviate, 'abbreviate')
   LEVELS <- .ASSEMBLY_CLASSES
   req_cols <- c('species', 'Assembly', LEVELS, 'best_n50')
-  ASSEMBLY <- .gama_require_output(ASSEMBLY, 'summarise_assembly_availability', required_cols = req_cols)
-  CORE <- ASSEMBLY |>
+  ASM_SUMMARY <- .gama_require_output(ASM_SUMMARY, 'summarise_assembly_availability', required_cols = req_cols)
+  CORE <- ASM_SUMMARY |>
     dplyr::select(species, Assembly, dplyr::all_of(LEVELS))
   if (!is.null(species)) {
     species <- as.character(species)
     species <- species[!is.na(species) & nzchar(species)]
     species <- unique(species)
     missing_sp <- setdiff(species, CORE$species)
-    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `ASSEMBLY`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
+    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `ASM_SUMMARY`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
     CORE <- CORE |> dplyr::filter(.data$species %in% .env$species)
     if (!nrow(CORE)) .gama_stop('No matching species found.')
   }
@@ -242,7 +242,7 @@ plot_assembly_availability <- function(
 #' Operates on the wide-format summary returned by
 #' [summarise_sra_availability()].
 #'
-#' @param SRA A wide-format SRA summary table returned by
+#' @param SRA_SUMMARY A wide-format SRA summary table returned by
 #' [summarise_sra_availability()].
 #' @param species `NULL` (default) to plot all species, or a character vector
 #' of species to include.
@@ -265,7 +265,7 @@ plot_assembly_availability <- function(
 #' }
 #' @export
 plot_sra_availability <- function(
-    SRA,
+    SRA_SUMMARY,
     species    = NULL,
     rank       = 'highest',
     abbreviate = TRUE,
@@ -282,15 +282,15 @@ plot_sra_availability <- function(
   rank <- .gama_validate_parameters(rank, 'rank', .gama_rank_parameters, multiple = FALSE, allow_null = FALSE)
   abbreviate <- .gama_validate_logical_parameter(abbreviate, 'abbreviate')
   req_cols <- c('species', 'SRA', 'genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown')
-  SRA <- .gama_require_output(SRA, 'summarise_sra_availability', required_cols = req_cols)
-  CORE <- SRA |>
+  SRA_SUMMARY <- .gama_require_output(SRA_SUMMARY, 'summarise_sra_availability', required_cols = req_cols)
+  CORE <- SRA_SUMMARY |>
     dplyr::select(
       species, SRA, genomic, transcriptomic, epigenomic, chromatin, other,
       unknown
     )
   if (!is.null(species)) {
     missing_sp <- setdiff(species, CORE$species)
-    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `SRA`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
+    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `SRA_SUMMARY`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
     CORE <- CORE |> dplyr::filter(.data$species %in% .env$species)
     if (!nrow(CORE)) .gama_stop('No matching species found.')
   }
@@ -387,15 +387,15 @@ plot_sra_availability <- function(
 #' Labels show `GEO-linked / Total` for each modality.
 #'
 #' Operates on the direct output of [summarise_sra_availability()].
-#' GEO-linked counts are derived from the cached `attr(SRA, 'sra_profile')`,
-#' which stores per-experiment `geo_linked` values regardless of
-#' `include_geo`.
+#' GEO-linked counts are derived from the cached
+#' `attr(SRA_SUMMARY,'sra_profile')`, which stores per-experiment `geo_linked`
+#' values regardless of `include_geo`.
 #'
 #' If `species` is `NULL`, plots are generated for all species in the table. A
 #' single species returns a ggplot object; multiple species return a named
 #' list of ggplot objects.
 #'
-#' @param SRA A wide-format SRA summary table returned by
+#' @param SRA_SUMMARY A wide-format SRA summary table returned by
 #' [summarise_sra_availability()].
 #' @param species `NULL` (default) for all species, or a character vector of
 #' species to plot.
@@ -420,7 +420,7 @@ plot_sra_availability <- function(
 #' }
 #' @export
 plot_sra_geo <- function(
-    SRA,
+    SRA_SUMMARY,
     species    = NULL,
     rank       = 'highest',
     theme_fn   = ggplot2::theme_minimal,
@@ -438,13 +438,13 @@ plot_sra_geo <- function(
     'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown'
   )
   FIXED_ORDER <- rev(GEO_CLASSES)
-  SRA <- .gama_require_output(
-    SRA,
+  SRA_SUMMARY <- .gama_require_output(
+    SRA_SUMMARY,
     'summarise_sra_availability',
     required_cols = c('species', GEO_CLASSES)
   )
   prof <- .gama_require_cache(
-    SRA,
+    SRA_SUMMARY,
     attr_name = 'sra_profile',
     required_cols = c('species', 'class', 'geo_linked'),
     source = 'summarise_sra_availability'
@@ -453,14 +453,14 @@ plot_sra_geo <- function(
     dplyr::filter(.data$class %in% GEO_CLASSES, .data$geo_linked) |>
     dplyr::count(species, class, name = 'linked') |>
     tidyr::complete(
-      species = unique(SRA$species),
+      species = unique(SRA_SUMMARY$species),
       class   = GEO_CLASSES,
       fill    = list(linked = 0L)
     )
   if (is.null(species)) {
-    sp <- SRA$species
+    sp <- SRA_SUMMARY$species
     if (rank != 'input') {
-      ord <- SRA[, c('species', 'SRA')]
+      ord <- SRA_SUMMARY[, c('species', 'SRA')]
       if (rank == 'highest') ord <- ord[order(ord$SRA, decreasing = TRUE), ]
       if (rank == 'lowest') ord <- ord[order(ord$SRA, decreasing = FALSE), ]
       if (rank == 'A-Z') ord <- ord[order(ord$species, decreasing = FALSE), ]
@@ -468,11 +468,11 @@ plot_sra_geo <- function(
       sp <- ord$species
     }
   } else {
-    sp <- intersect(species, SRA$species)
-    missing_sp <- setdiff(species, SRA$species)
+    sp <- intersect(species, SRA_SUMMARY$species)
+    missing_sp <- setdiff(species, SRA_SUMMARY$species)
     if (length(missing_sp)) {
       .gama_warn(sprintf(
-        'Requested species not found in input `SRA`: %s. Dropping.',
+        'Requested species not found in input `SRA_SUMMARY`: %s. Dropping.',
         paste(missing_sp, collapse = ', ')
       ))
     }
@@ -481,7 +481,7 @@ plot_sra_geo <- function(
     if (rank == 'Z-A') sp <- sort(sp, decreasing = TRUE)
   }
   .plot_one <- function(one_species) {
-    row <- SRA |> dplyr::filter(.data$species == one_species)
+    row <- SRA_SUMMARY |> dplyr::filter(.data$species == one_species)
     if (!nrow(row)) .gama_stop('No matching species found.')
     total <- as.integer(row[1, GEO_CLASSES, drop = TRUE])
     linked <- GEO_COUNTS |>
@@ -570,11 +570,11 @@ plot_sra_geo <- function(
 #' statistics on a log10 y-axis.
 #'
 #' Optional labels show `eff=<x> (n=<y>)` for each species. When a cached
-#' UID-level profile is available as `attr(SKEW, 'sra_profile')`, per-unit
+#' UID-level profile is available as `attr(SRA_SKEW, 'sra_profile')`, per-unit
 #' points (one point per BioProject/BioSample) can be overlaid with
 #' horizontal jitter.
 #'
-#' @param SKEW A tibble returned by [summarise_sra_skew()].
+#' @param SRA_SKEW A tibble returned by [summarise_sra_skew()].
 #' @param species `NULL` (default) to include all species, or a character
 #'   vector of species to plot.
 #' @param rank Ordering of species. One of `highest` (default), `lowest`,
@@ -598,13 +598,13 @@ plot_sra_geo <- function(
 #' \dontrun{
 #' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 #' SRA_SUMMARY <- summarise_sra_availability(RESULTS)
-#' SKEW <- summarise_sra_skew(SRA_SUMMARY, class = 'transcriptomic')
-#' plot_sra_skew(SKEW)
+#' SRA_SKEW <- summarise_sra_skew(SRA_SUMMARY, class = 'transcriptomic')
+#' plot_sra_skew(SRA_SKEW)
 #' }
 #'
 #' @export
 plot_sra_skew <- function(
-    SKEW,
+    SRA_SKEW,
     species      = NULL,
     rank         = 'highest',
     abbreviate   = TRUE,
@@ -620,14 +620,14 @@ plot_sra_skew <- function(
   abbreviate <- .gama_validate_logical_parameter(abbreviate, 'abbreviate')
   show_points <- .gama_validate_logical_parameter(show_points, 'show_points')
   show_labels <- .gama_validate_logical_parameter(show_labels, 'show_labels')
-  SKEW <- .gama_require_output(
-    SKEW,
+  SRA_SKEW <- .gama_require_output(
+    SRA_SKEW,
     'summarise_sra_skew',
     required_cols = c('species', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff')
   )
-  unit_col <- if ('BioProject' %in% names(SKEW)) {
+  unit_col <- if ('BioProject' %in% names(SRA_SKEW)) {
     'BioProject'
-  } else if ('BioSample' %in% names(SKEW)) {
+  } else if ('BioSample' %in% names(SRA_SKEW)) {
     'BioSample'
   } else {
     .gama_input_error(
@@ -636,12 +636,12 @@ plot_sra_skew <- function(
       detail = 'missing `BioProject` or `BioSample` column.'
     )
   }
-  CORE0 <- SKEW |> dplyr::select(species, dplyr::all_of(unit_col), class, min, q25, med, q75, max, eff)
+  CORE0 <- SRA_SKEW |> dplyr::select(species, dplyr::all_of(unit_col), class, min, q25, med, q75, max, eff)
   if (!is.null(species)) {
     missing_sp <- setdiff(species, CORE0$species)
-    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `SKEW`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
+    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `SRA_SKEW`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
     CORE0 <- CORE0 |> dplyr::filter(.data$species %in% .env$species)
-    if (!nrow(CORE0)) .gama_stop('No matching species found in `SKEW` for the requested filter.')
+    if (!nrow(CORE0)) .gama_stop('No matching species found in `SRA_SKEW` for the requested filter.')
   }
   class_vals <- unique(CORE0$class)
   if (length(class_vals) != 1L) .gama_stop('plot_sra_skew() expects a single class per plot.')
@@ -667,9 +667,8 @@ plot_sra_skew <- function(
   CORE$species_label <- factor(CORE$species_label, levels = CORE$species_label)
   x_labs <- levels(CORE$species_label)
   CORE$x <- as.numeric(CORE$species_label)
-  class_title <- if (identical(tolower(class_val), 'all')) 'Experiments' else paste0(toupper(substr(class_val, 1, 1)), substr(class_val, 2, nchar(class_val)))
-  y_prefix <- if (identical(tolower(class_val), 'all')) 'Experiments' else paste0(class_title, ' experiments')
-  y_lab <- paste0(y_prefix, ' per ', unit_col, ' (log10)')
+  class_title <- if (identical(tolower(class_val), 'all')) 'SRA records' else paste0(toupper(substr(class_val, 1, 1)), substr(class_val, 2, nchar(class_val)), ' SRA records')
+  y_lab <- paste0(class_title, ' per ', unit_col, ' (log10)')
   box_w <- 0.7
   cap_w <- 0.22
   BOX <- CORE |> dplyr::transmute(x, xmin = x - box_w / 2, xmax = x + box_w / 2, ymin = q25, ymax = q75, med = med, min = min, max = max)
@@ -693,9 +692,9 @@ plot_sra_skew <- function(
       plot.margin = ggplot2::margin(10, 40, 10, 10)
     )
   if (isTRUE(show_points)) {
-    prof <- attr(SKEW, 'sra_profile', exact = TRUE)
+    prof <- attr(SRA_SKEW, 'sra_profile', exact = TRUE)
     if (is.null(prof)) {
-      .gama_msg('`show_points` is TRUE but no `sra_profile` found on `SKEW`; plotting boxplots only.')
+      .gama_msg('`show_points` is TRUE but no `sra_profile` found on `SRA_SKEW`; plotting boxplots only.')
     } else {
       unit_col_lower <- tolower(unit_col)
       counts_df <- prof |>
@@ -729,14 +728,14 @@ plot_sra_skew <- function(
 #' Visualises species-level BioSample anatomy composition using stacked
 #' horizontal bars. Each bar shows the proportional contribution of major
 #' anatomy classes (`aerial`, `ground`, `reproductive`, `whole`, `in_vitro`,
-#' `other`, `mixed`, `unknown`), with operable BioSample counts labelled.
+#' `other`, `mixed`, `unknown`), with operable record counts labelled.
 #'
 #' Operates on the wide-format summary returned by
 #' [summarise_biosample_availability()]. Proportions are calculated over
-#' operable BioSamples, where operable means that an accepted sample-source
-#' attribute was present.
+#' operable BioSample records, where operable means that an accepted
+#' sample-source attribute was present.
 #'
-#' @param BIO A wide-format BioSample summary table returned by
+#' @param BIO_SUMMARY A wide-format BioSample summary table returned by
 #' [summarise_biosample_availability()].
 #' @param species `NULL` (default) to plot all species, or a character vector
 #' of species to include.
@@ -759,7 +758,7 @@ plot_sra_skew <- function(
 #' }
 #' @export
 plot_biosample_availability <- function(
-    BIO,
+    BIO_SUMMARY,
     species    = NULL,
     rank       = 'highest',
     abbreviate = TRUE,
@@ -779,25 +778,25 @@ plot_biosample_availability <- function(
   abbreviate <- .gama_validate_logical_parameter(abbreviate, 'abbreviate')
   class_levels <- .biosample_anatomy_profile_levels()
   req_cols <- c('species', 'operable', class_levels)
-  BIO <- .gama_require_output(
-    BIO,
+  BIO_SUMMARY <- .gama_require_output(
+    BIO_SUMMARY,
     'summarise_biosample_availability',
     required_cols = req_cols
   )
-  CORE <- BIO |>
+  CORE <- BIO_SUMMARY |>
     dplyr::select(species, operable, dplyr::all_of(class_levels))
   if (!is.null(species)) {
     missing_sp <- setdiff(species, CORE$species)
-    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `BIO`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
+    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `BIO_SUMMARY`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
     CORE <- CORE |> dplyr::filter(.data$species %in% .env$species)
     if (!nrow(CORE)) .gama_stop('No matching species found.')
   }
   dropped <- unique(CORE$species[is.na(CORE$operable) | CORE$operable == 0L])
   CORE <- CORE |> dplyr::filter(!is.na(.data$operable), .data$operable > 0L)
-  if (!nrow(CORE)) .gama_stop('No data to plot: all selected species have zero operable BioSamples.')
+  if (!nrow(CORE)) .gama_stop('No data to plot: all selected species have zero operable BioSample records.')
   if (length(dropped) > 0L) {
     .gama_msg(sprintf(
-      'Dropping %d species with zero operable BioSamples: %s.',
+      'Dropping %d species with zero operable BioSample records: %s.',
       length(dropped),
       paste(dropped, collapse = ', ')
     ))
@@ -831,7 +830,7 @@ plot_biosample_availability <- function(
     ggplot2::geom_col(width = 0.7) +
     ggplot2::scale_fill_manual(values = colours, breaks = class_levels, labels = legend_labels) +
     ggplot2::coord_flip(clip = 'off') +
-    ggplot2::labs(x = NULL, y = 'Proportion of operable BioSamples', fill = 'Class:') +
+    ggplot2::labs(x = NULL, y = 'Proportion of operable BioSample records', fill = 'Class:') +
     theme_fn(base_size = 13) +
     ggplot2::theme(
       plot.margin = ggplot2::margin(10, 40, 10, 10),
@@ -855,6 +854,178 @@ plot_biosample_availability <- function(
     ggplot2::scale_y_continuous(expand = c(0, 0))
 }
 
+#' Plot BioSample replication skew
+#'
+#' Visualises BioSample replication skew using the summary output of
+#' [summarise_biosample_skew()]. Boxplots are drawn from pre-computed summary
+#' statistics on a log10 y-axis.
+#'
+#' Optional labels show `eff=<x> (n=<y>)` for each species. When a cached
+#' BioSample-level profile is available as
+#' `attr(BIO_SKEW, 'biosample_anatomy_profile')`, per-BioProject points can be
+#' overlaid with horizontal jitter.
+#'
+#' @param BIO_SKEW A tibble returned by [summarise_biosample_skew()].
+#' @param species `NULL` (default) to include all species, or a character
+#'   vector of species to plot.
+#' @param rank Ordering of species. One of `highest` (default), `lowest`,
+#'   `A-Z`, `Z-A`, or `input`.
+#' @param abbreviate Logical; if `TRUE` (default), abbreviate species labels.
+#' @param theme_fn A ggplot2 theme function.
+#' @param colours Named character vector for box fill and line colours.
+#' @param show_points Logical; if `TRUE` (default), overlay per-BioProject
+#'   points when cached profiles are available.
+#' @param point_colour Character scalar giving the colour of overlaid points.
+#' @param point_alpha Numeric alpha value for overlaid points.
+#' @param show_labels Logical; if `TRUE` (default), label each box with
+#'   `eff` and `n`.
+#' @param label_digits Integer; decimal places for `eff` labels.
+#'
+#' @return A ggplot object.
+#'
+#' @seealso [summarise_biosample_skew()]
+#'
+#' @examples
+#' \dontrun{
+#' RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
+#' BIO_SUMMARY <- summarise_biosample_availability(RESULTS)
+#' BIO_SKEW <- summarise_biosample_skew(BIO_SUMMARY, anatomy_class = 'aerial')
+#' plot_biosample_skew(BIO_SKEW, rank = 'input')
+#' }
+#'
+#' @export
+plot_biosample_skew <- function(
+    BIO_SKEW,
+    species      = NULL,
+    rank         = 'highest',
+    abbreviate   = TRUE,
+    theme_fn     = ggplot2::theme_minimal,
+    colours      = c(box = '#E3F9F2', line = 'black'),
+    show_points  = TRUE,
+    point_colour = '#56C5A8',
+    point_alpha  = 0.25,
+    show_labels  = TRUE,
+    label_digits = 1L
+) {
+  rank <- .gama_validate_parameters(rank, 'rank', .gama_rank_parameters, multiple = FALSE, allow_null = FALSE)
+  abbreviate <- .gama_validate_logical_parameter(abbreviate, 'abbreviate')
+  show_points <- .gama_validate_logical_parameter(show_points, 'show_points')
+  show_labels <- .gama_validate_logical_parameter(show_labels, 'show_labels')
+  BIO_SKEW <- .gama_require_output(
+    BIO_SKEW,
+    'summarise_biosample_skew',
+    required_cols = c('species', 'BioProject', 'anatomy_class', 'min', 'q25', 'med', 'q75', 'max', 'eff')
+  )
+  CORE0 <- BIO_SKEW |>
+    dplyr::select(species, BioProject, anatomy_class, min, q25, med, q75, max, eff)
+  if (!is.null(species)) {
+    missing_sp <- setdiff(species, CORE0$species)
+    if (length(missing_sp)) .gama_warn(sprintf('Requested species not found in input `BIO_SKEW`: %s. Dropping.', paste(missing_sp, collapse = ', ')))
+    CORE0 <- CORE0 |> dplyr::filter(.data$species %in% .env$species)
+    if (!nrow(CORE0)) .gama_stop('No matching species found in `BIO_SKEW` for the requested filter.')
+  }
+  anatomy_class_vals <- unique(CORE0$anatomy_class)
+  if (length(anatomy_class_vals) != 1L) .gama_stop('plot_biosample_skew() expects a single anatomy class per plot.')
+  anatomy_class_val <- anatomy_class_vals[[1]]
+  dropped <- unique(CORE0$species[is.na(CORE0$max)])
+  CORE <- CORE0 |> dplyr::filter(!is.na(.data$max))
+  if (!nrow(CORE)) {
+    .gama_stop('No data to plot: all selected species have zero BioProject-linked operable BioSample records.')
+  }
+  label_term <- if (!identical(tolower(anatomy_class_val), 'all')) anatomy_class_val else 'all'
+  label_scope <- if (!identical(tolower(anatomy_class_val), 'all')) 'anatomy class' else 'all'
+  if (length(dropped) > 0L) {
+    .gama_msg(sprintf(
+      'Dropping %d species with no %s data: %s.',
+      length(dropped),
+      label_scope,
+      paste(dropped, collapse = ', ')
+    ))
+  }
+  if (rank == 'highest') CORE <- CORE[order(CORE$eff, decreasing = TRUE), ]
+  if (rank == 'lowest')  CORE <- CORE[order(CORE$eff, decreasing = FALSE), ]
+  if (rank == 'A-Z')     CORE <- CORE[order(CORE$species, decreasing = FALSE), ]
+  if (rank == 'Z-A')     CORE <- CORE[order(CORE$species, decreasing = TRUE), ]
+  CORE$species_label <- if (abbreviate) .shorten_species(CORE$species) else CORE$species
+  CORE$species_label <- factor(CORE$species_label, levels = CORE$species_label)
+  x_labs <- levels(CORE$species_label)
+  CORE$x <- as.numeric(CORE$species_label)
+  display_label <- function(x) {
+    x <- as.character(x)
+    x <- gsub('_', ' ', x)
+    if (!nzchar(x) || identical(tolower(x), 'all')) return('BioSample records')
+    paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)), ' BioSample records')
+  }
+  y_lab <- if (identical(label_term, 'in_vitro')) {
+    expression(italic('in vitro')~'BioSample records per BioProject (log10)')
+  } else {
+    paste0(display_label(label_term), ' per BioProject (log10)')
+  }
+  box_w <- 0.7
+  cap_w <- 0.22
+  BOX <- CORE |>
+    dplyr::transmute(x, xmin = x - box_w / 2, xmax = x + box_w / 2, ymin = q25, ymax = q75, med = med, min = min, max = max)
+  p <- ggplot2::ggplot(CORE, ggplot2::aes(x = x)) +
+    ggplot2::geom_rect(data = BOX, ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), fill = colours[['box']], colour = NA, inherit.aes = FALSE) +
+    ggplot2::geom_segment(data = BOX, ggplot2::aes(x = x, xend = x, y = ymax, yend = max), linewidth = 0.35, colour = colours[['line']], inherit.aes = FALSE) +
+    ggplot2::geom_segment(data = BOX, ggplot2::aes(x = x, xend = x, y = ymin, yend = min), linewidth = 0.35, colour = colours[['line']], inherit.aes = FALSE) +
+    ggplot2::geom_segment(data = BOX, ggplot2::aes(x = x - cap_w / 2, xend = x + cap_w / 2, y = max, yend = max), linewidth = 0.35, colour = colours[['line']], inherit.aes = FALSE) +
+    ggplot2::geom_segment(data = BOX, ggplot2::aes(x = x - cap_w / 2, xend = x + cap_w / 2, y = min, yend = min), linewidth = 0.35, colour = colours[['line']], inherit.aes = FALSE) +
+    ggplot2::geom_segment(data = BOX, ggplot2::aes(x = x - box_w / 2, xend = x + box_w / 2, y = med, yend = med), linewidth = 0.8, colour = colours[['line']], inherit.aes = FALSE) +
+    ggplot2::scale_x_continuous(breaks = seq_along(x_labs), labels = x_labs) +
+    ggplot2::scale_y_log10(expand = ggplot2::expansion(mult = c(0.02, 0.18))) +
+    ggplot2::labs(x = NULL, y = y_lab) +
+    theme_fn(base_size = 13) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, vjust = 1, face = 'italic', size = 11),
+      axis.text.y = ggplot2::element_text(size = 11),
+      axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 10)),
+      panel.grid.major.x = ggplot2::element_blank(),
+      plot.title = ggplot2::element_blank(),
+      plot.margin = ggplot2::margin(10, 40, 10, 10)
+    )
+  if (isTRUE(show_points)) {
+    prof <- attr(BIO_SKEW, 'biosample_anatomy_profile', exact = TRUE)
+    if (is.null(prof)) {
+      .gama_msg('`show_points` is TRUE but no `biosample_anatomy_profile` found on `BIO_SKEW`; plotting boxplots only.')
+    } else {
+      counts_df <- prof |>
+        dplyr::filter(.data$species %in% CORE$species) |>
+        dplyr::filter(!is.na(.data$bioproject), nzchar(.data$bioproject)) |>
+        dplyr::count(species, bioproject, name = 'count') |>
+        dplyr::mutate(species_label = if (abbreviate) .shorten_species(species) else species) |>
+        dplyr::mutate(species_label = factor(species_label, levels = levels(CORE$species_label))) |>
+        dplyr::mutate(x = as.numeric(species_label))
+      p <- p + ggplot2::geom_jitter(
+        data = counts_df,
+        ggplot2::aes(x = x, y = count),
+        width = 0.08,
+        height = 0,
+        size = 1.6,
+        shape = 19,
+        colour = point_colour,
+        alpha = point_alpha,
+        inherit.aes = FALSE
+      )
+    }
+  }
+  if (isTRUE(show_labels)) {
+    lab_df <- CORE
+    lab_df$label_y <- lab_df$max * 1.2
+    lab_df$lab <- sprintf(paste0('eff = %0.', label_digits, 'f (n = %d)'), lab_df$eff, lab_df$BioProject)
+    p <- p +
+      ggplot2::geom_text(
+        data = lab_df,
+        ggplot2::aes(x = x, y = label_y, label = lab),
+        vjust = 0,
+        size = 3.5,
+        inherit.aes = FALSE
+      ) +
+      ggplot2::coord_cartesian(clip = 'off')
+  }
+  p
+}
+
 #' Plot SRA-BioSample interaction
 #'
 #' Visualises SRA-BioSample interaction summaries as modality-by-anatomy
@@ -869,7 +1040,7 @@ plot_biosample_availability <- function(
 #'
 #' @details
 #' With `value = 'count'`, the heatmap shows the observed number of linked
-#' BioSamples in each SRA modality-by-anatomy cell.
+#' BioSample records in each SRA modality-by-anatomy cell.
 #'
 #' With `value = 'residual'`, the heatmap shows Pearson residuals from the
 #' species-level marginal expectation calculated by [summarise_interaction()].
@@ -1146,7 +1317,7 @@ plot_interaction <- function(INTERACTION,
       fill_scale +
       ggplot2::labs(
         title = one_species,
-        x = 'Sample tissue',
+        x = 'Sample material',
         y = 'Class'
       ) +
       ggplot2::coord_fixed() +

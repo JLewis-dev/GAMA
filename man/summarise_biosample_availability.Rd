@@ -15,48 +15,49 @@ vector specifying which species to include.}
 \item{all}{Logical; if \code{TRUE}, include canonical anatomy-term columns.}
 }
 \value{
-A tibble with one row per species containing class-level counts,
-total BioSample records, and operable BioSample counts. When \code{all = TRUE},
-canonical anatomy-term counts are included. The tibble has class \code{gdt_tbl}
-and carries a \code{query_info} attribute. It also carries cached BioSample-level
-profiles as attributes \code{biosample_anatomy_profile} and
-\code{biosample_canonical_profile}, plus metadata in
-\code{biosample_anatomy_profile_info} and \code{biosample_canonical_profile_info}.
+A tibble with one row per species containing total BioSample record
+counts, operable BioSample record counts, and class-level anatomy counts.
+When \code{all = TRUE}, canonical anatomy-term counts are also included. The
+tibble has class \code{gdt_tbl} and carries a \code{query_info} attribute. It also
+carries cached BioSample-level profiles as attributes
+\code{biosample_anatomy_profile} and \code{biosample_canonical_profile}, plus metadata
+in \code{biosample_anatomy_profile_info} and \code{biosample_canonical_profile_info}.
 }
 \description{
-Collapses record-level BioSample tissue metadata into species-level anatomy
-class, subclass, and term counts assigned using the internal ontology.
+Collapses BioSample sample-source metadata into species-level counts of
+anatomy classes, subclasses, and canonical anatomy terms assigned using the
+internal GAMA BioSample ontology.
 }
 \details{
 By default, the output includes class-level counts for the major anatomy
-categories (aerial, ground, reproductive, whole, in_vitro, other, mixed,
-unknown), plus total BioSample records and operable BioSamples per species.
-Here, \code{whole} is reserved for whole-plant or whole-seedling samples, not
-for whole sub-anatomy such as whole leaves, roots, grains, or spikelets.
+categories (\code{aerial}, \code{ground}, \code{reproductive}, \code{whole}, \code{in_vitro},
+\code{other}, \code{mixed}, and \code{unknown}), plus total and operable BioSample record
+counts per species. Here, \code{whole} is reserved for whole-plant or
+whole-seedling samples, not for whole sub-anatomy such as whole leaves,
+roots, grains, or spikelets.
 
-A BioSample is operable when it contains an accepted sample-source
-attribute, regardless of whether the value can be assigned to a curated
-anatomy term. Accepted but missing-like values and accepted values with no
-ontological match are retained as \code{unknown}; broad, generic, cross-cutting,
-or subcellular anatomy values are retained as \code{other}.
+A BioSample record is operable when it contains at least one accepted
+sample-source attribute, regardless of whether the value can be assigned to
+a curated anatomy term. Missing-like values and values with no ontological
+match are retained as \code{unknown}. Broad, generic, or subcellular anatomy
+values are retained as \code{other}.
 
 At class level, \code{mixed} is assigned when more than one anatomy class is
-recovered from accepted fields within the same BioSample. Multi-subclass
-records within a single class remain assigned to that class in this summary;
-subclass-level mixed states are handled when \code{summarise_interaction()} is
-called with \code{level = 'anatomy_subclass'}.
+recovered from accepted fields within the same BioSample record.
+Multi-subclass records within a single class remain assigned to that class
+in this summary. Subclass-level mixed states are handled when
+\code{\link[=summarise_interaction]{summarise_interaction()}} is called with \code{level = 'anatomy_subclass'}.
 
-Profile cache (used by \code{\link[=summarise_interaction]{summarise_interaction()}}):
-In addition to the summary table, this function attaches cached
-BioSample-level profiles as attributes \code{biosample_anatomy_profile} and
-\code{biosample_canonical_profile}. The anatomy profile contains BioSample-level
-class and subclass profiles (\code{anatomy_class} and \code{anatomy_subclass}), while
-the canonical profile contains row-level anatomy terms, subclasses, classes,
-ranks, and ontology fields.
-These caches are intended to be re-used locally for downstream summaries
-that require within-species BioSample anatomy structure without re-querying
-NCBI. In particular, \code{\link[=summarise_interaction]{summarise_interaction()}} consumes these caches from
-the output of this function.
+Profile cache:
+In addition to the summary table, this function attaches two cached
+BioSample-level profiles: \code{biosample_anatomy_profile} and
+\code{biosample_canonical_profile}. The anatomy profile stores one collapsed
+anatomy class and subclass profile per operable BioSample record, together
+with BioProject provenance where available. The canonical profile stores
+row-level anatomy terms, subclasses, classes, ranks, and ontology fields.
+These caches are reused by \code{\link[=summarise_biosample_skew]{summarise_biosample_skew()}} and
+\code{\link[=summarise_interaction]{summarise_interaction()}} without repeating the BioSample retrieval and
+parsing stage.
 }
 \examples{
 \dontrun{
@@ -66,5 +67,6 @@ print(BIO_SUMMARY)
 }
 }
 \seealso{
-\code{\link[=query_species]{query_species()}}, \code{\link[=plot_biosample_availability]{plot_biosample_availability()}}
+\code{\link[=query_species]{query_species()}}, \code{\link[=plot_biosample_availability]{plot_biosample_availability()}},
+\code{\link[=summarise_biosample_skew]{summarise_biosample_skew()}}, \code{\link[=extract_biosample_metadata]{extract_biosample_metadata()}}
 }

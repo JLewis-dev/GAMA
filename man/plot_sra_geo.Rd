@@ -5,7 +5,7 @@
 \title{Plot SRA modality GEO linkage overlay}
 \usage{
 plot_sra_geo(
-  SRA,
+  SRA_SUMMARY,
   species = NULL,
   rank = "highest",
   theme_fn = ggplot2::theme_minimal,
@@ -15,7 +15,7 @@ plot_sra_geo(
 )
 }
 \arguments{
-\item{SRA}{A wide-format SRA summary table returned by
+\item{SRA_SUMMARY}{A wide-format SRA summary table returned by
 \code{\link[=summarise_sra_availability]{summarise_sra_availability()}}.}
 
 \item{species}{\code{NULL} (default) for all species, or a character vector of
@@ -44,9 +44,9 @@ Labels show \code{GEO-linked / Total} for each modality.
 }
 \details{
 Operates on the direct output of \code{\link[=summarise_sra_availability]{summarise_sra_availability()}}.
-GEO-linked counts are derived from the cached \code{attr(SRA, 'sra_profile')},
-which stores per-experiment \code{geo_linked} values regardless of
-\code{include_geo}.
+GEO-linked counts are derived from the cached
+\code{attr(SRA_SUMMARY,'sra_profile')}, which stores per-experiment \code{geo_linked}
+values regardless of \code{include_geo}.
 
 If \code{species} is \code{NULL}, plots are generated for all species in the table. A
 single species returns a ggplot object; multiple species return a named

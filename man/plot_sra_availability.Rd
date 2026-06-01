@@ -5,7 +5,7 @@
 \title{Plot SRA modality composition}
 \usage{
 plot_sra_availability(
-  SRA,
+  SRA_SUMMARY,
   species = NULL,
   rank = "highest",
   abbreviate = TRUE,
@@ -15,7 +15,7 @@ plot_sra_availability(
 )
 }
 \arguments{
-\item{SRA}{A wide-format SRA summary table returned by
+\item{SRA_SUMMARY}{A wide-format SRA summary table returned by
 \code{\link[=summarise_sra_availability]{summarise_sra_availability()}}.}
 
 \item{species}{\code{NULL} (default) to plot all species, or a character vector

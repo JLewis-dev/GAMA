@@ -5,7 +5,7 @@
 \title{Plot Assembly composition}
 \usage{
 plot_assembly_availability(
-  ASSEMBLY,
+  ASM_SUMMARY,
   species = NULL,
   rank = "highest",
   abbreviate = TRUE,
@@ -15,7 +15,7 @@ plot_assembly_availability(
 )
 }
 \arguments{
-\item{ASSEMBLY}{A wide-format Assembly summary table returned by
+\item{ASM_SUMMARY}{A wide-format Assembly summary table returned by
 \code{\link[=summarise_assembly_availability]{summarise_assembly_availability()}}.}
 
 \item{species}{\code{NULL} (default) to plot all species, or a character vector

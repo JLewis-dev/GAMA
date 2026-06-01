@@ -35,7 +35,11 @@ When \code{best = TRUE}, the best assembly is selected using structural-weightin
 \examples{
 \dontrun{
 RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
-ASM <- extract_assembly_metadata(RESULTS, best = TRUE)
+ASM <- extract_assembly_metadata(
+  RESULTS,
+  species = 'Vigna angularis',
+  best = TRUE
+)
 print(ASM)
 }
 }

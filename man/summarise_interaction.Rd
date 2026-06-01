@@ -33,17 +33,17 @@ Profile caches:
 The input \code{SRA} must carry the cached UID-level profile produced by
 \code{\link[=summarise_sra_availability]{summarise_sra_availability()}}. The input \code{BIO} must carry the cached
 BioSample-level anatomy profiles produced by
-\code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}. BioSamples are linked by shared
+\code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}. BioSample records are linked by shared
 BioSample identifiers, then counted across SRA modality classes and either
 BioSample anatomy classes or anatomy subclasses.
 
 For each species, the \code{BioSample} column gives the observed number of linked
-BioSamples in each modality-by-anatomy cell. Expected counts are computed
-from the species-level marginal totals as
+BioSample records in each modality-by-anatomy cell. Expected counts are
+computed from the species-level marginal totals as
 \code{expected = row_total * col_total / total}, where \code{row_total} is the total
-number of linked BioSamples in a modality class, \code{col_total} is the total
-number of linked BioSamples in an anatomy category, and \code{total} is the total
-number of linked BioSamples for that species.
+number of linked records in a modality class, \code{col_total} is the total
+number of linked records in an anatomy category, and \code{total} is the total
+number of linked records for that species.
 
 The \code{residual} column is computed as
 \code{(BioSample - expected) / sqrt(expected)}. Positive residuals indicate

@@ -46,11 +46,12 @@ RESULTS <- query_species(
   c('Vigna angularis', 'Vigna reflexo-pilosa', 'Vigna vexillata'),
   synonyms = list('Vigna reflexo-pilosa' = 'Vigna glabrescens')
 )
-str(RESULTS, max.level = 2)
-attr(RESULTS, 'query_info')
+print(RESULTS)
 }
 }
 \seealso{
 \code{\link[=summarise_availability]{summarise_availability()}}, \code{\link[=summarise_assembly_availability]{summarise_assembly_availability()}},
-\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}, \code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}
+\code{\link[=extract_assembly_metadata]{extract_assembly_metadata()}}, \code{\link[=summarise_sra_availability]{summarise_sra_availability()}},
+\code{\link[=extract_sra_metadata]{extract_sra_metadata()}}, \code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}},
+\code{\link[=extract_biosample_metadata]{extract_biosample_metadata()}}
 }

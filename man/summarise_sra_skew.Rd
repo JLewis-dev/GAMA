@@ -45,8 +45,8 @@ few units.
 \dontrun{
 RESULTS <- query_species(c('Vigna angularis', 'Vigna vexillata'))
 SRA_SUMMARY <- summarise_sra_availability(RESULTS)
-SKEW <- summarise_sra_skew(SRA_SUMMARY, class = 'transcriptomic')
-print(SKEW)
+SRA_SKEW <- summarise_sra_skew(SRA_SUMMARY, class = 'transcriptomic')
+print(SRA_SKEW)
 }
 
 }

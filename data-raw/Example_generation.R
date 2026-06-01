@@ -38,7 +38,7 @@ SUMMARY_example <- summarise_availability(RESULTS_example)
 
 SRA_SUMMARY_example <- summarise_sra_availability(RESULTS_example)
 
-SKEW_example <- summarise_sra_skew(SRA_SUMMARY_example, class = 'transcriptomic')
+SRA_SKEW_example <- summarise_sra_skew(SRA_SUMMARY_example, class = 'transcriptomic')
 
 BIO_SUMMARY_example <- summarise_biosample_availability(RESULTS_example)
 
@@ -51,12 +51,12 @@ INTERACTION_example <- summarise_interaction(
 
 save_example(SUMMARY_example, 'SUMMARY_example')
 save_example(SRA_SUMMARY_example, 'SRA_SUMMARY_example')
-save_example(SKEW_example, 'SKEW_example')
+save_example(SRA_SKEW_example, 'SRA_SKEW_example')
 save_example(INTERACTION_example, 'INTERACTION_example')
 
 Data_richness_plot <- plot_availability(SUMMARY_example)
 Modality_plot <- plot_sra_availability(SRA_SUMMARY_example)
-Skew_plot <- plot_sra_skew(SKEW_example)
+Skew_plot <- plot_sra_skew(SRA_SKEW_example)
 Interaction_plot <- plot_interaction(INTERACTION_example)
 
 if (!inherits(Interaction_plot, 'ggplot') && is.list(Interaction_plot)) {
@@ -77,7 +77,7 @@ example_manifest <- tibble::tibble(
   object = c(
     'SUMMARY_example',
     'SRA_SUMMARY_example',
-    'SKEW_example',
+    'SRA_SKEW_example',
     'INTERACTION_example'
   )
 )

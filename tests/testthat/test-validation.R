@@ -5,7 +5,7 @@ expect_gama_error <- function(expr, regexp = NULL) {
   if (!inherits(err, 'error')) return(invisible(err))
   msg <- conditionMessage(err)
   version <- getFromNamespace('.GAMA_VERSION', 'GAMA')
-  testthat::expect_true(grepl(paste0('GAMA v', version, ' | '), msg, fixed = TRUE))
+  testthat::expect_true(grepl(paste0('GAMA ', version, ' | '), msg, fixed = TRUE))
   if (!is.null(regexp)) testthat::expect_match(msg, regexp)
   invisible(err)
 }
@@ -249,9 +249,9 @@ test_that('plot_sra_skew validation rejects incompatible input objects', {
 })
 
 test_that('plot_sra_skew validation rejects invalid rank parameters', {
-  SKEW_BIOPROJECT <- load_fixture('SKEW_BIOPROJECT_Arabidopsis_thaliana')
+  SRA_SKEW_BIOPROJECT <- load_fixture('SRA_SKEW_BIOPROJECT_Arabidopsis_thaliana')
   expect_gama_error(
-    plot_sra_skew(SKEW_BIOPROJECT, rank = 'lowst'),
+    plot_sra_skew(SRA_SKEW_BIOPROJECT, rank = 'lowst'),
     'Invalid `rank` parameter.*Did you mean.*lowest'
   )
 })
@@ -368,6 +368,47 @@ test_that('plot_biosample_availability validation rejects invalid logical parame
   expect_gama_error(
     plot_biosample_availability(BIO_SUMMARY, abbreviate = 'yes'),
     '`abbreviate` must be TRUE or FALSE'
+  )
+})
+
+test_that('summarise_biosample_skew validation rejects incompatible input objects', {
+  SUMMARY <- load_fixture('SUMMARY_Arabidopsis_thaliana')
+  expect_gama_error(
+    summarise_biosample_skew(SUMMARY),
+    'output of summarise_biosample_availability\\(\\).*detected summarise_availability object'
+  )
+})
+
+test_that('summarise_biosample_skew validation reports missing BioSample profile caches', {
+  BIO_SUMMARY <- load_fixture('BIO_SUMMARY_Arabidopsis_thaliana')
+  BIO_SUMMARY <- without_attr(BIO_SUMMARY, 'biosample_anatomy_profile')
+  expect_gama_error(
+    summarise_biosample_skew(BIO_SUMMARY),
+    "missing required cache 'biosample_anatomy_profile'"
+  )
+})
+
+test_that('summarise_biosample_skew validation rejects invalid anatomy-class parameters', {
+  BIO_SUMMARY <- load_fixture('BIO_SUMMARY_Arabidopsis_thaliana')
+  expect_gama_error(
+    summarise_biosample_skew(BIO_SUMMARY, anatomy_class = 'not-a-class'),
+    'Invalid `anatomy_class` parameter'
+  )
+})
+
+test_that('plot_biosample_skew validation rejects incompatible input objects', {
+  BIO_SUMMARY <- load_fixture('BIO_SUMMARY_Arabidopsis_thaliana')
+  expect_gama_error(
+    plot_biosample_skew(BIO_SUMMARY),
+    'output of summarise_biosample_skew\\(\\).*detected summarise_biosample_availability object'
+  )
+})
+
+test_that('plot_biosample_skew validation rejects invalid rank parameters', {
+  BIO_SKEW <- load_fixture('BIO_SKEW_Arabidopsis_thaliana')
+  expect_gama_error(
+    plot_biosample_skew(BIO_SKEW, rank = 'lowst'),
+    'Invalid `rank` parameter.*Did you mean.*lowest'
   )
 })
 

@@ -72,7 +72,7 @@ generated with \code{level = 'anatomy_subclass'}, columns represent anatomy
 subclasses.
 
 With \code{value = 'count'}, the heatmap shows the observed number of linked
-BioSamples in each SRA modality-by-anatomy cell.
+BioSample records in each SRA modality-by-anatomy cell.
 
 With \code{value = 'residual'}, the heatmap shows Pearson residuals from the
 species-level marginal expectation calculated by \code{\link[=summarise_interaction]{summarise_interaction()}}.

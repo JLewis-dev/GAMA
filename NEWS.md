@@ -1,3 +1,36 @@
+# GAMA 0.3.1
+
+## Features
+
+- Added BioSample replication-skew analysis via `summarise_biosample_skew()` and `plot_biosample_skew()`
+- BioSample skew supports metadata interpretation by quantifying record distribution across BioProjects, optionally for a single `anatomy_class`
+
+## Reliability
+
+- Added BioProject provenance to BioSample profile caches, enabling BioSample skew to run from cached summary outputs without re-querying NCBI
+- Added `skew_id_recovery` diagnostics to SRA and BioSample skew outputs, making record inclusion, exclusion, and ID recovery explicit
+- Refined skew calculations to exclude records with missing skew-unit IDs after filtering
+- Patched provenance retention in `extract_assembly_metadata()` when filtering by `species`
+
+## Refactoring
+
+- Standardised SRA and BioSample skew object naming across fixtures, examples, and tests
+- Updated fixture-generation and example-generation workflows for new `BIO_SKEW` objects
+
+## Plotting
+
+- Updated the `plot_sra_skew()` axis label to reference SRA records
+
+## Documentation
+- Updated roxygen documentation and the GAMA user guide accordingly
+
+## Testing
+
+- Expanded test coverage for BioSample skew, skew diagnostics, validation, and cache provenance
+- Confirmed `devtools::check()` with 0 errors, 0 warnings, and 0 notes
+
+---
+
 # GAMA 0.3.0
 
 ## Features

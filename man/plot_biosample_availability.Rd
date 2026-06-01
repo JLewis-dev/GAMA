@@ -5,7 +5,7 @@
 \title{Plot BioSample anatomy composition}
 \usage{
 plot_biosample_availability(
-  BIO,
+  BIO_SUMMARY,
   species = NULL,
   rank = "highest",
   abbreviate = TRUE,
@@ -16,7 +16,7 @@ plot_biosample_availability(
 )
 }
 \arguments{
-\item{BIO}{A wide-format BioSample summary table returned by
+\item{BIO_SUMMARY}{A wide-format BioSample summary table returned by
 \code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}.}
 
 \item{species}{\code{NULL} (default) to plot all species, or a character vector
@@ -39,13 +39,13 @@ across species.
 Visualises species-level BioSample anatomy composition using stacked
 horizontal bars. Each bar shows the proportional contribution of major
 anatomy classes (\code{aerial}, \code{ground}, \code{reproductive}, \code{whole}, \code{in_vitro},
-\code{other}, \code{mixed}, \code{unknown}), with operable BioSample counts labelled.
+\code{other}, \code{mixed}, \code{unknown}), with operable record counts labelled.
 }
 \details{
 Operates on the wide-format summary returned by
 \code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}. Proportions are calculated over
-operable BioSamples, where operable means that an accepted sample-source
-attribute was present.
+operable BioSample records, where operable means that an accepted
+sample-source attribute was present.
 }
 \examples{
 \dontrun{

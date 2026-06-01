@@ -62,7 +62,7 @@ test_that('summarise_availability applies correct data richness formula', {
     )
   )
   attr(RESULTS, 'query_info') <- list(
-    tool_version = '0.3.0',
+    tool_version = '0.3.1',
     query_time_utc = '2026-05-22T11:23:11Z',
     databases = c('assembly', 'sra', 'biosample'),
     terms = list('Synthetic species' = 'Synthetic species[Organism]'),

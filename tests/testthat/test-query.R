@@ -50,10 +50,11 @@ test_that('fixture manifest records the complete fixture set', {
     'ASM_SUMMARY_Arabidopsis_thaliana',
     'ASM_Arabidopsis_thaliana',
     'SRA_SUMMARY_Arabidopsis_thaliana',
-    'SKEW_BIOPROJECT_Arabidopsis_thaliana',
-    'SKEW_BIOSAMPLE_Arabidopsis_thaliana',
+    'SRA_SKEW_BIOPROJECT_Arabidopsis_thaliana',
+    'SRA_SKEW_BIOSAMPLE_Arabidopsis_thaliana',
     'SRA_Arabidopsis_thaliana',
     'BIO_SUMMARY_Arabidopsis_thaliana',
+    'BIO_SKEW_Arabidopsis_thaliana',
     'BIO_Arabidopsis_thaliana',
     'INTERACTION_CLASS_Arabidopsis_thaliana',
     'INTERACTION_SUBCLASS_Arabidopsis_thaliana'
