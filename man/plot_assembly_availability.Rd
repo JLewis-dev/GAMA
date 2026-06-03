@@ -37,8 +37,8 @@ species.
 \description{
 Visualises species-level Assembly composition using stacked horizontal bars.
 Each bar shows the proportional contribution of recognised assembly levels
-(\code{complete}, \code{chromosome}, \code{scaffold}, \code{contig}), with total Assembly
-accession counts labelled.
+(\code{complete}, \code{chromosome}, \code{scaffold}, \code{contig}), with total Assembly record
+counts labelled.
 }
 \details{
 Operates on the wide-format summary returned by

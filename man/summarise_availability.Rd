@@ -2,7 +2,7 @@
 % Please edit documentation in R/Availability_Analysis.R
 \name{summarise_availability}
 \alias{summarise_availability}
-\title{Summarise accession counts and compute data richness}
+\title{Summarise record counts and compute data richness}
 \usage{
 summarise_availability(results)
 }
@@ -13,7 +13,7 @@ summarise_availability(results)
 A tibble with one row per species and the following columns:
 \itemize{
 \item \code{species}: species name
-\item \code{Assembly}, \code{SRA}, \code{BioSample}: accession counts per database
+\item \code{Assembly}, \code{SRA}, \code{BioSample}: record counts per database
 \item \code{A}, \code{S}, \code{B}: component scores used for the composite
 \item \code{score}: composite data richness score
 }
@@ -22,10 +22,10 @@ provenance.
 }
 \description{
 Collapses the output of \code{\link[=query_species]{query_species()}} into a species-level summary table
-of accession counts (Assembly, SRA, BioSample) and data richness scores.
+of record counts (Assembly, SRA, BioSample) and data richness scores.
 }
 \details{
-For each species, accession counts are extracted from the underlying query
+For each species, record counts are extracted from the underlying query
 results and summarised into a single row. The returned tibble is given class
 \code{gdt_tbl} and retains query provenance via the \code{query_info} attribute
 carried over from the \code{results} object.

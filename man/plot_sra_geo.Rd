@@ -45,8 +45,8 @@ Labels show \code{GEO-linked / Total} for each modality.
 \details{
 Operates on the direct output of \code{\link[=summarise_sra_availability]{summarise_sra_availability()}}.
 GEO-linked counts are derived from the cached
-\code{attr(SRA_SUMMARY,'sra_profile')}, which stores per-experiment \code{geo_linked}
-values regardless of \code{include_geo}.
+\code{attr(SRA_SUMMARY, 'sra_profile')}, which stores per-record
+\code{geo_linked} values regardless of \code{include_geo}.
 
 If \code{species} is \code{NULL}, plots are generated for all species in the table. A
 single species returns a ggplot object; multiple species return a named

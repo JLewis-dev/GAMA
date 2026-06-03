@@ -2,7 +2,7 @@
 % Please edit documentation in R/Plotting.R
 \name{plot_interaction}
 \alias{plot_interaction}
-\title{Plot SRA-BioSample interaction}
+\title{Plot interaction summaries}
 \usage{
 plot_interaction(
   INTERACTION,
@@ -60,8 +60,8 @@ A ggplot object for a single species, or a named list of ggplot
 objects when multiple species are plotted.
 }
 \description{
-Visualises SRA-BioSample interaction summaries as modality-by-anatomy
-heatmaps for one or more species.
+Visualises interaction summaries as modality-by-anatomy heatmaps for one
+or more species.
 }
 \details{
 \code{plot_interaction()} operates on the summary returned by

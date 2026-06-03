@@ -2,7 +2,7 @@
 % Please edit documentation in R/Availability_Analysis.R
 \name{summarise_interaction}
 \alias{summarise_interaction}
-\title{Summarise SRA-BioSample interaction}
+\title{Summarise interaction profiles}
 \usage{
 summarise_interaction(SRA, BIO, level = "anatomy_class", species = NULL)
 }

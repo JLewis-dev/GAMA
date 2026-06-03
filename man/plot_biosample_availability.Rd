@@ -39,7 +39,8 @@ across species.
 Visualises species-level BioSample anatomy composition using stacked
 horizontal bars. Each bar shows the proportional contribution of major
 anatomy classes (\code{aerial}, \code{ground}, \code{reproductive}, \code{whole}, \code{in_vitro},
-\code{other}, \code{mixed}, \code{unknown}), with operable record counts labelled.
+\code{other}, \code{mixed}, \code{unknown}), with total operable BioSample record counts
+labelled.
 }
 \details{
 Operates on the wide-format summary returned by

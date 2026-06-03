@@ -99,8 +99,8 @@ BioSample = '#56C5A8'
 #'
 #' Visualises species-level Assembly composition using stacked horizontal bars.
 #' Each bar shows the proportional contribution of recognised assembly levels
-#' (`complete`, `chromosome`, `scaffold`, `contig`), with total Assembly
-#' accession counts labelled.
+#' (`complete`, `chromosome`, `scaffold`, `contig`), with total Assembly record
+#' counts labelled.
 #'
 #' Operates on the wide-format summary returned by
 #' [summarise_assembly_availability()].
@@ -199,7 +199,7 @@ plot_assembly_availability <- function(
     ggplot2::coord_flip(clip = 'off') +
     ggplot2::labs(
       x    = NULL,
-      y    = 'Proportion of Assembly accessions',
+      y    = 'Proportion of Assembly records',
       fill = 'Level:'
     ) +
     theme_fn(base_size = 13) +
@@ -235,9 +235,9 @@ plot_assembly_availability <- function(
 #' Plot SRA modality composition
 #'
 #' Visualises species-level SRA modality composition using stacked horizontal
-#' bars. Each bar shows the proportional contribution of major experimental
-#' classes (`genomic`, `transcriptomic`, `epigenomic`, `chromatin`, `other`,
-#' `unknown`), with total SRA counts labelled.
+#' bars. Each bar shows the proportional contribution of major modality
+#' classes (`genomic`, `transcriptomic`, `epigenomic`, `chromatin`,
+#' `other`, `unknown`), with total SRA record counts labelled.
 #'
 #' Operates on the wide-format summary returned by
 #' [summarise_sra_availability()].
@@ -346,7 +346,7 @@ plot_sra_availability <- function(
     ggplot2::coord_flip(clip = 'off') +
     ggplot2::labs(
       x    = NULL,
-      y    = 'Proportion of experiments',
+      y    = 'Proportion of SRA records',
       fill = 'Class:'
     ) +
     theme_fn(base_size = 13) +
@@ -388,8 +388,8 @@ plot_sra_availability <- function(
 #'
 #' Operates on the direct output of [summarise_sra_availability()].
 #' GEO-linked counts are derived from the cached
-#' `attr(SRA_SUMMARY,'sra_profile')`, which stores per-experiment `geo_linked`
-#' values regardless of `include_geo`.
+#' `attr(SRA_SUMMARY, 'sra_profile')`, which stores per-record
+#' `geo_linked` values regardless of `include_geo`.
 #'
 #' If `species` is `NULL`, plots are generated for all species in the table. A
 #' single species returns a ggplot object; multiple species return a named
@@ -571,7 +571,7 @@ plot_sra_geo <- function(
 #'
 #' Optional labels show `eff=<x> (n=<y>)` for each species. When a cached
 #' UID-level profile is available as `attr(SRA_SKEW, 'sra_profile')`, per-unit
-#' points (one point per BioProject/BioSample) can be overlaid with
+#' points (one point per BioProject or BioSample ID) can be overlaid with
 #' horizontal jitter.
 #'
 #' @param SRA_SKEW A tibble returned by [summarise_sra_skew()].
@@ -728,7 +728,8 @@ plot_sra_skew <- function(
 #' Visualises species-level BioSample anatomy composition using stacked
 #' horizontal bars. Each bar shows the proportional contribution of major
 #' anatomy classes (`aerial`, `ground`, `reproductive`, `whole`, `in_vitro`,
-#' `other`, `mixed`, `unknown`), with operable record counts labelled.
+#' `other`, `mixed`, `unknown`), with total operable BioSample record counts
+#' labelled.
 #'
 #' Operates on the wide-format summary returned by
 #' [summarise_biosample_availability()]. Proportions are calculated over
@@ -1026,10 +1027,10 @@ plot_biosample_skew <- function(
   p
 }
 
-#' Plot SRA-BioSample interaction
+#' Plot interaction summaries
 #'
-#' Visualises SRA-BioSample interaction summaries as modality-by-anatomy
-#' heatmaps for one or more species.
+#' Visualises interaction summaries as modality-by-anatomy heatmaps for one
+#' or more species.
 #'
 #' `plot_interaction()` operates on the summary returned by
 #' [summarise_interaction()]. The plotted anatomy resolution is inherited from

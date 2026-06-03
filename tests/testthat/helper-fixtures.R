@@ -9,6 +9,10 @@ load_fixture <- function(file) {
   readRDS(path)
 }
 
+test_gama_version <- function() {
+  getFromNamespace('.GAMA_VERSION', 'GAMA')
+}
+
 expect_gdt_tbl <- function(x) {
   testthat::expect_s3_class(x, 'gdt_tbl')
   testthat::expect_false(is.null(attr(x, 'query_info')))

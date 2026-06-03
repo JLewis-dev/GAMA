@@ -16,7 +16,7 @@ vector specifying which species to include.}
 A tibble with one row per species and the following columns:
 \itemize{
 \item \code{species}: species name
-\item \code{Assembly}: total Assembly accession count
+\item \code{Assembly}: total Assembly record count
 \item \code{complete}, \code{chromosome}, \code{scaffold}, \code{contig}: assembly level counts
 \item \code{best_n50}: highest N50 among assemblies at the highest available
 recognised assembly level
@@ -29,10 +29,10 @@ Collapses Assembly metadata into species-level assembly level counts.
 }
 \details{
 \code{summarise_assembly_availability()} reports the total number of Assembly
-accessions returned by \code{\link[=query_species]{query_species()}} and the number assigned to each
+records returned by \code{\link[=query_species]{query_species()}} and the number assigned to each
 recognised assembly level: \code{complete}, \code{chromosome}, \code{scaffold}, and
 \code{contig}. Assembly level counts are derived from Assembly esummary metadata;
-the \code{Assembly} total is retained from the original query accession count.
+the \code{Assembly} total is retained from the original query record count.
 
 The \code{best_n50} column is the highest N50 among assemblies at the highest
 available recognised assembly level for each species. Assembly levels are

@@ -22,21 +22,21 @@ vector specifying which species to include.}
 
 \item{subclass}{Optional character vector of modality subclasses to retain.}
 
-\item{only_geo}{Logical; if \code{TRUE}, retain only GEO-linked experiments.}
+\item{only_geo}{Logical; if \code{TRUE}, retain only GEO-linked SRA records.}
 }
 \value{
-A tibble with one row per SRA experiment, including identifiers,
+A tibble with one row per SRA record, including identifiers,
 strategy fields, ontology assignments, and GEO linkage columns. The tibble
 has class \code{gdt_tbl} and carries a \code{query_info} attribute for provenance.
 }
 \description{
-Retrieves experiment-level SRA metadata for one or more species, then
+Retrieves record-level SRA metadata for one or more species, then
 assigns curated modality classes and subclasses together with GEO linkage
 fields.
 }
 \details{
 Optional filters restrict the output to particular modality classes,
-subclasses, or GEO-linked experiments only.
+subclasses, or GEO-linked SRA records only.
 
 Accepted modality filters follow the internal GAMA classification scheme.
 Top-level classes and their subclasses are:

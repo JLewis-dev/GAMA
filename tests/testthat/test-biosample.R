@@ -170,7 +170,7 @@ test_that('summarise_biosample_skew applies correct inverse Simpson index formul
     unknown = 0L
   )
   attr(BIO_SUMMARY, 'query_info') <- list(
-    tool_version = '0.3.1',
+    tool_version = test_gama_version(),
     query_time_utc = '2026-05-31T07:30:00Z',
     databases = c('assembly', 'sra', 'biosample'),
     terms = list('Synthetic species' = 'Synthetic species[Organism]'),

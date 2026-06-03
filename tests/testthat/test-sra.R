@@ -167,7 +167,7 @@ test_that('summarise_sra_skew applies correct inverse Simpson index formula', {
     unknown = 0L
   )
   attr(SRA_SUMMARY, 'query_info') <- list(
-    tool_version = '0.3.1',
+    tool_version = test_gama_version(),
     query_time_utc = '2026-05-22T11:23:11Z',
     databases = c('assembly', 'sra', 'biosample'),
     terms = list('Synthetic species' = 'Synthetic species[Organism]'),

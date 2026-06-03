@@ -56,7 +56,7 @@ statistics on a log10 y-axis.
 \details{
 Optional labels show \verb{eff=<x> (n=<y>)} for each species. When a cached
 UID-level profile is available as \code{attr(SRA_SKEW, 'sra_profile')}, per-unit
-points (one point per BioProject/BioSample) can be overlaid with
+points (one point per BioProject or BioSample ID) can be overlaid with
 horizontal jitter.
 }
 \examples{

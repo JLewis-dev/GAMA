@@ -111,13 +111,13 @@ query_species <- function(species, synonyms = NULL) {
   RESULTS
 }
 
-#' Summarise accession counts and compute data richness
+#' Summarise record counts and compute data richness
 #'
 #' Collapses the output of [query_species()] into a species-level summary table
-#' of accession counts (Assembly, SRA, BioSample) and data richness scores.
+#' of record counts (Assembly, SRA, BioSample) and data richness scores.
 #'
 #' @details
-#' For each species, accession counts are extracted from the underlying query
+#' For each species, record counts are extracted from the underlying query
 #' results and summarised into a single row. The returned tibble is given class
 #' `gdt_tbl` and retains query provenance via the `query_info` attribute
 #' carried over from the `results` object.
@@ -136,7 +136,7 @@ query_species <- function(species, synonyms = NULL) {
 #' @return A tibble with one row per species and the following columns:
 #' \itemize{
 #' \item `species`: species name
-#' \item `Assembly`, `SRA`, `BioSample`: accession counts per database
+#' \item `Assembly`, `SRA`, `BioSample`: record counts per database
 #' \item `A`, `S`, `B`: component scores used for the composite
 #' \item `score`: composite data richness score
 #' }
@@ -175,10 +175,10 @@ summarise_availability <- function(results) {
 #'
 #' @details
 #' `summarise_assembly_availability()` reports the total number of Assembly
-#' accessions returned by [query_species()] and the number assigned to each
+#' records returned by [query_species()] and the number assigned to each
 #' recognised assembly level: `complete`, `chromosome`, `scaffold`, and
 #' `contig`. Assembly level counts are derived from Assembly esummary metadata;
-#' the `Assembly` total is retained from the original query accession count.
+#' the `Assembly` total is retained from the original query record count.
 #'
 #' The `best_n50` column is the highest N50 among assemblies at the highest
 #' available recognised assembly level for each species. Assembly levels are
@@ -194,7 +194,7 @@ summarise_availability <- function(results) {
 #' @return A tibble with one row per species and the following columns:
 #' \itemize{
 #' \item `species`: species name
-#' \item `Assembly`: total Assembly accession count
+#' \item `Assembly`: total Assembly record count
 #' \item `complete`, `chromosome`, `scaffold`, `contig`: assembly level counts
 #' \item `best_n50`: highest N50 among assemblies at the highest available
 #' recognised assembly level
@@ -346,12 +346,12 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
 
 #' Summarise SRA modality composition
 #'
-#' Collapses experiment-level SRA metadata into species-level modality counts
+#' Collapses record-level SRA metadata into species-level modality counts
 #' using classes and subclasses assigned using the internal ontology.
 #'
 #' By default, the output includes class-level counts for the major modalities
 #' (genomic, transcriptomic, epigenomic, chromatin, other, unknown), plus the
-#' total number of SRA experiments per species.
+#' total number of SRA records per species.
 #'
 #' Profile cache (used by downstream summaries):
 #' In addition to the summary table, this function attaches a cached, UID-level
@@ -360,7 +360,7 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
 #' GEO linkage fields (`geo_linked`, `gse_ids`, `gsm_ids`). This cache is
 #' intended to be re-used locally for downstream summaries that require
 #' within-species structure (e.g. replication skew across BioProjects or
-#' BioSamples) without re-querying NCBI. In particular,
+#' BioSample IDs) without re-querying NCBI. In particular,
 #' [summarise_sra_skew()] and [summarise_interaction()] consume
 #' `attr(x, 'sra_profile')` from the output of this function.
 #'
@@ -548,10 +548,10 @@ include_geo = FALSE) {
   OUT
 }
 
-#' Summarise SRA replication skew across BioProjects / BioSamples
+#' Summarise SRA replication skew across BioProjects / BioSample IDs
 #'
 #' Quantifies replication skew across independent units (BioProject or
-#' BioSample) using the cached UID-level SRA profile produced by
+#' BioSample ID) using the cached UID-level SRA profile produced by
 #' [summarise_sra_availability()]. Optional filters restrict the analysis to a
 #' single modality class.
 #'
@@ -563,9 +563,9 @@ include_geo = FALSE) {
 #' @details
 #' The `eff` column is the *effective number of units* (Hill number of order
 #' 2), computed as the inverse Simpson index: `eff = 1 / sum(p^2)`, where `p`
-#' is the proportion of experiments in each BioProject/BioSample. Larger values
-#' indicate a more even spread; values near 1 indicate strong concentration in
-#' few units.
+#' is the proportion of SRA records in each BioProject or BioSample ID.
+#' Larger values indicate a more even spread; values near 1 indicate strong
+#' concentration in few units.
 #'
 #' @param x A data.frame/tibble returned by summarise_sra_availability()
 #' that has a cached profile attached as attribute `sra_profile`.
@@ -576,8 +576,8 @@ include_geo = FALSE) {
 #'
 #' @return A tibble/data.frame with one row per species containing:
 #' `species`, `BioProject`/`BioSample` (number of distinct units with records),
-#' `class`, `min`, `q25`, `med`, `q75`, `max` (experiments per unit), and `eff`
-#' (effective number of units; inverse Simpson index).
+#' `class`, `min`, `q25`, `med`, `q75`, `max` (SRA records per unit), and
+#' `eff` (effective number of units; inverse Simpson index).
 #'
 #' @seealso [summarise_sra_availability()], [plot_sra_skew()]
 #'
@@ -727,12 +727,12 @@ summarise_sra_skew <- function(x, species = NULL, unit = 'bioproject', class = N
 
 #' Extract filtered SRA metadata
 #'
-#' Retrieves experiment-level SRA metadata for one or more species, then
+#' Retrieves record-level SRA metadata for one or more species, then
 #' assigns curated modality classes and subclasses together with GEO linkage
 #' fields.
 #'
 #' Optional filters restrict the output to particular modality classes,
-#' subclasses, or GEO-linked experiments only.
+#' subclasses, or GEO-linked SRA records only.
 #'
 #' @details
 #' Accepted modality filters follow the internal GAMA classification scheme.
@@ -754,9 +754,9 @@ summarise_sra_skew <- function(x, species = NULL, unit = 'bioproject', class = N
 #' vector specifying which species to include.
 #' @param class Optional character vector of modality classes to retain.
 #' @param subclass Optional character vector of modality subclasses to retain.
-#' @param only_geo Logical; if `TRUE`, retain only GEO-linked experiments.
+#' @param only_geo Logical; if `TRUE`, retain only GEO-linked SRA records.
 #'
-#' @return A tibble with one row per SRA experiment, including identifiers,
+#' @return A tibble with one row per SRA record, including identifiers,
 #' strategy fields, ontology assignments, and GEO linkage columns. The tibble
 #' has class `gdt_tbl` and carries a `query_info` attribute for provenance.
 #'
@@ -1452,7 +1452,7 @@ anatomy_term     = NULL) {
   OUT
 }
 
-#' Summarise SRA-BioSample interaction
+#' Summarise interaction profiles
 #'
 #' Links cached SRA modality and BioSample anatomy profiles to summarise
 #' modality-by-anatomy structure for each species.
