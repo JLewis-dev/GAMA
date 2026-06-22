@@ -342,7 +342,7 @@ Visualises BioSample replication skew using the summary output of `summarise_bio
 
 ### extract_biosample_metadata()
 
-Returns record-level BioSample source-material metadata for deeper inspection, including recovered tissue fields, ontology assignments, and collapsed anatomy profiles.
+Returns record-level BioSample source-material metadata for deeper inspection, including recovered sample-source values, ontology assignments, and collapsed anatomy profiles.
 
 - Input – list returned by `query_species()`
   - Optional arguments –<br>
@@ -350,7 +350,7 @@ Returns record-level BioSample source-material metadata for deeper inspection, i
     &nbsp;&nbsp;`anatomy_class`: character vector; anatomy classes to filter by (NULL, one or more anatomy classes)<br>
     &nbsp;&nbsp;`anatomy_subclass`: character vector; anatomy subclasses to filter by (NULL, one or more anatomy subclasses)<br>
     &nbsp;&nbsp;`anatomy_term`: character vector; canonical anatomy terms to filter by (NULL, one or more anatomy terms)
-- Output – tibble (`gdt_tbl`) with one row per BioSample anatomy term, including identifiers, raw and normalised tissue fields, ontology assignments, and anatomy_class_profile and anatomy_subclass_profile labels
+- Output – tibble (`gdt_tbl`) with one row per BioSample anatomy term, including identifiers, raw and normalised sample-source values, ontology assignments, and anatomy_class_profile and anatomy_subclass_profile labels
 
 ### summarise_interaction()
 
@@ -398,7 +398,7 @@ GAMA is organised around two archive-interrogation layers:
 
 ### Data richness
 
-*Score* = *A* + *S* + *B*, where *A*, *S*, and *B* are the transformed contributions of Assembly, SRA, and BioSample record counts. *A* = *best* + ln(1 + *total* − *best*), with assemblies weighted as Complete = 10, Chromosome = 8, Scaffold = 5, and Contig = 2; *best* is the maximum-weight assembly, with ties broken by highest N50, and *total* is the sum of all record weights. *S* = 2·ln(1 + SRA), and *B* = ln(1 + BioSample). This formulation prioritises high-quality assemblies while incorporating diminishing returns for highly sampled taxa.
+*Score* = *A* + *S* + *B*, where *A*, *S*, and *B* are the transformed contributions of Assembly, SRA, and BioSample record counts. *A* = *best* + ln(1 + *total* − *best*), with assemblies weighted as Complete = 10, Chromosome = 8, Scaffold = 5, and Contig = 2; *best* is the maximum-weight assembly, with ties broken by highest N50, and *total* is the sum of all record weights. *S* = 2·ln(1 + SRA), and *B* = ln(1 + BioSample). This formulation prioritises high-quality assemblies while incorporating diminishing returns for extensively sampled taxa.
 
 ### Ontology-driven classification
 
@@ -406,7 +406,7 @@ GAMA uses curated ontologies derived from archive text mining to classify NCBI m
 
 For SRA, modality terms and recognised variants were derived by mining >220,000 *Arabidopsis thaliana* accessions (conducted 31 January 2026) before manual curation to capture common submitter variants and deprecated terminology. Assignment is based primarily on normalised LIBRARY_STRATEGY terms, with conservative fallback to related SRA metadata fields, including LIBRARY_SOURCE, LIBRARY_SELECTION, and record title, when the primary strategy field is missing, unknown, or uninformative.
 
-For BioSample, anatomy terms and recognised variants were derived by mining >750,000 BioSample records across ten representative plant species selected as data-rich examples of major plant lineages: *A. thaliana*, *Brachypodium distachyon*, *Glycine max*, *Malus domestica*, *Manihot esculenta*, *Oryza sativa*, *Populus trichocarpa*, *Solanum lycopersicum*, *Solanum tuberosum*, and *Zea mays* (conducted 24 February 2026). This produced a corpus with broad anatomical coverage and substantial terminological depth. Because compiled BioSample free-text metadata proved too heterogeneous for stable classification, curation was restricted to a reliable subset of sample-source attributes, including tissue, organism part, cell type, tissue type, and organ.
+For BioSample, anatomy terms and recognised variants were derived by mining >750,000 BioSample records across ten representative angiosperm species selected as data-rich examples of major lineages: *A. thaliana*, *Brachypodium distachyon*, *Glycine max*, *Malus domestica*, *Manihot esculenta*, *Oryza sativa*, *Populus trichocarpa*, *Solanum lycopersicum*, *Solanum tuberosum*, and *Zea mays* (conducted 24 February 2026). This produced a corpus with broad anatomical coverage and substantial terminological depth. However, the ontology has since been expanded using gymnosperm, pteridophyte, and bryophyte data. Because compiled BioSample free-text metadata proved too heterogeneous for stable classification, curation was restricted to a reliable subset of sample-source attributes, including tissue, organism part, cell type, tissue type, and organ.
 
 ### Replication skew
 
@@ -414,7 +414,7 @@ For BioSample, anatomy terms and recognised variants were derived by mining >750
 
 ### Residuals
 
-Residuals quantify whether an SRA modality–BioSample anatomy combination is over- or under-represented relative to a marginal expectation. For each species, expected counts are calculated under a simple independence model in which sequencing modality and anatomy category are assumed to occur in proportion to their overall frequencies: *Eᵢⱼ* = (*Rᵢ* × *Cⱼ*) / *N*, where *Rᵢ* is the total number of records in SRA modality *i*, *Cⱼ* is the total number of records in BioSample anatomy category *j*, and *N* is the total number of linked records. Pearson residuals are then calculated as *rᵢⱼ* = (*Oᵢⱼ* − *Eᵢⱼ*) / √(*Eᵢⱼ*), where *Oᵢⱼ* is the observed count for each modality–anatomy combination (Pearson, 1900). Positive residuals indicate combinations observed more often than expected, while negative residuals indicate combinations observed less often than expected. This helps reveal species-level biases and gaps that raw counts alone may obscure, since common combinations such as genomic leaf records can appear dominant simply because both the sequencing modality and tissue type are widely sampled (Fig. 1).
+Residuals quantify whether an SRA modality–BioSample anatomy combination is over- or under-represented relative to a marginal expectation. For each species, expected counts are calculated under a simple independence model in which sequencing modality and anatomy category are assumed to occur in proportion to their overall frequencies: *Eᵢⱼ* = (*Rᵢ* × *Cⱼ*) / *N*, where *Rᵢ* is the total number of records in SRA modality *i*, *Cⱼ* is the total number of records in BioSample anatomy category *j*, and *N* is the total number of linked records. Pearson residuals are then calculated as *rᵢⱼ* = (*Oᵢⱼ* − *Eᵢⱼ*) / √(*Eᵢⱼ*), where *Oᵢⱼ* is the observed count for each modality–anatomy combination (Pearson, 1900). Positive residuals indicate combinations observed more often than expected, while negative residuals indicate combinations observed less often than expected. This helps reveal species-level biases and gaps that raw counts alone may obscure, since common combinations such as genomic leaf records can appear dominant simply because both the sequencing modality and tissue type are broadly popular (Fig. 1).
 
 <p align='center'>
   <img src='../man/figures/Residuals_plot.png' alt='GAMA residuals plot' width='800'>

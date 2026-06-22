@@ -6,6 +6,6 @@ citEntry(
   title = 'GAMA: Genomic Availability & Metadata Analysis Tool',
   author = person('James', 'Lewis'),
   year = '2026',
-  note = 'R package version 0.3.2',
+  note = 'R package version 0.3.3',
   url = 'https://github.com/JLewis-dev/GAMA'
 )

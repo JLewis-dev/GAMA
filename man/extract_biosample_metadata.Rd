@@ -30,10 +30,10 @@ retain.}
 \value{
 A tibble with one row per recovered BioSample anatomy term. Columns
 include species, Entrez UID, BioSample accession, BioProject accession, raw
-and normalised tissue fields, row-level anatomy assignments, and collapsed
-BioSample-level \code{anatomy_class_profile} and \code{anatomy_subclass_profile}
-labels. The tibble has class \code{gdt_tbl} and carries a \code{query_info} attribute
-for provenance.
+and normalised sample-source values, row-level anatomy assignments, and
+collapsed BioSample-level \code{anatomy_class_profile} and
+\code{anatomy_subclass_profile} labels. The tibble has class \code{gdt_tbl} and
+carries a \code{query_info} attribute for provenance.
 }
 \description{
 Retrieves BioSample sample-source metadata for one or more species, then

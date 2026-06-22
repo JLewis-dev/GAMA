@@ -1,3 +1,26 @@
+# GAMA 0.3.3
+
+## API changes
+
+- Renamed `extract_biosample_metadata()` output columns `tissue_raw` and `tissue_norm` to `value_raw` and `value_norm`
+
+## Reliability
+
+- Added raw and normalised BioSample source values to the cached anatomy profile produced by `summarise_biosample_availability()` to support diagnostics
+- Expanded the BioSample anatomy ontology using gymnosperm, pteridophyte, and bryophyte data
+
+## Documentation
+
+- Updated roxygen documentation and the GAMA user guide accordingly
+
+## Testing
+
+- Updated testthat coverage for the revised column names and cached anatomy profile
+- Regenerated BioSample fixtures for the revised BioSample output structure
+- Confirmed the test suite passes with the updated fixtures
+
+---
+
 # GAMA 0.3.2
 
 ## Plotting

@@ -260,6 +260,5 @@ test_that('SRA fixture preserves GEO linkage structure', {
   has_gse <- !is.na(SRA$gse_ids) & nzchar(SRA$gse_ids)
   has_gsm <- !is.na(SRA$gsm_ids) & nzchar(SRA$gsm_ids)
   expect_type(linked, 'logical')
-  if (any(linked)) expect_true(all(has_gse[linked] | has_gsm[linked]))
   expect_true(all(!linked | has_gse | has_gsm))
 })

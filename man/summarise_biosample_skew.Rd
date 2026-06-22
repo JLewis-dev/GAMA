@@ -43,10 +43,9 @@ where \code{p} is the proportion of operable BioSample records in each
 BioProject. Larger values indicate a more even spread; values near 1
 indicate strong concentration in few BioProjects.
 
-Missing BioProject IDs are excluded from the skew calculation after any
-species or \code{anatomy_class} filters are applied. A \code{skew_id_recovery}
-attribute reports the active denominator, number of records included, number
-excluded, and recovery proportion.
+Records missing BioProject IDs are excluded from the skew calculation. A
+\code{skew_id_recovery} attribute reports the active denominator, number of
+records included, number excluded, and recovery proportion.
 }
 \examples{
 \dontrun{

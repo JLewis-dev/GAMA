@@ -44,7 +44,20 @@ test_that('BIO_SUMMARY fixture carries BioSample profile caches', {
   ANATOMY <- attr(BIO_SUMMARY, 'biosample_anatomy_profile', exact = TRUE)
   CANONICAL <- attr(BIO_SUMMARY, 'biosample_canonical_profile', exact = TRUE)
   anatomy_cols <- c('species', 'biosample_id', 'bioproject', 'anatomy_class', 'anatomy_subclass')
-  canonical_cols <- c('species', 'biosample_id', 'anatomy_term', 'anatomy_class', 'anatomy_subclass', 'rank', 'ontology_namespace', 'ontology_id', 'ontology_label')
+  canonical_cols <- c(
+    'species',
+    'biosample_id',
+    'bioproject',
+    'value_raw',
+    'value_norm',
+    'anatomy_term',
+    'anatomy_class',
+    'anatomy_subclass',
+    'rank',
+    'ontology_namespace',
+    'ontology_id',
+    'ontology_label'
+  )
   expect_false(is.null(ANATOMY))
   expect_false(is.null(CANONICAL))
   expect_gama_columns(ANATOMY, anatomy_cols)
@@ -217,7 +230,19 @@ test_that('BIO fixture is a valid extract_biosample_metadata object', {
 
 test_that('BIO fixture contains expected columns', {
   BIO <- load_fixture('BIO_Arabidopsis_thaliana')
-  expected_cols <- c('species', 'entrez_uid', 'biosample', 'bioproject', 'tissue_raw', 'tissue_norm', 'anatomy_class', 'anatomy_subclass', 'anatomy_term', 'anatomy_class_profile', 'anatomy_subclass_profile')
+  expected_cols <- c(
+    'species',
+    'entrez_uid',
+    'biosample',
+    'bioproject',
+    'value_raw',
+    'value_norm',
+    'anatomy_class',
+    'anatomy_subclass',
+    'anatomy_term',
+    'anatomy_class_profile',
+    'anatomy_subclass_profile'
+  )
   expect_named(BIO, expected_cols)
   expect_true(all(BIO$species == 'Arabidopsis thaliana'))
   expect_true(any(!is.na(BIO$entrez_uid) & nzchar(BIO$entrez_uid)))

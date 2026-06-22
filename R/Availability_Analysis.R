@@ -567,6 +567,10 @@ include_geo = FALSE) {
 #' Larger values indicate a more even spread; values near 1 indicate strong
 #' concentration in few units.
 #'
+#' Records missing BioProject or BioSample IDs are excluded from the skew
+#' calculation. A `skew_id_recovery` attribute reports the active denominator,
+#' number of records included, number excluded, and recovery proportion.
+#'
 #' @param x A data.frame/tibble returned by summarise_sra_availability()
 #' that has a cached profile attached as attribute `sra_profile`.
 #' @param species Optional character vector of species names to filter the
@@ -905,6 +909,8 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
     'species',
     'biosample_id',
     'bioproject',
+    'value_raw',
+    'value_norm',
     'anatomy_term',
     'anatomy_class',
     'anatomy_subclass',
@@ -962,6 +968,8 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
       species = character(),
       biosample_id = character(),
       bioproject = character(),
+      value_raw = character(),
+      value_norm = character(),
       anatomy_term = character(),
       anatomy_class = character(),
       anatomy_subclass = character(),
@@ -1099,10 +1107,9 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
 #' BioProject. Larger values indicate a more even spread; values near 1
 #' indicate strong concentration in few BioProjects.
 #'
-#' Missing BioProject IDs are excluded from the skew calculation after any
-#' species or `anatomy_class` filters are applied. A `skew_id_recovery`
-#' attribute reports the active denominator, number of records included, number
-#' excluded, and recovery proportion.
+#' Records missing BioProject IDs are excluded from the skew calculation. A
+#' `skew_id_recovery` attribute reports the active denominator, number of
+#' records included, number excluded, and recovery proportion.
 #'
 #' @param x A data.frame/tibble returned by
 #' [summarise_biosample_availability()] that has a cached profile attached as
@@ -1294,10 +1301,10 @@ summarise_biosample_skew <- function(x, species = NULL, anatomy_class = NULL) {
 #'
 #' @return A tibble with one row per recovered BioSample anatomy term. Columns
 #' include species, Entrez UID, BioSample accession, BioProject accession, raw
-#' and normalised tissue fields, row-level anatomy assignments, and collapsed
-#' BioSample-level `anatomy_class_profile` and `anatomy_subclass_profile`
-#' labels. The tibble has class `gdt_tbl` and carries a `query_info` attribute
-#' for provenance.
+#' and normalised sample-source values, row-level anatomy assignments, and
+#' collapsed BioSample-level `anatomy_class_profile` and
+#' `anatomy_subclass_profile` labels. The tibble has class `gdt_tbl` and
+#' carries a `query_info` attribute for provenance.
 #'
 #' @seealso [query_species()], [summarise_biosample_availability()]
 #'
@@ -1324,8 +1331,8 @@ anatomy_term     = NULL) {
     entrez_uid = character(),
     biosample = character(),
     bioproject = character(),
-    tissue_raw = character(),
-    tissue_norm = character(),
+    value_raw = character(),
+    value_norm = character(),
     anatomy_class = character(),
     anatomy_subclass = character(),
     anatomy_term = character(),
@@ -1398,8 +1405,8 @@ anatomy_term     = NULL) {
       entrez_uid = .data$entrez_uid,
       biosample = .data$biosample_id,
       bioproject = .data$bioproject,
-      tissue_raw = .data$tissue_raw,
-      tissue_norm = .data$tissue_norm,
+      value_raw = .data$value_raw,
+      value_norm = .data$value_norm,
       anatomy_class = .data$anatomy_class,
       anatomy_subclass = .data$anatomy_subclass,
       anatomy_term = .data$anatomy_term
@@ -1436,8 +1443,8 @@ anatomy_term     = NULL) {
       entrez_uid = .data$entrez_uid,
       biosample = .data$biosample,
       bioproject = .data$bioproject,
-      tissue_raw = .data$tissue_raw,
-      tissue_norm = .data$tissue_norm,
+      value_raw = .data$value_raw,
+      value_norm = .data$value_norm,
       anatomy_class = .data$anatomy_class,
       anatomy_subclass = .data$anatomy_subclass,
       anatomy_term = .data$anatomy_term,

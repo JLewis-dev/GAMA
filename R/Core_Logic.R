@@ -1089,69 +1089,44 @@ title_raw = NA_character_) {
 .ANATOMY_ONTOLOGY <- list(
   aerial = list(
     leaf = list(
-      leaf = list(
-        variants = c('leaf', 'leaves', 'cauline leaf', 'cauline leaves', 'mature leaf', 'mature leaves', 'old leaf', 'trifoliate leaves', 'trifoliate', 'true leaf', 'true leaves', 'foliage', 'seedling leaf', 'seedling leaves', 'leaf tissue', 'leaf sample', 'leave', 'leaves tissue', 'leave tissue', 'leave tissues', 'leaaves', 'leafs', 'leat', 'plant leave', 'foliar', 'cauline'),
-        ontology = list(namespace = 'PO', id = 'PO:0025034', label = 'leaf'),
-        rank = 'organ'
-      ),
-      rosette_leaf = list(
-        variants = c('leaf rosette', 'rosette', 'rosette and cauline leaves', 'rosette leaf', 'rosette leaves', 'rossette leaf', 'rosetteleaves'),
-        ontology = list(namespace = 'PO', id = 'PO:0000014', label = 'rosette leaf'),
-        rank = 'organ'
-      ),
-      flag_leaf = list(
-        variants = c('flag leaf', 'flag leaves', 'flagleaf', 'flag leafs'),
-        ontology = list(namespace = 'PO', id = 'PO:0020103', label = 'flag leaf'),
-        rank = 'organ'
-      ),
-      young_leaf = list(
-        variants = c('young leaf', 'young leaves', 'young leave', 'youngleaf'),
-        ontology = list(namespace = 'PO', id = 'PO:0025034', label = 'leaf'),
-        rank = 'organ'
-      ),
-      cotyledon = list(
-        variants = c('cotyledon', 'cotyledons', 'cotyleden', 'cotyldon'),
-        ontology = list(namespace = 'PO', id = 'PO:0020030', label = 'cotyledon'),
-        rank = 'organ'
-      ),
-      leaf_blade = list(
-        variants = c('blade', 'lamina', 'leaf blade', 'leaf lamina'),
-        ontology = list(namespace = 'PO', id = 'PO:0020039', label = 'leaf lamina'),
-        rank = 'suborgan'
-      ),
-      leaf_sheath = list(
-        variants = c('leaf sheath', 'sheath', 'sheaths', 'leafsheath'),
-        ontology = list(namespace = 'PO', id = 'PO:0020104', label = 'leaf sheath'),
-        rank = 'suborgan'
-      ),
-      petiole = list(
-        variants = c('petiole', 'petioles'),
-        ontology = list(namespace = 'PO', id = 'PO:0020038', label = 'petiole'),
-        rank = 'suborgan'
-      ),
-      leaflet = list(
-        variants = c('leaflet', 'leaflets', 'terminal leaflet'),
-        ontology = list(namespace = 'PO', id = 'PO:0020049', label = 'leaflet'),
-        rank = 'suborgan'
-      ),
-      ligule = list(
-        variants = c('ligule', 'ligules'),
-        ontology = list(namespace = 'PO', id = 'PO:0020105', label = 'ligule'),
-        rank = 'suborgan'
-      ),
       auricle = list(
         variants = c('auricle', 'auricles', 'leaf auricle region'),
         ontology = list(namespace = 'PO', id = 'PO:0020106', label = 'leaf sheath auricle'),
         rank = 'suborgan'
       ),
-      leaf_vein = list(
-        variants = c('leaf vein', 'vein'),
-        ontology = list(namespace = 'PO', id = 'PO:0020138', label = 'leaf lamina vein'),
+      cotyledon = list(
+        variants = c('cotyldon', 'cotyleden', 'cotyledon', 'cotyledons'),
+        ontology = list(namespace = 'PO', id = 'PO:0020030', label = 'cotyledon'),
+        rank = 'organ'
+      ),
+      cotyledon_primordium = list(
+        variants = c('cotyledon primordia', 'cotyledon primordium'),
+        ontology = list(namespace = 'PO', id = 'PO:0000015', label = 'cotyledon primordium'),
         rank = 'suborgan'
       ),
-      midvein = list(
-        variants = c('midrib', 'midvein'),
-        ontology = list(namespace = 'PO', id = 'PO:0020139', label = 'leaf midvein'),
+      fiddlehead = list(
+        variants = c('emerging fiddlehead', 'fiddlehead', 'fiddleheads'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      flag_leaf = list(
+        variants = c('flag leaf', 'flag leafs', 'flag leaves', 'flagleaf'),
+        ontology = list(namespace = 'PO', id = 'PO:0020103', label = 'flag leaf'),
+        rank = 'organ'
+      ),
+      frond = list(
+        variants = c('expanding frond', 'fern frond', 'fern fronds', 'frond', 'fronds', 'mature frond', 'mature fronds', 'vegetative frond', 'vegetative fronds', 'young frond', 'young fronds'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      leaf = list(
+        variants = c('cauline', 'cauline leaf', 'cauline leaves', 'foliage', 'foliar', 'leaaves', 'leaf', 'leaf sample', 'leaf tissue', 'leafs', 'leat', 'leave', 'leave tissue', 'leave tissues', 'leaves', 'leaves tissue', 'mature leaf', 'mature leaves', 'old leaf', 'plant leave', 'seedling leaf', 'seedling leaves', 'trifoliate', 'trifoliate leaves', 'true leaf', 'true leaves'),
+        ontology = list(namespace = 'PO', id = 'PO:0025034', label = 'leaf'),
+        rank = 'organ'
+      ),
+      leaf_blade = list(
+        variants = c('blade', 'lamina', 'leaf blade', 'leaf lamina'),
+        ontology = list(namespace = 'PO', id = 'PO:0020039', label = 'leaf lamina'),
         rank = 'suborgan'
       ),
       leaf_epidermis = list(
@@ -1165,14 +1140,64 @@ title_raw = NA_character_) {
         rank = 'meta'
       ),
       leaf_primordium = list(
-        variants = c('leaf primordium', 'leaf primordia', 'vascular leaf primordium', 'vascular leaf primordia'),
+        variants = c('leaf primordia', 'leaf primordium', 'vascular leaf primordia', 'vascular leaf primordium'),
         ontology = list(namespace = 'PO', id = 'PO:0000017', label = 'vascular leaf primordium'),
         rank = 'suborgan'
       ),
-      cotyledon_primordium = list(
-        variants = c('cotyledon primordium', 'cotyledon primordia'),
-        ontology = list(namespace = 'PO', id = 'PO:0000015', label = 'cotyledon primordium'),
+      leaf_sheath = list(
+        variants = c('leaf sheath', 'leafsheath', 'sheath', 'sheaths'),
+        ontology = list(namespace = 'PO', id = 'PO:0020104', label = 'leaf sheath'),
         rank = 'suborgan'
+      ),
+      leaf_vein = list(
+        variants = c('leaf vein', 'vein'),
+        ontology = list(namespace = 'PO', id = 'PO:0020138', label = 'leaf lamina vein'),
+        rank = 'suborgan'
+      ),
+      leaflet = list(
+        variants = c('leaflet', 'leaflets', 'terminal leaflet'),
+        ontology = list(namespace = 'PO', id = 'PO:0020049', label = 'leaflet'),
+        rank = 'suborgan'
+      ),
+      ligule = list(
+        variants = c('ligule', 'ligules'),
+        ontology = list(namespace = 'PO', id = 'PO:0020105', label = 'ligule'),
+        rank = 'suborgan'
+      ),
+      microphyll = list(
+        variants = c('microphyll', 'microphyll frond', 'microphyll fronds', 'microphylls'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      midvein = list(
+        variants = c('midrib', 'midvein'),
+        ontology = list(namespace = 'PO', id = 'PO:0020139', label = 'leaf midvein'),
+        rank = 'suborgan'
+      ),
+      needle = list(
+        variants = c('neddles', 'needle', 'needles', 'needls', 'niddle'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      petiole = list(
+        variants = c('petiole', 'petioles'),
+        ontology = list(namespace = 'PO', id = 'PO:0020038', label = 'petiole'),
+        rank = 'suborgan'
+      ),
+      rosette_leaf = list(
+        variants = c('leaf rosette', 'rosette', 'rosette and cauline leaves', 'rosette leaf', 'rosette leaves', 'rosetteleaves', 'rossette leaf'),
+        ontology = list(namespace = 'PO', id = 'PO:0000014', label = 'rosette leaf'),
+        rank = 'organ'
+      ),
+      trophophyll = list(
+        variants = c('trophophyll', 'trophophylls'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      young_leaf = list(
+        variants = c('young leaf', 'young leave', 'young leaves', 'youngleaf'),
+        ontology = list(namespace = 'PO', id = 'PO:0025034', label = 'leaf'),
+        rank = 'organ'
       )
     ),
     shoot_meristem = list(
@@ -1270,7 +1295,7 @@ title_raw = NA_character_) {
       ),
       vascular_cambium = list(
         variants = c('cambium', 'vascular cambium'),
-        ontology = list(namespace = 'PO', id = 'PO:0005597', label = 'vascular cambium'),
+        ontology = list(namespace = 'PO', id = 'PO:0005598', label = 'vascular cambium'),
         rank = 'suborgan'
       ),
       cork_cambium = list(
@@ -1287,10 +1312,25 @@ title_raw = NA_character_) {
   ),
   ground = list(
     root = list(
-      root = list(
-        variants = c('root', 'roots', 'tap root', 'taproot', 'primary root', 'lateral roots', 'hairy roots', 'storage root', 'whole root', 'whole roots', 'seedling root', 'seedling roots', 'firoots'),
-        ontology = list(namespace = 'PO', id = 'PO:0009005', label = 'root'),
-        rank = 'organ'
+      adventitious_root = list(
+        variants = c('adventitious root', 'adventitious roots'),
+        ontology = NULL,
+        rank = 'suborgan'
+      ),
+      cortex = list(
+        variants = c('cortex', 'root cortex'),
+        ontology = list(namespace = 'PO', id = 'PO:0005708', label = 'cortex'),
+        rank = 'suborgan'
+      ),
+      crown_root = list(
+        variants = c('crown root', 'crown roots'),
+        ontology = list(namespace = 'PO', id = 'PO:0000043', label = 'crown root'),
+        rank = 'suborgan'
+      ),
+      endodermis = list(
+        variants = c('endodermis'),
+        ontology = list(namespace = 'PO', id = 'PO:0000252', label = 'endodermis'),
+        rank = 'suborgan'
       ),
       fine_root = list(
         variants = c('fine root'),
@@ -1302,14 +1342,39 @@ title_raw = NA_character_) {
         ontology = list(namespace = 'PO', id = 'PO:0020121', label = 'lateral root'),
         rank = 'suborgan'
       ),
-      adventitious_root = list(
-        variants = c('adventitious root', 'adventitious roots'),
+      pericycle = list(
+        variants = c('pericycle', 'root pericycle'),
+        ontology = list(namespace = 'PO', id = 'PO:0006203', label = 'pericycle'),
+        rank = 'suborgan'
+      ),
+      prop_root = list(
+        variants = c('prop root', 'prop roots'),
+        ontology = list(namespace = 'PO', id = 'PO:0000044', label = 'prop root'),
+        rank = 'suborgan'
+      ),
+      radicle = list(
+        variants = c('radicle'),
+        ontology = list(namespace = 'PO', id = 'PO:0020031', label = 'radicle'),
+        rank = 'organ'
+      ),
+      rhizoid = list(
+        variants = c('rhizoid', 'rhizoid like protonema', 'rhizoid like protonemata', 'rhizoids'),
         ontology = NULL,
         rank = 'suborgan'
       ),
-      crown_root = list(
-        variants = c('crown root', 'crown roots'),
-        ontology = list(namespace = 'PO', id = 'PO:0000043', label = 'crown root'),
+      rhizophore = list(
+        variants = c('rhizophore', 'rhizophores'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      root = list(
+        variants = c('firoots', 'hairy roots', 'lateral roots', 'primary root', 'root', 'roots', 'seedling root', 'seedling roots', 'storage root', 'tap root', 'taproot', 'whole root', 'whole roots'),
+        ontology = list(namespace = 'PO', id = 'PO:0009005', label = 'root'),
+        rank = 'organ'
+      ),
+      root_epidermis = list(
+        variants = c('root epidermis'),
+        ontology = list(namespace = 'PO', id = 'PO:0006036', label = 'root epidermis'),
         rank = 'suborgan'
       ),
       root_hair = list(
@@ -1317,40 +1382,10 @@ title_raw = NA_character_) {
         ontology = list(namespace = 'PO', id = 'PO:0000256', label = 'root hair cell'),
         rank = 'cell'
       ),
-      root_epidermis = list(
-        variants = c('root epidermis'),
-        ontology = list(namespace = 'PO', id = 'PO:0006036', label = 'root epidermis'),
-        rank = 'suborgan'
-      ),
-      cortex = list(
-        variants = c('cortex', 'root cortex'),
-        ontology = list(namespace = 'PO', id = 'PO:0005708', label = 'cortex'),
-        rank = 'suborgan'
-      ),
-      endodermis = list(
-        variants = c('endodermis'),
-        ontology = list(namespace = 'PO', id = 'PO:0000252', label = 'endodermis'),
-        rank = 'suborgan'
-      ),
-      pericycle = list(
-        variants = c('pericycle', 'root pericycle'),
-        ontology = list(namespace = 'PO', id = 'PO:0006203', label = 'pericycle'),
-        rank = 'suborgan'
-      ),
-      stele = list(
-        variants = c('root stele', 'stele'),
-        ontology = list(namespace = 'PO', id = 'PO:0025197', label = 'stele'),
-        rank = 'suborgan'
-      ),
       root_nodule = list(
-        variants = c('root nodule', 'nodule', 'nodules'),
+        variants = c('nodule', 'nodules', 'root nodule'),
         ontology = list(namespace = 'PO', id = 'PO:0003023', label = 'root nodule'),
         rank = 'suborgan'
-      ),
-      radicle = list(
-        variants = c('radicle'),
-        ontology = list(namespace = 'PO', id = 'PO:0020031', label = 'radicle'),
-        rank = 'organ'
       ),
       seminal_root = list(
         variants = c('seminal root', 'seminal roots'),
@@ -1362,9 +1397,9 @@ title_raw = NA_character_) {
         ontology = list(namespace = 'PO', id = 'PO:0000042', label = 'shoot-borne root'),
         rank = 'suborgan'
       ),
-      prop_root = list(
-        variants = c('prop root', 'prop roots'),
-        ontology = list(namespace = 'PO', id = 'PO:0000044', label = 'prop root'),
+      stele = list(
+        variants = c('root stele', 'stele'),
+        ontology = list(namespace = 'PO', id = 'PO:0025197', label = 'stele'),
         rank = 'suborgan'
       )
     ),
@@ -1784,6 +1819,21 @@ title_raw = NA_character_) {
         ontology = list(namespace = 'PO', id = 'PO:0009010', label = 'seed'),
         rank = 'organ'
       ),
+      aril = list(
+        variants = c('aril', 'arils'),
+        ontology = NULL,
+        rank = 'suborgan'
+      ),
+      episperm = list(
+        variants = c('episperm', 'episperms'),
+        ontology = NULL,
+        rank = 'suborgan'
+      ),
+      megagametophyte = list(
+        variants = c('megagametophyte', 'megagametophytes'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
       caryopsis = list(
         variants = c('caryopsis', 'caryposis'),
         ontology = list(namespace = 'PO', id = 'PO:0030104', label = 'caryopsis fruit'),
@@ -1829,24 +1879,198 @@ title_raw = NA_character_) {
         ontology = list(namespace = 'PO', id = 'PO:0000001', label = 'plant embryo proper'),
         rank = 'suborgan'
       )
+    ),
+    other = list(
+      antheridial_receptacle = list(
+        variants = c('antheridial receptacle', 'antheridial receptacles'),
+        ontology = NULL,
+        rank = 'suborgan'
+      ),
+      antheridiophore = list(
+        variants = c('antheridiophore', 'antheridiophores'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      antheridium = list(
+        variants = c('antheridia', 'antheridium'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      archegonial_receptacle = list(
+        variants = c('archegonial receptacle', 'archegonial receptacles'),
+        ontology = NULL,
+        rank = 'suborgan'
+      ),
+      archegoniophore = list(
+        variants = c('archegoniophore', 'archegoniophores', 'archegoniphore', 'archegoniphores'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      archegonium = list(
+        variants = c('archegonia', 'archegonium'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      cone = list(
+        variants = c(
+          'cone',
+          'cones',
+          'entire cone',
+          'entire cones',
+          'expanding female cone',
+          'expanding female cones',
+          'female cone',
+          'female cones',
+          'male cone',
+          'male cones',
+          'whole cone',
+          'whole cones'
+        ),
+        match = 'exact',
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      conelet = list(
+        variants = c('conelet', 'conelets'),
+        match = 'exact',
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      gametangium = list(
+        variants = c('gametangia', 'gametangium', 'multicellular plant gametangium', 'plant gametangium'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      gemma = list(
+        variants = c('developing gemma', 'gemma', 'gemmae', 'whole gemma', 'whole gemmae'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      gemma_cup = list(
+        variants = c('gemma cup', 'gemma cups'),
+        ontology = NULL,
+        rank = 'suborgan'
+      ),
+      microstrobilus = list(
+        variants = c('microstrobili', 'microstrobilus'),
+        match = 'exact',
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      ovulate_strobilus = list(
+        variants = c('ovulate strobili', 'ovulate strobilus'),
+        match = 'exact',
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      pollen_cone = list(
+        variants = c('pollen cone', 'pollen cones'),
+        match = 'exact',
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      seed_cone = list(
+        variants = c('seed cone', 'seed cones'),
+        match = 'exact',
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      sporangium = list(
+        variants = c('sporangia', 'sporangium'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      spore = list(
+        variants = c('developing spore', 'spore', 'spores'),
+        ontology = NULL,
+        rank = 'cell'
+      ),
+      sporophyll = list(
+        variants = c('sporophyll', 'sporophylls'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      strobilus = list(
+        variants = c('strobili', 'strobilus'),
+        match = 'exact',
+        ontology = NULL,
+        rank = 'organ'
+      )
     )
   ),
   whole = list(
     whole = list(
+      caulonema = list(
+        variants = c('caulonema', 'caulonemata'),
+        match = 'phrase',
+        ontology = NULL,
+        rank = 'suborgan'
+      ),
+      chloronema = list(
+        variants = c('chloronema', 'chloronemata'),
+        match = 'phrase',
+        ontology = NULL,
+        rank = 'suborgan'
+      ),
+      gametophore = list(
+        variants = c('adult gametophore', 'adult gametophores', 'dissected gametophores', 'disrupted gametophore', 'gametophore', 'gametophore apex', 'gametophore apices', 'gametophore tissue', 'gametophores', 'leafy gametophore', 'leafy gametophores', 'whole adult gametophores', 'whole gametophore', 'whole gametophores', 'young gametophore', 'young gametophores'),
+        match = 'phrase',
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      gametophyte = list(
+        variants = c('gametophyte', 'gametophyte tissue', 'gametophytes'),
+        match = 'phrase',
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      gemmaling = list(
+        variants = c('gemmaling', 'gemmalings', 'whole gemmaling', 'whole gemmalings'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      prothallus = list(
+        variants = c('prothalli', 'prothallia', 'prothallium', 'prothallus'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      protonema = list(
+        variants = c('protonema', 'protonema filaments', 'protonema tissue', 'protonemal tip cells', 'protonemal tissue', 'protonemata', 'protonemata tissue'),
+        match = 'phrase',
+        ontology = NULL,
+        rank = 'suborgan'
+      ),
+      seedling = list(
+        variants = c('etiolated seedling', 'etiolated seedlings', 'plantlet', 'plantlets', 'seeding', 'seedings', 'seedligns', 'seedlilng', 'seedling', 'seedlings', 'seedllings', 'seedlngs', 'sprout', 'sprouts', 'young seedling', 'young seedlings'),
+        match = 'exact',
+        ontology = list(namespace = 'PO', id = 'PO:0008037', label = 'seedling'),
+        rank = 'organ'
+      ),
+      sporeling = list(
+        variants = c('sporeling', 'sporelings', 'whole sporeling', 'whole sporelings'),
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      sporophyte = list(
+        variants = c('green sporophyte', 'sporophyte', 'sporophytes', 'whole sporophyte', 'whole sporophytes', 'young sporophyte', 'young sporophytes'),
+        match = 'phrase',
+        ontology = NULL,
+        rank = 'organ'
+      ),
+      thallus = list(
+        variants = c('gametophytic thallus', 'mature thalli', 'mature thallus', 'thalli', 'thalloid', 'thallus', 'thallus tissue', 'vegetative thalli', 'vegetative thallus', 'whole thalli', 'whole thallus', 'young thalli', 'young thallus'),
+        match = 'phrase',
+        ontology = NULL,
+        rank = 'organ'
+      ),
       whole_plant = list(
-        variants = c('whole', 'whole organism', 'whole plant', 'whole plants', 'total plant', 'total plants', 'plant', 'full plants', 'the entire plant', 'whole ground plant', 'whole body', 't0 plants'),
+        variants = c('full plants', 'plant', 't0 plants', 'the entire plant', 'total plant', 'total plants', 'whole', 'whole body', 'whole ground plant', 'whole organism', 'whole plant', 'whole plants'),
         match = 'exact',
         ontology = list(namespace = 'PO', id = 'PO:0000003', label = 'whole plant'),
         rank = 'organ'
       ),
       whole_seedling = list(
-        variants = c('whole seedling', 'whole seedlings', 'whole seedlings including roots', 'total seedlings', 'total seedling', 'whole seeding', 'whole seedings', 'whole seedllings', 'whole seedlngs', 'whole seedlilng'),
-        match = 'exact',
-        ontology = list(namespace = 'PO', id = 'PO:0008037', label = 'seedling'),
-        rank = 'organ'
-      ),
-      seedling = list(
-        variants = c('seedling', 'seedlings', 'etiolated seedling', 'etiolated seedlings', 'young seedling', 'young seedlings', 'plantlet', 'plantlets', 'seeding', 'seedings', 'sprout', 'sprouts', 'seedligns', 'seedlngs', 'seedllings', 'seedlilng'),
+        variants = c('total seedling', 'total seedlings', 'whole seeding', 'whole seedings', 'whole seedlilng', 'whole seedling', 'whole seedlings', 'whole seedlings including roots', 'whole seedllings', 'whole seedlngs'),
         match = 'exact',
         ontology = list(namespace = 'PO', id = 'PO:0008037', label = 'seedling'),
         rank = 'organ'
@@ -1900,7 +2124,7 @@ title_raw = NA_character_) {
         rank = 'suborgan'
       ),
       phloem = list(
-        variants = c('phloem'),
+        variants = c('phloem', 'tree phloem'),
         ontology = list(namespace = 'PO', id = 'PO:0005417', label = 'phloem'),
         rank = 'suborgan'
       ),
@@ -2686,8 +2910,8 @@ title_raw = NA_character_) {
     entrez_uid = character(),
     biosample_id = character(),
     bioproject = character(),
-    tissue_raw = character(),
-    tissue_norm = character(),
+    value_raw = character(),
+    value_norm = character(),
     anatomy_term = character(),
     anatomy_class = character(),
     anatomy_subclass = character(),
@@ -2722,37 +2946,37 @@ title_raw = NA_character_) {
       entrez_uid = as.character(.data$entrez_uid),
       biosample_id = .biosample_resolve_key(.data$biosample_id, .data$input_id),
       bioproject = as.character(.data$bioproject),
-      tissue_raw = as.character(.data$attribute_value_raw),
-      tissue_norm = as.character(.data$attribute_value_norm)
+      value_raw = as.character(.data$attribute_value_raw),
+      value_norm = as.character(.data$attribute_value_norm)
     ) |>
     dplyr::filter(!is.na(.data$species), nzchar(.data$species), !is.na(.data$biosample_id), nzchar(.data$biosample_id))
   if (!is.null(species)) tissue <- tissue |> dplyr::filter(.data$species %in% .env$species)
   if (!nrow(tissue)) return(.biosample_empty_tissue_classification())
   ref <- .biosample_anatomy_ref()
   lex <- tibble::as_tibble(ref$lex)
-  vals <- unique(as.character(tissue$tissue_norm))
+  vals <- unique(as.character(tissue$value_norm))
   vals <- vals[!is.na(vals) & nzchar(vals)]
   lookup <- if (length(vals)) {
     lapply(vals, function(val) {
       terms <- if (.biosample_is_missing_like_value(val)) character() else unique(.match_biosample_anatomy_value(val, ref$variant_map))
       if (!length(terms)) terms <- 'unknown'
       tibble::tibble(
-        tissue_norm = val,
+        value_norm = val,
         anatomy_term = as.character(terms)
       )
     }) |>
       dplyr::bind_rows()
   } else {
     tibble::tibble(
-      tissue_norm = character(),
+      value_norm = character(),
       anatomy_term = character()
     )
   }
   tissue |>
-    dplyr::left_join(lookup, by = 'tissue_norm', relationship = 'many-to-many') |>
+    dplyr::left_join(lookup, by = 'value_norm', relationship = 'many-to-many') |>
     dplyr::mutate(
       anatomy_term = dplyr::if_else(
-        .biosample_is_missing_like_value(.data$tissue_norm) | is.na(.data$anatomy_term) | !nzchar(dplyr::coalesce(.data$anatomy_term, '')),
+        .biosample_is_missing_like_value(.data$value_norm) | is.na(.data$anatomy_term) | !nzchar(dplyr::coalesce(.data$anatomy_term, '')),
         'unknown',
         .data$anatomy_term
       )
@@ -2772,8 +2996,8 @@ title_raw = NA_character_) {
       entrez_uid = .data$entrez_uid,
       biosample_id = .data$biosample_id,
       bioproject = .data$bioproject,
-      tissue_raw = .data$tissue_raw,
-      tissue_norm = .data$tissue_norm,
+      value_raw = .data$value_raw,
+      value_norm = .data$value_norm,
       anatomy_term = .data$anatomy_term,
       anatomy_class = .data$anatomy_class,
       anatomy_subclass = .data$anatomy_subclass,
@@ -2835,6 +3059,8 @@ title_raw = NA_character_) {
     species = character(),
     biosample_id = character(),
     bioproject = character(),
+    value_raw = character(),
+    value_norm = character(),
     anatomy_term = character(),
     anatomy_class = character(),
     anatomy_subclass = character(),
@@ -2844,7 +3070,20 @@ title_raw = NA_character_) {
     ontology_label = character()
   )
   if (is.null(tissue_classification) || !is.data.frame(tissue_classification) || !nrow(tissue_classification)) return(out)
-  req <- c('species', 'biosample_id', 'bioproject', 'anatomy_term', 'anatomy_class', 'anatomy_subclass', 'rank', 'ontology_namespace', 'ontology_id', 'ontology_label')
+  req <- c(
+    'species',
+    'biosample_id',
+    'bioproject',
+    'value_raw',
+    'value_norm',
+    'anatomy_term',
+    'anatomy_class',
+    'anatomy_subclass',
+    'rank',
+    'ontology_namespace',
+    'ontology_id',
+    'ontology_label'
+  )
   miss <- setdiff(req, names(tissue_classification))
   if (length(miss)) .gama_stop('`.biosample_canonical_profile()`: `tissue_classification` missing columns: ', paste(miss, collapse = ', '))
   out <- tissue_classification |>
@@ -2852,6 +3091,8 @@ title_raw = NA_character_) {
       species = as.character(.data$species),
       biosample_id = as.character(.data$biosample_id),
       bioproject = as.character(.data$bioproject),
+      value_raw = as.character(.data$value_raw),
+      value_norm = as.character(.data$value_norm),
       anatomy_term = as.character(.data$anatomy_term),
       anatomy_class = as.character(.data$anatomy_class),
       anatomy_subclass = as.character(.data$anatomy_subclass),
@@ -2863,8 +3104,21 @@ title_raw = NA_character_) {
     dplyr::filter(!is.na(.data$species), nzchar(.data$species), !is.na(.data$biosample_id), nzchar(.data$biosample_id), !is.na(.data$anatomy_term), nzchar(.data$anatomy_term))
   if (!is.null(species)) out <- out |> dplyr::filter(.data$species %in% .env$species)
   out |>
-    dplyr::distinct(.data$species, .data$biosample_id, .data$bioproject, .data$anatomy_term, .keep_all = TRUE) |>
-    dplyr::arrange(.data$species, .data$anatomy_class, .data$anatomy_term)
+    dplyr::distinct(
+      .data$species,
+      .data$biosample_id,
+      .data$bioproject,
+      .data$value_raw,
+      .data$value_norm,
+      .data$anatomy_term,
+      .keep_all = TRUE
+    ) |>
+    dplyr::arrange(
+      .data$species,
+      .data$anatomy_class,
+      .data$anatomy_term,
+      .data$value_norm
+    )
 }
 
 .biosample_modality_profile <- function(sra_profile) {
@@ -2916,12 +3170,47 @@ title_raw = NA_character_) {
 
 .biosample_term_heatmap_core <- function(BIO, SRA, species = NULL) {
   class_levels <- .biosample_anatomy_profile_levels()
-  subclass_core <- .biosample_anatomy_subclass_map() |>
+  subclass_map <- .biosample_anatomy_subclass_map() |>
     dplyr::filter(
       !.data$anatomy_class %in% c('mixed', 'unknown'),
       !.data$anatomy_subclass %in% c('mixed', 'unknown')
     ) |>
-    dplyr::distinct(.data$anatomy_subclass, .keep_all = TRUE)
+    dplyr::mutate(map_order = dplyr::row_number())
+  shared_subclasses <- subclass_map |>
+    dplyr::count(.data$anatomy_subclass, name = 'n_class') |>
+    dplyr::filter(.data$n_class > 1L) |>
+    dplyr::pull(.data$anatomy_subclass)
+  bad_shared <- setdiff(shared_subclasses, 'other')
+  if (length(bad_shared) > 0L) {
+    .gama_stop(
+      'Duplicated BioSample anatomy subclass labels detected: ',
+      paste(bad_shared, collapse = ', '),
+      '.'
+    )
+  }
+  subclass_core <- subclass_map |>
+    dplyr::mutate(
+      metadata_class = dplyr::if_else(
+        .data$anatomy_subclass == 'other',
+        'other',
+        as.character(.data$anatomy_class)
+      ),
+      metadata_order = dplyr::if_else(
+        .data$anatomy_class == 'other' & .data$anatomy_subclass == 'other',
+        0L,
+        1L
+      ),
+      class_order = match(
+        .data$metadata_class,
+        .env$class_levels
+      )
+    ) |>
+    dplyr::arrange(.data$class_order, .data$metadata_order, .data$map_order) |>
+    dplyr::distinct(.data$anatomy_subclass, .keep_all = TRUE) |>
+    dplyr::transmute(
+      anatomy_class = .data$metadata_class,
+      anatomy_subclass = .data$anatomy_subclass
+    )
   subclass_meta <- dplyr::bind_rows(
     subclass_core,
     tibble::tibble(
@@ -2930,9 +3219,6 @@ title_raw = NA_character_) {
     )
   ) |>
     dplyr::mutate(term_order = dplyr::row_number())
-  if (anyDuplicated(subclass_meta$anatomy_subclass)) {
-    .gama_stop('Duplicated BioSample anatomy subclass labels detected in interaction metadata.')
-  }
   subclass_levels <- subclass_meta$anatomy_subclass
   modality_levels <- .biosample_modality_levels()
   BIO <- .gama_require_output(

@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.3.2'
+.GAMA_VERSION <- '0.3.3'
 
 # NCBI configuration
 
@@ -500,7 +500,7 @@ utils::globalVariables(c(
     if (all(c('species', 'entrez_uid', 'biosample', 'bioproject', 'strategy_raw', 'strategy_norm', 'class', 'subclass', 'geo_linked', 'gse_ids', 'gsm_ids') %in% nms)) {
       return('extract_sra_metadata')
     }
-    if (all(c('species', 'entrez_uid', 'biosample', 'bioproject', 'tissue_raw', 'tissue_norm', 'anatomy_class', 'anatomy_subclass', 'anatomy_term') %in% nms)) {
+    if (all(c('species', 'entrez_uid', 'biosample', 'bioproject', 'value_raw', 'value_norm', 'anatomy_class', 'anatomy_subclass', 'anatomy_term') %in% nms)) {
       return('extract_biosample_metadata')
     }
     if (all(c('species', 'BioProject', 'anatomy_class', 'min', 'q25', 'med', 'q75', 'max', 'eff') %in% nms)) {

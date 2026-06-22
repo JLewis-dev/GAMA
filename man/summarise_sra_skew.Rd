@@ -40,6 +40,10 @@ The \code{eff} column is the \emph{effective number of units} (Hill number of or
 is the proportion of SRA records in each BioProject or BioSample ID.
 Larger values indicate a more even spread; values near 1 indicate strong
 concentration in few units.
+
+Records missing BioProject or BioSample IDs are excluded from the skew
+calculation. A \code{skew_id_recovery} attribute reports the active denominator,
+number of records included, number excluded, and recovery proportion.
 }
 \examples{
 \dontrun{
