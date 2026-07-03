@@ -7,8 +7,8 @@
 summarise_sra_skew(x, species = NULL, unit = "bioproject", class = NULL)
 }
 \arguments{
-\item{x}{A data.frame/tibble returned by summarise_sra_availability()
-that has a cached profile attached as attribute \code{sra_profile}.}
+\item{x}{A data.frame/tibble returned by summarise_sra_availability() that
+has a cached profile attached as attribute \code{sra_profile}.}
 
 \item{species}{Optional character vector of species names to filter the
 output. If \code{NULL}, all species in x are returned.}
@@ -18,10 +18,10 @@ output. If \code{NULL}, all species in x are returned.}
 \item{class}{Optional character scalar specifying a single modality class.}
 }
 \value{
-A tibble/data.frame with one row per species containing:
-\code{species}, \code{BioProject}/\code{BioSample} (number of distinct units with records),
-\code{class}, \code{min}, \code{q25}, \code{med}, \code{q75}, \code{max} (SRA records per unit), and
-\code{eff} (effective number of units; inverse Simpson index).
+A tibble/data.frame with one row per species containing: \code{species},
+\code{BioProject}/\code{BioSample} (number of distinct units with records), \code{class},
+\code{min}, \code{q25}, \code{med}, \code{q75}, \code{max} (SRA records per unit), and \code{eff}
+(effective number of units; inverse Simpson index).
 }
 \description{
 Quantifies replication skew across independent units (BioProject or
@@ -31,14 +31,14 @@ single modality class.
 }
 \details{
 Profile cache (consumed by this function):
-The input must carry a cached UID-level profile as attribute \code{sra_profile}
-containing (at minimum) \code{species}, \code{entrez_uid}, \code{biosample}, \code{bioproject},
-and \code{class}. Each row in the profile corresponds to an Entrez UID.
+The input must carry a cached UID-level profile as attribute \code{sra_profile}.
+Each row in the profile corresponds to one SRA Entrez UID. Required fields
+are \code{species}, \code{entrez_uid}, \code{biosample}, \code{bioproject}, and \code{class}.
 
 The \code{eff} column is the \emph{effective number of units} (Hill number of order
 2), computed as the inverse Simpson index: \code{eff = 1 / sum(p^2)}, where \code{p}
-is the proportion of SRA records in each BioProject or BioSample ID.
-Larger values indicate a more even spread; values near 1 indicate strong
+is the proportion of SRA records in each BioProject or BioSample ID. Larger
+values indicate a more even spread; values near 1 indicate strong
 concentration in few units.
 
 Records missing BioProject or BioSample IDs are excluded from the skew

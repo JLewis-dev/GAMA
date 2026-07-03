@@ -33,8 +33,8 @@ UID-level profile as attribute \code{sra_profile} (see \verb{Profile cache}), pl
 metadata in \code{sra_profile_info}.
 }
 \description{
-Collapses record-level SRA metadata into species-level modality counts
-using classes and subclasses assigned using the internal ontology.
+Collapses record-level SRA metadata into species-level modality counts using
+classes and subclasses assigned using the internal ontology.
 }
 \details{
 By default, the output includes class-level counts for the major modalities
@@ -42,15 +42,12 @@ By default, the output includes class-level counts for the major modalities
 total number of SRA records per species.
 
 Profile cache (used by downstream summaries):
-In addition to the summary table, this function attaches a cached, UID-level
-profile as an attribute \code{sra_profile}. The profile contains (at minimum)
-\code{species}, \code{entrez_uid}, \code{biosample}, \code{bioproject}, \code{class}, \code{subclass}, and
-GEO linkage fields (\code{geo_linked}, \code{gse_ids}, \code{gsm_ids}). This cache is
-intended to be re-used locally for downstream summaries that require
-within-species structure (e.g. replication skew across BioProjects or
-BioSample IDs) without re-querying NCBI. In particular,
-\code{\link[=summarise_sra_skew]{summarise_sra_skew()}} and \code{\link[=summarise_interaction]{summarise_interaction()}} consume
-\code{attr(x, 'sra_profile')} from the output of this function.
+In addition to the summary table, this function attaches a cached UID-level
+profile as attribute \code{sra_profile}. Each row corresponds to one SRA Entrez
+UID and stores species, record identifiers, BioSample/BioProject links, raw
+and normalised library strategy values, modality classes and subclasses, and
+GEO linkage fields. This cache is reused by \code{\link[=summarise_sra_skew]{summarise_sra_skew()}} and
+\code{\link[=summarise_interaction]{summarise_interaction()}} without re-querying NCBI.
 
 GEO overlay:
 GEO linkage fields are always cached in \code{attr(x, 'sra_profile')} regardless

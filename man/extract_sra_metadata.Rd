@@ -30,9 +30,8 @@ strategy fields, ontology assignments, and GEO linkage columns. The tibble
 has class \code{gdt_tbl} and carries a \code{query_info} attribute for provenance.
 }
 \description{
-Retrieves record-level SRA metadata for one or more species, then
-assigns curated modality classes and subclasses together with GEO linkage
-fields.
+Retrieves record-level SRA metadata for one or more species, then assigns
+curated modality classes and subclasses together with GEO linkage fields.
 }
 \details{
 Optional filters restrict the output to particular modality classes,

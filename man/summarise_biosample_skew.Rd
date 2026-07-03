@@ -18,10 +18,10 @@ output. If \code{NULL}, all species in x are returned.}
 class.}
 }
 \value{
-A tibble/data.frame with one row per species containing:
-\code{species}, \code{BioProject} (number of distinct BioProjects with operable
-BioSample records), \code{anatomy_class}, \code{min}, \code{q25}, \code{med}, \code{q75}, \code{max}
-(operable BioSample records per BioProject), and \code{eff} (effective number of
+A tibble/data.frame with one row per species containing: \code{species},
+\code{BioProject} (number of distinct BioProjects with operable BioSample
+records), \code{anatomy_class}, \code{min}, \code{q25}, \code{med}, \code{q75}, \code{max} (operable
+BioSample records per BioProject), and \code{eff} (effective number of
 BioProjects; inverse Simpson index).
 }
 \description{
@@ -33,15 +33,15 @@ to a single anatomy class.
 \details{
 Profile cache (consumed by this function):
 The input must carry a cached BioSample-level profile as attribute
-\code{biosample_anatomy_profile} containing (at minimum) \code{species},
-\code{biosample_id}, \code{bioproject}, and \code{anatomy_class}. Each row in the profile
-corresponds to one operable BioSample record.
+\code{biosample_anatomy_profile}. Each row in the profile corresponds to one
+operable BioSample record. Required fields are \code{species}, \code{biosample_id},
+\code{bioproject}, and \code{anatomy_class}.
 
 The \code{eff} column is the \emph{effective number of BioProjects} (Hill number of
-order 2), computed as the inverse Simpson index: \code{eff = 1 / sum(p^2)},
-where \code{p} is the proportion of operable BioSample records in each
-BioProject. Larger values indicate a more even spread; values near 1
-indicate strong concentration in few BioProjects.
+order 2), computed as the inverse Simpson index: \code{eff = 1 / sum(p^2)}, where
+\code{p} is the proportion of operable BioSample records in each BioProject.
+Larger values indicate a more even spread; values near 1 indicate strong
+concentration in few BioProjects.
 
 Records missing BioProject IDs are excluded from the skew calculation. A
 \code{skew_id_recovery} attribute reports the active denominator, number of

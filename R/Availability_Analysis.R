@@ -14,13 +14,13 @@
 #' canonical species names using unique database record identifiers.
 #'
 #' The returned object has an attribute `query_info` containing the tool
-#' version, timestamp (UTC), databases queried, search terms, and any
-#' synonym groups used for canonical collapse.
+#' version, timestamp (UTC), databases queried, search terms, and any synonym
+#' groups used for canonical collapse.
 #'
 #' @param species Character vector of binomial species names (e.g.
 #' `Vigna angularis`). Duplicates are removed with [unique()].
-#' @param synonyms `NULL` (default) for no synonym collapse, or a named list
-#' or named character vector mapping canonical species names to one or more
+#' @param synonyms `NULL` (default) for no synonym collapse, or a named list or
+#' named character vector mapping canonical species names to one or more
 #' synonymous names. Query results for each canonical species are merged across
 #' all supplied names using unique database record identifiers.
 #'
@@ -122,14 +122,14 @@ query_species <- function(species, synonyms = NULL) {
 #' `gdt_tbl` and retains query provenance via the `query_info` attribute
 #' carried over from the `results` object.
 #'
-#' The `score` column is computed as `A + S + B`, where `A`, `S`, and `B`
-#' are transformed contributions from Assembly, SRA, and BioSample
-#' availability. `A = best + ln(1 + total - best)`, with assembly weights of
-#' Complete = 10, Chromosome = 8, Scaffold = 5, and Contig = 2; `best` is
-#' the maximum-weight assembly, with ties broken by highest N50, and `total`
-#' is the sum of all assembly weights. `S = 2 * ln(1 + SRA)`, and
-#' `B = ln(1 + BioSample)`. This formulation prioritises high-quality
-#' assemblies while applying diminishing returns to highly sampled taxa.
+#' The `score` column is computed as `A + S + B`, where `A`, `S`, and `B` are
+#' transformed contributions from Assembly, SRA, and BioSample availability.
+#' `A = best + ln(1 + total - best)`, with assembly weights of Complete = 10,
+#' Chromosome = 8, Scaffold = 5, and Contig = 2; `best` is the maximum-weight
+#' assembly, with ties broken by highest N50, and `total` is the sum of all
+#' assembly weights. `S = 2 * ln(1 + SRA)`, and `B = ln(1 + BioSample)`. This
+#' formulation prioritises high-quality assemblies while applying diminishing
+#' returns to highly sampled taxa.
 #'
 #' @param results A list returned by [query_species()].
 #'
@@ -183,8 +183,8 @@ summarise_availability <- function(results) {
 #' The `best_n50` column is the highest N50 among assemblies at the highest
 #' available recognised assembly level for each species. Assembly levels are
 #' ranked as complete > chromosome > scaffold > contig. Where multiple
-#' assemblies are present at the highest available level, the highest N50
-#' among those assemblies is reported. If no recognised assembly level with an
+#' assemblies are present at the highest available level, the highest N50 among
+#' those assemblies is reported. If no recognised assembly level with an
 #' available N50 is found, `best_n50` is returned as `NA_real_`.
 #'
 #' @param results A list returned by [query_species()].
@@ -284,20 +284,22 @@ summarise_assembly_availability <- function(results, species = NULL) {
 #'
 #' Retrieves and structures assembly metadata for one or more species using the
 #' Assembly identifiers stored in the output of [query_species()]. Metadata are
-#' returned in a tidy tibble and optionally reduced to a single best assembly
-#' per species.
+#' returned in a tidy tibble and optionally reduced to the best assembly or
+#' tied best assemblies per species.
 #'
-#' When `best = TRUE`, the best assembly is selected using structural-weighting
-#' (assembly level) and N50 as a tie-breaker.
+#' When `best = TRUE`, assemblies are filtered to the highest recognised
+#' assembly level and then the highest N50. Assemblies tied at both steps are
+#' retained.
 #'
 #' @param results A list returned by [query_species()], containing Assembly
 #' IDs.
 #' @param species `NULL` (default) to return assemblies for all species, or a
 #' character vector specifying which species to extract.
-#' @param best Logical; if `TRUE`, return only the best assembly per species.
+#' @param best Logical; if `TRUE`, return the best assembly or tied best
+#' assemblies per species.
 #'
-#' @return A tibble with one row per assembly (or one row per species when
-#' `best = TRUE`). Fields include species, entrez_uid, assembly level, N50,
+#' @return A tibble with one row per assembly, or one row per selected assembly
+#' when `best = TRUE`. Fields include species, entrez_uid, assembly level, N50,
 #' coverage, BioSample/BioProject accessions, submitter, release date, and FTP
 #' path (where available). The tibble has class `gdt_tbl` and carries a
 #' `query_info` attribute for provenance.
@@ -329,15 +331,8 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
   META <- .assembly_metadata_core(RESULTS_USE)
   if (!best) return(.as_gdt_table(META, results, 'extract_assembly_metadata'))
   BEST <- lapply(split(META, META$species), function(x) {
-    STRUCT <- .assembly_level_weight(x$level)
-    if (!length(STRUCT) || all(STRUCT <= 0)) return(x[1L, , drop = FALSE])
-    N50 <- x$n50
-    max_struct <- max(STRUCT)
-    tied_idx   <- which(STRUCT == max_struct)
-    best_idx <- if (length(tied_idx) > 1) {
-      tied_n50 <- N50[tied_idx]
-      if (all(is.na(tied_n50))) tied_idx[1L] else tied_idx[which.max(tied_n50)]
-    } else tied_idx
+    best_idx <- .best_assembly_indices(x$level, x$n50, ties = 'all')
+    if (!length(best_idx)) return(x[1L, , drop = FALSE])
     x[best_idx, , drop = FALSE]
   })
   OUT <- dplyr::bind_rows(BEST)
@@ -346,23 +341,20 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
 
 #' Summarise SRA modality composition
 #'
-#' Collapses record-level SRA metadata into species-level modality counts
-#' using classes and subclasses assigned using the internal ontology.
+#' Collapses record-level SRA metadata into species-level modality counts using
+#' classes and subclasses assigned using the internal ontology.
 #'
 #' By default, the output includes class-level counts for the major modalities
 #' (genomic, transcriptomic, epigenomic, chromatin, other, unknown), plus the
 #' total number of SRA records per species.
 #'
 #' Profile cache (used by downstream summaries):
-#' In addition to the summary table, this function attaches a cached, UID-level
-#' profile as an attribute `sra_profile`. The profile contains (at minimum)
-#' `species`, `entrez_uid`, `biosample`, `bioproject`, `class`, `subclass`, and
-#' GEO linkage fields (`geo_linked`, `gse_ids`, `gsm_ids`). This cache is
-#' intended to be re-used locally for downstream summaries that require
-#' within-species structure (e.g. replication skew across BioProjects or
-#' BioSample IDs) without re-querying NCBI. In particular,
-#' [summarise_sra_skew()] and [summarise_interaction()] consume
-#' `attr(x, 'sra_profile')` from the output of this function.
+#' In addition to the summary table, this function attaches a cached UID-level
+#' profile as attribute `sra_profile`. Each row corresponds to one SRA Entrez
+#' UID and stores species, record identifiers, BioSample/BioProject links, raw
+#' and normalised library strategy values, modality classes and subclasses, and
+#' GEO linkage fields. This cache is reused by [summarise_sra_skew()] and
+#' [summarise_interaction()] without re-querying NCBI.
 #'
 #' GEO overlay:
 #' GEO linkage fields are always cached in `attr(x, 'sra_profile')` regardless
@@ -405,6 +397,19 @@ include_geo = FALSE) {
   results <- .gama_require_output(results, 'query_species')
   all <- .gama_validate_logical_parameter(all, 'all')
   include_geo <- .gama_validate_logical_parameter(include_geo, 'include_geo')
+  sra_profile_fields <- c(
+    'species',
+    'entrez_uid',
+    'biosample',
+    'bioproject',
+    'strategy_raw',
+    'strategy_norm',
+    'class',
+    'subclass',
+    'geo_linked',
+    'gse_ids',
+    'gsm_ids'
+  )
   SPECIES_ALL <- names(results)
   SPECIES_USE <- if (is.null(species)) {
     SPECIES_ALL
@@ -428,27 +433,33 @@ include_geo = FALSE) {
     }
     OUT <- .as_gdt_table(OUT, results, 'summarise_sra_availability')
     attr(OUT, 'sra_profile') <- tibble::tibble(
-    species    = character(),
-    entrez_uid = character(),
-    biosample  = character(),
-    bioproject = character(),
-    class      = character(),
-    subclass   = character(),
-    geo_linked = logical(),
-    gse_ids    = character(),
-    gsm_ids    = character()
+    species       = character(),
+    entrez_uid    = character(),
+    biosample     = character(),
+    bioproject    = character(),
+    strategy_raw  = character(),
+    strategy_norm = character(),
+    class         = character(),
+    subclass      = character(),
+    geo_linked    = logical(),
+    gse_ids       = character(),
+    gsm_ids       = character()
     )
     attr(OUT, 'sra_profile_info') <- list(
-    cached_at_utc    = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
-    profile_time_utc = attr(OUT, 'query_info')$query_time_utc %||% NA_character_,
+    cached_at_utc    = format(
+      as.POSIXct(Sys.time(), tz = 'UTC'),
+      '%Y-%m-%dT%H:%M:%SZ'
+    ),
+    profile_time_utc = attr(OUT, 'query_info')$query_time_utc %||%
+      NA_character_,
     id_col           = 'entrez_uid',
-    fields           = c('species', 'entrez_uid', 'biosample', 'bioproject', 'class', 'subclass', 'geo_linked', 'gse_ids', 'gsm_ids')
+    fields           = sra_profile_fields
     )
     return(OUT)
   }
   META <- .sra_metadata_core(results, species = SPECIES_USE)
   PROFILE <- META |>
-  dplyr::select(species, entrez_uid, biosample, bioproject, class, subclass, geo_linked, gse_ids, gsm_ids)
+  dplyr::select(dplyr::all_of(sra_profile_fields))
   CLASS <- META |>
   dplyr::count(species, class, name = 'count') |>
   tidyr::pivot_wider(
@@ -540,10 +551,14 @@ include_geo = FALSE) {
   OUT <- .as_gdt_table(OUT, results, 'summarise_sra_availability')
   attr(OUT, 'sra_profile') <- PROFILE
   attr(OUT, 'sra_profile_info') <- list(
-  cached_at_utc    = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
-  profile_time_utc = attr(OUT, 'query_info')$query_time_utc %||% NA_character_,
+  cached_at_utc    = format(
+    as.POSIXct(Sys.time(), tz = 'UTC'),
+    '%Y-%m-%dT%H:%M:%SZ'
+  ),
+  profile_time_utc = attr(OUT, 'query_info')$query_time_utc %||%
+    NA_character_,
   id_col           = 'entrez_uid',
-  fields           = c('species', 'entrez_uid', 'biosample', 'bioproject', 'class', 'subclass', 'geo_linked', 'gse_ids', 'gsm_ids')
+  fields           = sra_profile_fields
   )
   OUT
 }
@@ -556,32 +571,32 @@ include_geo = FALSE) {
 #' single modality class.
 #'
 #' Profile cache (consumed by this function):
-#' The input must carry a cached UID-level profile as attribute `sra_profile`
-#' containing (at minimum) `species`, `entrez_uid`, `biosample`, `bioproject`,
-#' and `class`. Each row in the profile corresponds to an Entrez UID.
+#' The input must carry a cached UID-level profile as attribute `sra_profile`.
+#' Each row in the profile corresponds to one SRA Entrez UID. Required fields
+#' are `species`, `entrez_uid`, `biosample`, `bioproject`, and `class`.
 #'
 #' @details
 #' The `eff` column is the *effective number of units* (Hill number of order
 #' 2), computed as the inverse Simpson index: `eff = 1 / sum(p^2)`, where `p`
-#' is the proportion of SRA records in each BioProject or BioSample ID.
-#' Larger values indicate a more even spread; values near 1 indicate strong
+#' is the proportion of SRA records in each BioProject or BioSample ID. Larger
+#' values indicate a more even spread; values near 1 indicate strong
 #' concentration in few units.
 #'
 #' Records missing BioProject or BioSample IDs are excluded from the skew
 #' calculation. A `skew_id_recovery` attribute reports the active denominator,
 #' number of records included, number excluded, and recovery proportion.
 #'
-#' @param x A data.frame/tibble returned by summarise_sra_availability()
-#' that has a cached profile attached as attribute `sra_profile`.
+#' @param x A data.frame/tibble returned by summarise_sra_availability() that
+#' has a cached profile attached as attribute `sra_profile`.
 #' @param species Optional character vector of species names to filter the
 #' output. If `NULL`, all species in x are returned.
 #' @param unit Character scalar; either `bioproject` (default) or `biosample`.
 #' @param class Optional character scalar specifying a single modality class.
 #'
-#' @return A tibble/data.frame with one row per species containing:
-#' `species`, `BioProject`/`BioSample` (number of distinct units with records),
-#' `class`, `min`, `q25`, `med`, `q75`, `max` (SRA records per unit), and
-#' `eff` (effective number of units; inverse Simpson index).
+#' @return A tibble/data.frame with one row per species containing: `species`,
+#' `BioProject`/`BioSample` (number of distinct units with records), `class`,
+#' `min`, `q25`, `med`, `q75`, `max` (SRA records per unit), and `eff`
+#' (effective number of units; inverse Simpson index).
 #'
 #' @seealso [summarise_sra_availability()], [plot_sra_skew()]
 #'
@@ -731,9 +746,8 @@ summarise_sra_skew <- function(x, species = NULL, unit = 'bioproject', class = N
 
 #' Extract filtered SRA metadata
 #'
-#' Retrieves record-level SRA metadata for one or more species, then
-#' assigns curated modality classes and subclasses together with GEO linkage
-#' fields.
+#' Retrieves record-level SRA metadata for one or more species, then assigns
+#' curated modality classes and subclasses together with GEO linkage fields.
 #'
 #' Optional filters restrict the output to particular modality classes,
 #' subclasses, or GEO-linked SRA records only.
@@ -873,10 +887,10 @@ only_geo = FALSE) {
 #' `biosample_canonical_profile`. The anatomy profile stores one collapsed
 #' anatomy class and subclass profile per operable BioSample record, together
 #' with BioProject provenance where available. The canonical profile stores
-#' row-level anatomy terms, subclasses, classes, ranks, and ontology fields.
-#' These caches are reused by [summarise_biosample_skew()] and
-#' [summarise_interaction()] without repeating the BioSample retrieval and
-#' parsing stage.
+#' row-level raw and normalised values, anatomy terms, subclasses, classes,
+#' ranks, and ontology fields. These caches are reused by
+#' [summarise_biosample_skew()] and [summarise_interaction()] without repeating
+#' the BioSample retrieval and parsing stage.
 #'
 #' @param results A list returned by [query_species()].
 #' @param species `NULL` (default) to include all species, or a character
@@ -1096,16 +1110,16 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
 #'
 #' Profile cache (consumed by this function):
 #' The input must carry a cached BioSample-level profile as attribute
-#' `biosample_anatomy_profile` containing (at minimum) `species`,
-#' `biosample_id`, `bioproject`, and `anatomy_class`. Each row in the profile
-#' corresponds to one operable BioSample record.
+#' `biosample_anatomy_profile`. Each row in the profile corresponds to one
+#' operable BioSample record. Required fields are `species`, `biosample_id`,
+#' `bioproject`, and `anatomy_class`.
 #'
 #' @details
 #' The `eff` column is the *effective number of BioProjects* (Hill number of
-#' order 2), computed as the inverse Simpson index: `eff = 1 / sum(p^2)`,
-#' where `p` is the proportion of operable BioSample records in each
-#' BioProject. Larger values indicate a more even spread; values near 1
-#' indicate strong concentration in few BioProjects.
+#' order 2), computed as the inverse Simpson index: `eff = 1 / sum(p^2)`, where
+#' `p` is the proportion of operable BioSample records in each BioProject.
+#' Larger values indicate a more even spread; values near 1 indicate strong
+#' concentration in few BioProjects.
 #'
 #' Records missing BioProject IDs are excluded from the skew calculation. A
 #' `skew_id_recovery` attribute reports the active denominator, number of
@@ -1119,10 +1133,10 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
 #' @param anatomy_class Optional character scalar specifying a single anatomy
 #' class.
 #'
-#' @return A tibble/data.frame with one row per species containing:
-#' `species`, `BioProject` (number of distinct BioProjects with operable
-#' BioSample records), `anatomy_class`, `min`, `q25`, `med`, `q75`, `max`
-#' (operable BioSample records per BioProject), and `eff` (effective number of
+#' @return A tibble/data.frame with one row per species containing: `species`,
+#' `BioProject` (number of distinct BioProjects with operable BioSample
+#' records), `anatomy_class`, `min`, `q25`, `med`, `q75`, `max` (operable
+#' BioSample records per BioProject), and `eff` (effective number of
 #' BioProjects; inverse Simpson index).
 #'
 #' @seealso [summarise_biosample_availability()], [plot_biosample_skew()]

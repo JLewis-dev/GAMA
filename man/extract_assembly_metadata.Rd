@@ -13,11 +13,12 @@ IDs.}
 \item{species}{\code{NULL} (default) to return assemblies for all species, or a
 character vector specifying which species to extract.}
 
-\item{best}{Logical; if \code{TRUE}, return only the best assembly per species.}
+\item{best}{Logical; if \code{TRUE}, return the best assembly or tied best
+assemblies per species.}
 }
 \value{
-A tibble with one row per assembly (or one row per species when
-\code{best = TRUE}). Fields include species, entrez_uid, assembly level, N50,
+A tibble with one row per assembly, or one row per selected assembly
+when \code{best = TRUE}. Fields include species, entrez_uid, assembly level, N50,
 coverage, BioSample/BioProject accessions, submitter, release date, and FTP
 path (where available). The tibble has class \code{gdt_tbl} and carries a
 \code{query_info} attribute for provenance.
@@ -25,12 +26,13 @@ path (where available). The tibble has class \code{gdt_tbl} and carries a
 \description{
 Retrieves and structures assembly metadata for one or more species using the
 Assembly identifiers stored in the output of \code{\link[=query_species]{query_species()}}. Metadata are
-returned in a tidy tibble and optionally reduced to a single best assembly
-per species.
+returned in a tidy tibble and optionally reduced to the best assembly or
+tied best assemblies per species.
 }
 \details{
-When \code{best = TRUE}, the best assembly is selected using structural-weighting
-(assembly level) and N50 as a tie-breaker.
+When \code{best = TRUE}, assemblies are filtered to the highest recognised
+assembly level and then the highest N50. Assemblies tied at both steps are
+retained.
 }
 \examples{
 \dontrun{

@@ -37,8 +37,8 @@ the \code{Assembly} total is retained from the original query record count.
 The \code{best_n50} column is the highest N50 among assemblies at the highest
 available recognised assembly level for each species. Assembly levels are
 ranked as complete > chromosome > scaffold > contig. Where multiple
-assemblies are present at the highest available level, the highest N50
-among those assemblies is reported. If no recognised assembly level with an
+assemblies are present at the highest available level, the highest N50 among
+those assemblies is reported. If no recognised assembly level with an
 available N50 is found, \code{best_n50} is returned as \code{NA_real_}.
 }
 \examples{

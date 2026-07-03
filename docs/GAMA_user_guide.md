@@ -208,8 +208,8 @@ Returns record-level Assembly metadata for deeper inspection, including assembly
 - Input – list returned by `query_species()`
   - Optional arguments –<br>
     &nbsp;&nbsp;`species`: character vector; species from list to include (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`best`: logical; return the best assembly per species (FALSE, TRUE)
-- Output – tibble (`gdt_tbl`) containing Assembly metadata, including species, `entrez_uid`, level, n50, coverage, biosample, bioproject, submitter, release_date, and ftp_path
+    &nbsp;&nbsp;`best`: logical; return the best assembly or tied best assemblies per species (FALSE, TRUE)
+- Output – tibble (`gdt_tbl`) containing Assembly metadata, including species, `entrez_uid`, level, n50, coverage, biosample, bioproject, submitter, release_date, and ftp_path. When `best = TRUE`, assemblies tied at the highest recognised level and N50 are retained
 
 ### summarise_sra_availability()
 
@@ -427,9 +427,9 @@ Residuals quantify whether an SRA modality–BioSample anatomy combination is ov
 ## Limitations
 
 - Dependent on NCBI metadata quality
-- Runtime increases with species list size
-- Novel protocols may not be fully captured by the modality ontology
-- The anatomy ontology is broad but not exhaustive and will require refinement
+- Runtime increases with species list size and record count
+- Novel protocols may not be captured by the modality ontology
+- Some taxon-specific terms may not be captured by the anatomy ontology
 - Results should be interpreted cautiously during early development
 
 ---

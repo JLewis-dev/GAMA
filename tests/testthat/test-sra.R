@@ -44,8 +44,25 @@ test_that('SRA_SUMMARY fixture carries SRA profile cache', {
   SRA_SUMMARY <- load_fixture('SRA_SUMMARY_Arabidopsis_thaliana')
   PROFILE <- attr(SRA_SUMMARY, 'sra_profile', exact = TRUE)
   PROFILE_INFO <- attr(SRA_SUMMARY, 'sra_profile_info', exact = TRUE)
-  expected_profile_cols <- c('species', 'entrez_uid', 'biosample', 'bioproject', 'class', 'subclass', 'geo_linked', 'gse_ids', 'gsm_ids')
-  expected_info_fields <- c('cached_at_utc', 'profile_time_utc', 'id_col', 'fields')
+  expected_profile_cols <- c(
+    'species',
+    'entrez_uid',
+    'biosample',
+    'bioproject',
+    'strategy_raw',
+    'strategy_norm',
+    'class',
+    'subclass',
+    'geo_linked',
+    'gse_ids',
+    'gsm_ids'
+  )
+  expected_info_fields <- c(
+    'cached_at_utc',
+    'profile_time_utc',
+    'id_col',
+    'fields'
+  )
   expect_false(is.null(PROFILE))
   expect_false(is.null(PROFILE_INFO))
   expect_gama_columns(PROFILE, expected_profile_cols)
@@ -57,7 +74,11 @@ test_that('SRA_SUMMARY fixture carries SRA profile cache', {
   expect_true(any(!is.na(PROFILE$biosample) & nzchar(PROFILE$biosample)))
   expect_true(any(!is.na(PROFILE$class) & nzchar(PROFILE$class)))
   expect_true(any(!is.na(PROFILE$subclass) & nzchar(PROFILE$subclass)))
-  expect_true(any(PROFILE$species == 'Arabidopsis thaliana' & !is.na(PROFILE$biosample) & nzchar(PROFILE$biosample)))
+  expect_true(any(
+    PROFILE$species == 'Arabidopsis thaliana' &
+      !is.na(PROFILE$biosample) &
+      nzchar(PROFILE$biosample)
+  ))
 })
 
 test_that('SRA_SUMMARY fixture summarises modality counts', {
@@ -150,6 +171,8 @@ test_that('summarise_sra_skew applies correct inverse Simpson index formula', {
     entrez_uid = paste0('SRX', seq_len(10)),
     biosample = paste0('SAM', seq_len(10)),
     bioproject = rep(c('PRJ1', 'PRJ2', 'PRJ3'), c(5, 3, 2)),
+    strategy_raw = rep('WGS', 10),
+    strategy_norm = rep('wgs', 10),
     class = rep('genomic', 10),
     subclass = rep('WGS', 10),
     geo_linked = rep(FALSE, 10),
@@ -222,7 +245,19 @@ test_that('SRA fixture is a valid extract_sra_metadata object', {
 
 test_that('SRA fixture contains expected columns', {
   SRA <- load_fixture('SRA_Arabidopsis_thaliana')
-  expected_cols <- c('species', 'entrez_uid', 'biosample', 'bioproject', 'strategy_raw', 'strategy_norm', 'class', 'subclass', 'geo_linked', 'gse_ids', 'gsm_ids')
+  expected_cols <- c(
+    'species',
+    'entrez_uid',
+    'biosample',
+    'bioproject',
+    'strategy_raw',
+    'strategy_norm',
+    'class',
+    'subclass',
+    'geo_linked',
+    'gse_ids',
+    'gsm_ids'
+  )
   expect_named(SRA, expected_cols)
   expect_true(all(SRA$species == 'Arabidopsis thaliana'))
   expect_true(any(!is.na(SRA$entrez_uid) & nzchar(SRA$entrez_uid)))

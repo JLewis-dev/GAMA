@@ -83,6 +83,36 @@ test_that('summarise_availability applies correct data richness formula', {
   expect_equal(unname(SUMMARY$score), expected_A + expected_S + expected_B)
 })
 
+test_that('summarise_availability uses one best assembly when highest level and N50 tie', {
+  fake_summaries <- list(
+    a = list(assembly_level = 'Complete Genome', contign50 = 1000),
+    b = list(assembly_level = 'Complete Genome', contign50 = 1000),
+    c = list(assembly_level = 'Scaffold', contign50 = 5000)
+  )
+  RESULTS <- list(
+    'Synthetic species' = list(
+      assembly = list(count = 3L, ids = c('a', 'b', 'c')),
+      sra = list(count = 0L),
+      biosample = list(count = 0L)
+    )
+  )
+  attr(RESULTS, 'query_info') <- list(
+    tool_version = test_gama_version(),
+    query_time_utc = '2026-05-22T11:23:11Z',
+    databases = c('assembly', 'sra', 'biosample'),
+    terms = list('Synthetic species' = 'Synthetic species[Organism]'),
+    synonyms = list('Synthetic species' = NULL)
+  )
+  attr(RESULTS, 'gama_object') <- 'query_species'
+  testthat::local_mocked_bindings(
+    .fetch_search_summaries = function(db, search, batch_size = 100) fake_summaries,
+    .package = 'GAMA'
+  )
+  SUMMARY <- summarise_availability(RESULTS)
+  expected_A <- 10 + log1p((10 + 10 + 5) - 10)
+  expect_equal(unname(SUMMARY$A), expected_A)
+})
+
 test_that('SUMMARY fixture follows correct data richness formula', {
   SUMMARY <- load_fixture('SUMMARY_Arabidopsis_thaliana')
   ASM <- load_fixture('ASM_Arabidopsis_thaliana')

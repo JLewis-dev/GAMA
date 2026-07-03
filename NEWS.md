@@ -1,22 +1,35 @@
+# GAMA 0.3.4
+
+## Reliability
+- Added raw and normalised SRA strategy values to the cached profile produced by `summarise_sra_availability()` to support diagnostics
+- `extract_assembly_metadata()` now retains all records tied at the highest assembly level and N50 when `best = TRUE`
+- Expanded the BioSample anatomy ontology using terms from parasitic plant data
+
+## Documentation
+- Updated roxygen documentation and the GAMA user guide accordingly
+
+## Testing
+- Updated testthat coverage for the revised cached profile and tied assembly handling
+- Regenerated examples and fixtures for the revised behaviour
+- Confirmed the test suite passes with the updated fixtures
+
+---
+
 # GAMA 0.3.3
 
 ## API changes
-
 - Renamed `extract_biosample_metadata()` output columns `tissue_raw` and `tissue_norm` to `value_raw` and `value_norm`
 
 ## Reliability
-
 - Added raw and normalised BioSample source values to the cached anatomy profile produced by `summarise_biosample_availability()` to support diagnostics
 - Expanded the BioSample anatomy ontology using gymnosperm, pteridophyte, and bryophyte data
 
 ## Documentation
-
 - Updated roxygen documentation and the GAMA user guide accordingly
 
 ## Testing
-
 - Updated testthat coverage for the revised column names and cached anatomy profile
-- Regenerated BioSample fixtures for the revised BioSample output structure
+- Regenerated examples and fixtures for the revised output structure
 - Confirmed the test suite passes with the updated fixtures
 
 ---
@@ -249,4 +262,60 @@
 ## Plotting
 - `plot_sra_geo_availability()` now matches `plot_sra_availability()` styling more closely:
   - prevents GEO-linked fraction label clipping (margin/placement adjustments)
-  - enforces clean 0b
+  - enforces clean 0–1 axis breaks and two-decimal tick labels
+
+## Testing
+- Ran end-to-end availability and plotting workflows to confirm changes do not alter core functionality
+
+---
+
+# GAMA 0.2.0
+
+## Features
+- Added SRA skew workflow (`summarise_sra_skew()` and `plot_sra_skew()`) to support BioProject/BioSample-level record aggregation
+- Diversity summaries include Inverse Simpson index (`eff`, effective number):
+  - low values indicate evidence dominated by a small number of projects/samples
+  - high values indicate broader, more balanced support
+
+## Refactoring
+- `summarise_sra_availability()` now caches parsed SRA profiles on outputs for reuse by downstream summaries/plots
+- Centralised progress-bar handling for more consistent reporting
+- Added new Imports dependency `{rlang}`
+
+## API changes
+- `extract_sra_metadata()` now returns `entrez_uid` (replacing `sra_id`) and adds `biosample` and `bioproject` columns
+
+## Documentation
+- Added/expanded roxygen documentation and examples for the SRA skew workflow
+- Updated examples to reflect diversity-aware feasibility assessment workflows
+
+## Testing
+- Conducted extended end-to-end tests to validate the new workflow
+
+---
+
+# GAMA 0.1.2
+
+## Refactoring
+- Removed redundant code
+- Improved internal structure and plotting logic
+
+## Documentation
+- Revised and expanded roxygen documentation
+- Improved help page formatting and cross-references
+
+## Testing
+- Conducted end-to-end workflow tests
+- Validated plotting and metadata extraction functions
+
+---
+
+# GAMA 0.1.1
+
+## Refactoring
+- Simplified internal scripts and removed redundant code
+- Improved internal consistency and readability
+
+## Testing
+- Validated behaviour against previous version using smoke tests
+- Confirmed compatibility with existing saved result objects

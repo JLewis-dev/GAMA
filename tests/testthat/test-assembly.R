@@ -81,3 +81,41 @@ test_that('ASM fixture contains no unrecognised assembly levels', {
   expect_true(any(non_missing))
   expect_false(any(is.na(level_class)))
 })
+
+test_that('extract_assembly_metadata returns tied best assemblies when best = TRUE', {
+  META <- tibble::tibble(
+    species = rep('Synthetic species', 4),
+    entrez_uid = c('ASM1', 'ASM2', 'ASM3', 'ASM4'),
+    level = c('Complete Genome', 'Complete Genome', 'Chromosome', 'Scaffold'),
+    n50 = c(1000, 1000, 5000, 9000),
+    coverage = rep(NA_real_, 4),
+    biosample = rep(NA_character_, 4),
+    bioproject = rep(NA_character_, 4),
+    submitter = rep(NA_character_, 4),
+    release_date = rep(NA_character_, 4),
+    ftp_path = rep(NA_character_, 4)
+  )
+  RESULTS <- list(
+    'Synthetic species' = list(
+      assembly = list(count = 4L, ids = META$entrez_uid),
+      sra = list(count = 0L),
+      biosample = list(count = 0L)
+    )
+  )
+  attr(RESULTS, 'query_info') <- list(
+    tool_version = test_gama_version(),
+    query_time_utc = '2026-05-22T11:23:11Z',
+    databases = c('assembly', 'sra', 'biosample'),
+    terms = list('Synthetic species' = 'Synthetic species[Organism]'),
+    synonyms = list('Synthetic species' = NULL)
+  )
+  attr(RESULTS, 'gama_object') <- 'query_species'
+  testthat::local_mocked_bindings(
+    .assembly_metadata_core = function(results, species = NULL) META,
+    .package = 'GAMA'
+  )
+  ASM <- extract_assembly_metadata(RESULTS, best = TRUE)
+  expect_gdt_tbl(ASM)
+  expect_equal(nrow(ASM), 2L)
+  expect_identical(ASM$entrez_uid, c('ASM1', 'ASM2'))
+})

@@ -38,7 +38,16 @@ synthetic_interaction_inputs <- function() {
     entrez_uid = paste0('SRX', seq_len(6)),
     biosample = paste0('SAM', seq_len(6)),
     bioproject = rep('PRJ1', 6),
-    class = c('genomic', 'genomic', 'genomic', 'transcriptomic', 'transcriptomic', 'transcriptomic'),
+    strategy_raw = c(
+      'WGS', 'WGS', 'WGS', 'RNA-Seq', 'RNA-Seq', 'RNA-Seq'
+    ),
+    strategy_norm = c(
+      'wgs', 'wgs', 'wgs', 'rna seq', 'rna seq', 'rna seq'
+    ),
+    class = c(
+      'genomic', 'genomic', 'genomic',
+      'transcriptomic', 'transcriptomic', 'transcriptomic'
+    ),
     subclass = c('WGS', 'WGS', 'WGS', 'RNA-seq', 'RNA-seq', 'RNA-seq'),
     geo_linked = rep(FALSE, 6),
     gse_ids = rep(NA_character_, 6),
@@ -47,12 +56,18 @@ synthetic_interaction_inputs <- function() {
   BIO_ANATOMY <- tibble::tibble(
     species = rep('Synthetic species', 6),
     biosample_id = paste0('SAM', seq_len(6)),
-    anatomy_class = c('aerial', 'aerial', 'ground', 'aerial', 'ground', 'ground'),
+    bioproject = rep('PRJ1', 6),
+    anatomy_class = c(
+      'aerial', 'aerial', 'ground', 'aerial', 'ground', 'ground'
+    ),
     anatomy_subclass = c('leaf', 'leaf', 'root', 'leaf', 'root', 'root')
   )
   BIO_CANONICAL <- tibble::tibble(
     species = BIO_ANATOMY$species,
     biosample_id = BIO_ANATOMY$biosample_id,
+    bioproject = BIO_ANATOMY$bioproject,
+    value_raw = BIO_ANATOMY$anatomy_subclass,
+    value_norm = BIO_ANATOMY$anatomy_subclass,
     anatomy_term = BIO_ANATOMY$anatomy_subclass,
     anatomy_class = BIO_ANATOMY$anatomy_class,
     anatomy_subclass = BIO_ANATOMY$anatomy_subclass,

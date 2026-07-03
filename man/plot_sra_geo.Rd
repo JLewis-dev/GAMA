@@ -29,8 +29,8 @@ or \code{input}.}
 
 \item{colours}{Named character vector of class colours.}
 
-\item{alpha_vals}{Named numeric vector giving alpha values for GEO-linked
-vs not GEO-linked segments.}
+\item{alpha_vals}{Named numeric vector giving alpha values for GEO-linked vs
+not GEO-linked segments.}
 }
 \value{
 A ggplot object (single species) or a named list of ggplot objects
@@ -38,19 +38,18 @@ A ggplot object (single species) or a named list of ggplot objects
 }
 \description{
 Visualises GEO linkage across SRA modality classes, excluding \code{genomic}.
-Each modality is displayed as a 100\% bar with a translucent background
-fill, while the coloured segment represents the GEO-linked fraction.
-Labels show \code{GEO-linked / Total} for each modality.
+Each modality is displayed as a 100\% bar with a translucent background fill,
+while the coloured segment represents the GEO-linked fraction. Labels show
+\code{GEO-linked / Total} for each modality.
 }
 \details{
-Operates on the direct output of \code{\link[=summarise_sra_availability]{summarise_sra_availability()}}.
-GEO-linked counts are derived from the cached
-\code{attr(SRA_SUMMARY, 'sra_profile')}, which stores per-record
-\code{geo_linked} values regardless of \code{include_geo}.
+Operates on the direct output of \code{\link[=summarise_sra_availability]{summarise_sra_availability()}}. GEO-linked
+counts are derived from the cached \code{attr(SRA_SUMMARY, 'sra_profile')}, which
+stores per-record \code{geo_linked} values regardless of \code{include_geo}.
 
 If \code{species} is \code{NULL}, plots are generated for all species in the table. A
-single species returns a ggplot object; multiple species return a named
-list of ggplot objects.
+single species returns a ggplot object; multiple species return a named list
+of ggplot objects.
 }
 \examples{
 \dontrun{

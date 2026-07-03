@@ -40,8 +40,8 @@ when cached profiles are available.}
 
 \item{point_alpha}{Numeric alpha value for overlaid points.}
 
-\item{show_labels}{Logical; if \code{TRUE} (default), label each box with
-\code{eff} and \code{n}.}
+\item{show_labels}{Logical; if \code{TRUE} (default), label each box with \code{eff}
+and \code{n}.}
 
 \item{label_digits}{Integer; decimal places for \code{eff} labels.}
 }

@@ -10,8 +10,8 @@ query_species(species, synonyms = NULL)
 \item{species}{Character vector of binomial species names (e.g.
 \verb{Vigna angularis}). Duplicates are removed with \code{\link[=unique]{unique()}}.}
 
-\item{synonyms}{\code{NULL} (default) for no synonym collapse, or a named list
-or named character vector mapping canonical species names to one or more
+\item{synonyms}{\code{NULL} (default) for no synonym collapse, or a named list or
+named character vector mapping canonical species names to one or more
 synonymous names. Query results for each canonical species are merged across
 all supplied names using unique database record identifiers.}
 }
@@ -37,8 +37,8 @@ stored in a per-species list with components \code{assembly}, \code{sra}, and
 canonical species names using unique database record identifiers.
 
 The returned object has an attribute \code{query_info} containing the tool
-version, timestamp (UTC), databases queried, search terms, and any
-synonym groups used for canonical collapse.
+version, timestamp (UTC), databases queried, search terms, and any synonym
+groups used for canonical collapse.
 }
 \examples{
 \dontrun{

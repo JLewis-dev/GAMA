@@ -54,10 +54,10 @@ BioSample-level profiles: \code{biosample_anatomy_profile} and
 \code{biosample_canonical_profile}. The anatomy profile stores one collapsed
 anatomy class and subclass profile per operable BioSample record, together
 with BioProject provenance where available. The canonical profile stores
-row-level anatomy terms, subclasses, classes, ranks, and ontology fields.
-These caches are reused by \code{\link[=summarise_biosample_skew]{summarise_biosample_skew()}} and
-\code{\link[=summarise_interaction]{summarise_interaction()}} without repeating the BioSample retrieval and
-parsing stage.
+row-level raw and normalised values, anatomy terms, subclasses, classes,
+ranks, and ontology fields. These caches are reused by
+\code{\link[=summarise_biosample_skew]{summarise_biosample_skew()}} and \code{\link[=summarise_interaction]{summarise_interaction()}} without repeating
+the BioSample retrieval and parsing stage.
 }
 \examples{
 \dontrun{

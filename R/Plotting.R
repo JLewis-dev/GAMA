@@ -235,9 +235,9 @@ plot_assembly_availability <- function(
 #' Plot SRA modality composition
 #'
 #' Visualises species-level SRA modality composition using stacked horizontal
-#' bars. Each bar shows the proportional contribution of major modality
-#' classes (`genomic`, `transcriptomic`, `epigenomic`, `chromatin`,
-#' `other`, `unknown`), with total SRA record counts labelled.
+#' bars. Each bar shows the proportional contribution of major modality classes
+#' (`genomic`, `transcriptomic`, `epigenomic`, `chromatin`, `other`,
+#' `unknown`), with total SRA record counts labelled.
 #'
 #' Operates on the wide-format summary returned by
 #' [summarise_sra_availability()].
@@ -382,18 +382,17 @@ plot_sra_availability <- function(
 #' Plot SRA modality GEO linkage overlay
 #'
 #' Visualises GEO linkage across SRA modality classes, excluding `genomic`.
-#' Each modality is displayed as a 100% bar with a translucent background
-#' fill, while the coloured segment represents the GEO-linked fraction.
-#' Labels show `GEO-linked / Total` for each modality.
+#' Each modality is displayed as a 100% bar with a translucent background fill,
+#' while the coloured segment represents the GEO-linked fraction. Labels show
+#' `GEO-linked / Total` for each modality.
 #'
-#' Operates on the direct output of [summarise_sra_availability()].
-#' GEO-linked counts are derived from the cached
-#' `attr(SRA_SUMMARY, 'sra_profile')`, which stores per-record
-#' `geo_linked` values regardless of `include_geo`.
+#' Operates on the direct output of [summarise_sra_availability()]. GEO-linked
+#' counts are derived from the cached `attr(SRA_SUMMARY, 'sra_profile')`, which
+#' stores per-record `geo_linked` values regardless of `include_geo`.
 #'
 #' If `species` is `NULL`, plots are generated for all species in the table. A
-#' single species returns a ggplot object; multiple species return a named
-#' list of ggplot objects.
+#' single species returns a ggplot object; multiple species return a named list
+#' of ggplot objects.
 #'
 #' @param SRA_SUMMARY A wide-format SRA summary table returned by
 #' [summarise_sra_availability()].
@@ -404,8 +403,8 @@ plot_sra_availability <- function(
 #' or `input`.
 #' @param theme_fn A ggplot2 theme function.
 #' @param colours Named character vector of class colours.
-#' @param alpha_vals Named numeric vector giving alpha values for GEO-linked
-#' vs not GEO-linked segments.
+#' @param alpha_vals Named numeric vector giving alpha values for GEO-linked vs
+#' not GEO-linked segments.
 #'
 #' @return A ggplot object (single species) or a named list of ggplot objects
 #' (multiple species).
@@ -576,18 +575,18 @@ plot_sra_geo <- function(
 #'
 #' @param SRA_SKEW A tibble returned by [summarise_sra_skew()].
 #' @param species `NULL` (default) to include all species, or a character
-#'   vector of species to plot.
+#' vector of species to plot.
 #' @param rank Ordering of species. One of `highest` (default), `lowest`,
-#'   `A-Z`, `Z-A`, or `input`.
+#' `A-Z`, `Z-A`, or `input`.
 #' @param abbreviate Logical; if `TRUE` (default), abbreviate species labels.
 #' @param theme_fn A ggplot2 theme function.
 #' @param colours Named character vector for box fill and line colours.
 #' @param show_points Logical; if `TRUE` (default), overlay per-unit points
-#'   when cached profiles are available.
+#' when cached profiles are available.
 #' @param point_colour Character scalar giving the colour of overlaid points.
 #' @param point_alpha Numeric alpha value for overlaid points.
-#' @param show_labels Logical; if `TRUE` (default), label each box with
-#'   `eff` and `n`.
+#' @param show_labels Logical; if `TRUE` (default), label each box with `eff`
+#' and `n`.
 #' @param label_digits Integer; decimal places for `eff` labels.
 #'
 #' @return A ggplot object.
@@ -868,18 +867,18 @@ plot_biosample_availability <- function(
 #'
 #' @param BIO_SKEW A tibble returned by [summarise_biosample_skew()].
 #' @param species `NULL` (default) to include all species, or a character
-#'   vector of species to plot.
+#' vector of species to plot.
 #' @param rank Ordering of species. One of `highest` (default), `lowest`,
-#'   `A-Z`, `Z-A`, or `input`.
+#' `A-Z`, `Z-A`, or `input`.
 #' @param abbreviate Logical; if `TRUE` (default), abbreviate species labels.
 #' @param theme_fn A ggplot2 theme function.
 #' @param colours Named character vector for box fill and line colours.
 #' @param show_points Logical; if `TRUE` (default), overlay per-BioProject
-#'   points when cached profiles are available.
+#' points when cached profiles are available.
 #' @param point_colour Character scalar giving the colour of overlaid points.
 #' @param point_alpha Numeric alpha value for overlaid points.
-#' @param show_labels Logical; if `TRUE` (default), label each box with
-#'   `eff` and `n`.
+#' @param show_labels Logical; if `TRUE` (default), label each box with `eff`
+#' and `n`.
 #' @param label_digits Integer; decimal places for `eff` labels.
 #'
 #' @return A ggplot object.
@@ -1029,8 +1028,8 @@ plot_biosample_skew <- function(
 
 #' Plot interaction summaries
 #'
-#' Visualises interaction summaries as modality-by-anatomy heatmaps for one
-#' or more species.
+#' Visualises interaction summaries as modality-by-anatomy heatmaps for one or
+#' more species.
 #'
 #' `plot_interaction()` operates on the summary returned by
 #' [summarise_interaction()]. The plotted anatomy resolution is inherited from
@@ -1049,8 +1048,8 @@ plot_biosample_skew <- function(
 #' over-represented relative to the marginal distributions; negative residuals
 #' indicate under-represented combinations.
 #'
-#' When multiple species are plotted, species can be ordered with `rank`.
-#' The ranking is applied to the filtered interaction summary before plots are
+#' When multiple species are plotted, species can be ordered with `rank`. The
+#' ranking is applied to the filtered interaction summary before plots are
 #' generated.
 #'
 #' @param INTERACTION A summary table returned by [summarise_interaction()].

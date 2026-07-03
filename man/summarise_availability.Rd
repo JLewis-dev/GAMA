@@ -30,14 +30,14 @@ results and summarised into a single row. The returned tibble is given class
 \code{gdt_tbl} and retains query provenance via the \code{query_info} attribute
 carried over from the \code{results} object.
 
-The \code{score} column is computed as \code{A + S + B}, where \code{A}, \code{S}, and \code{B}
-are transformed contributions from Assembly, SRA, and BioSample
-availability. \code{A = best + ln(1 + total - best)}, with assembly weights of
-Complete = 10, Chromosome = 8, Scaffold = 5, and Contig = 2; \code{best} is
-the maximum-weight assembly, with ties broken by highest N50, and \code{total}
-is the sum of all assembly weights. \code{S = 2 * ln(1 + SRA)}, and
-\code{B = ln(1 + BioSample)}. This formulation prioritises high-quality
-assemblies while applying diminishing returns to highly sampled taxa.
+The \code{score} column is computed as \code{A + S + B}, where \code{A}, \code{S}, and \code{B} are
+transformed contributions from Assembly, SRA, and BioSample availability.
+\code{A = best + ln(1 + total - best)}, with assembly weights of Complete = 10,
+Chromosome = 8, Scaffold = 5, and Contig = 2; \code{best} is the maximum-weight
+assembly, with ties broken by highest N50, and \code{total} is the sum of all
+assembly weights. \code{S = 2 * ln(1 + SRA)}, and \code{B = ln(1 + BioSample)}. This
+formulation prioritises high-quality assemblies while applying diminishing
+returns to highly sampled taxa.
 }
 \examples{
 \dontrun{

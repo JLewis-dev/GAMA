@@ -70,6 +70,21 @@ contig     = 2
   max(best_n50, na.rm = TRUE)
 }
 
+.best_assembly_indices <- function(level, n50, ties = c('first', 'all')) {
+  ties <- match.arg(ties)
+  weight <- .assembly_level_weight(level)
+  if (!length(weight) || all(weight <= 0)) return(integer())
+  n50 <- suppressWarnings(as.numeric(n50))
+  best_weight <- max(weight, na.rm = TRUE)
+  tied_level <- which(weight == best_weight)
+  tied_n50 <- n50[tied_level]
+  if (length(tied_n50) && !all(is.na(tied_n50))) {
+    best_n50 <- max(tied_n50, na.rm = TRUE)
+    tied_level <- tied_level[!is.na(tied_n50) & tied_n50 == best_n50]
+  }
+  if (identical(ties, 'first')) tied_level[1L] else tied_level
+}
+
 .assembly_empty_metadata <- function(sp) {
   tibble::tibble(
   species       = sp,
@@ -196,13 +211,8 @@ contig     = 2
       LEVELS <- sapply(SUMS, .extract_assembly_level)
       STRUCT <- .assembly_level_weight(LEVELS)
       N50 <- suppressWarnings(as.numeric(sapply(SUMS, .extract_n50)))
-      max_struct <- max(STRUCT)
-      tied_idx   <- which(STRUCT == max_struct)
-      best_idx <- if (length(tied_idx) > 1) {
-        tied_n50 <- N50[tied_idx]
-        if (all(is.na(tied_n50))) tied_idx[1L] else tied_idx[which.max(tied_n50)]
-      } else tied_idx
-      best_score  <- STRUCT[best_idx]
+      best_idx <- .best_assembly_indices(LEVELS, N50, ties = 'first')
+      best_score <- if (length(best_idx)) STRUCT[best_idx] else 0
       total_score <- sum(STRUCT)
       richness <- best_score + log1p(total_score - best_score)
     }
@@ -2148,10 +2158,22 @@ title_raw = NA_character_) {
         ontology = list(namespace = 'PO', id = 'PO:0000293', label = 'guard cell'),
         rank = 'cell'
       ),
+      haustorium = list(
+        variants = c('haustoria', 'haustorial', 'haustorium'),
+        match = 'phrase',
+        ontology = NULL,
+        rank = 'suborgan'
+      ),
       mesophyll_cell = list(
         variants = c('leaf mesophyll', 'mesophyll', 'mesophyll cell', 'mesophyll cells'),
         ontology = list(namespace = 'PO', id = 'PO:0004006', label = 'mesophyll cell'),
         rank = 'cell'
+      ),
+      prehaustorium = list(
+        variants = c('prehaustoria', 'prehaustorium'),
+        match = 'phrase',
+        ontology = NULL,
+        rank = 'suborgan'
       ),
       trichome = list(
         variants = c('glandular trichome', 'glandular trichomes', 'leaf trichome', 'leaf trichomes', 'stem trichome', 'stem trichomes', 'trichome', 'trichomes'),

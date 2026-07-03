@@ -60,8 +60,8 @@ A ggplot object for a single species, or a named list of ggplot
 objects when multiple species are plotted.
 }
 \description{
-Visualises interaction summaries as modality-by-anatomy heatmaps for one
-or more species.
+Visualises interaction summaries as modality-by-anatomy heatmaps for one or
+more species.
 }
 \details{
 \code{plot_interaction()} operates on the summary returned by
@@ -80,8 +80,8 @@ Positive residuals indicate modality-anatomy combinations that are
 over-represented relative to the marginal distributions; negative residuals
 indicate under-represented combinations.
 
-When multiple species are plotted, species can be ordered with \code{rank}.
-The ranking is applied to the filtered interaction summary before plots are
+When multiple species are plotted, species can be ordered with \code{rank}. The
+ranking is applied to the filtered interaction summary before plots are
 generated.
 }
 \examples{
