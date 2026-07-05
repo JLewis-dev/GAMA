@@ -26,16 +26,15 @@ BioProjects; inverse Simpson index).
 }
 \description{
 Quantifies replication skew across BioProjects using the cached
-BioSample-level anatomy profile produced by
+\code{biosample_anatomy_profile} produced by
 \code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}. Optional filters restrict the analysis
 to a single anatomy class.
 }
 \details{
-Profile cache (consumed by this function):
-The input must carry a cached BioSample-level profile as attribute
-\code{biosample_anatomy_profile}. Each row in the profile corresponds to one
-operable BioSample record. Required fields are \code{species}, \code{biosample_id},
-\code{bioproject}, and \code{anatomy_class}.
+Profile cache:
+The input must carry \code{biosample_anatomy_profile}. Each row in this profile
+corresponds to one operable BioSample record. Required fields are \code{species},
+\code{biosample_id}, \code{bioproject}, and \code{anatomy_class}.
 
 The \code{eff} column is the \emph{effective number of BioProjects} (Hill number of
 order 2), computed as the inverse Simpson index: \code{eff = 1 / sum(p^2)}, where

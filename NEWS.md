@@ -1,3 +1,18 @@
+# GAMA 0.3.5
+
+## Reliability
+- Added Entrez UIDs to the cached profiles produced by `summarise_biosample_availability()` to further support diagnostics
+
+## Documentation
+- Updated roxygen documentation and the GAMA user guide accordingly
+
+## Testing
+- Updated testthat coverage for the revised BioSample cached profile structure
+- Regenerated examples and fixtures for the revised output structure
+- Confirmed the test suite passes with the updated fixtures
+
+---
+
 # GAMA 0.3.4
 
 ## Reliability

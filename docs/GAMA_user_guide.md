@@ -155,233 +155,233 @@ Searches NCBI Assembly, SRA, and BioSample for one or more species, creating the
 
 - Input – character vector of binomial species names
   - Optional arguments –<br>
-    &nbsp;&nbsp;`synonyms`: named list or named character vector; map canonical species names to one or more synonymous names for query collapse (NULL, one or more synonym mappings)
+    &nbsp;&nbsp;synonyms: named list or named character vector; map canonical species names to one or more synonymous names for query collapse (NULL, one or more synonym mappings)
 - Output – named list with one element per canonical species containing Assembly, SRA, and BioSample query results, including record IDs and counts; when the synonyms argument is supplied, results are merged across aliases using unique database record identifiers
 
 ### summarise_availability()
 
 Provides a compact species-level overview of public archive availability by combining Assembly, SRA, and BioSample record counts into a composite data richness score (see [Data richness](#data-richness)).
 
-- Input – list returned by `query_species()`
+- Input – list returned by query_species()
   - Optional arguments –<br>
     &nbsp;&nbsp;none
-- Output – tibble (`gdt_tbl`) with one row per species containing Assembly, SRA, and BioSample record counts, component scores (A, S, B), and a composite data richness score (score)
+- Output – tibble (gdt_tbl) with one row per species containing Assembly, SRA, and BioSample record counts, component scores (A, S, B), and a composite data richness score (score)
 
 ### plot_availability()
 
 Visualises species-level data richness using stacked bar segments for Assembly, SRA, and BioSample score contributions.
 
-- Input – tibble returned by `summarise_availability()`
+- Input – tibble returned by summarise_availability()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`rank`: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
-    &nbsp;&nbsp;`abbreviate`: logical; abbreviate species names (TRUE, FALSE)<br>
-    &nbsp;&nbsp;`theme_fn`: function; ggplot2 theme function (`ggplot2::theme_minimal`)<br>
-    &nbsp;&nbsp;`colours`: named character vector; fill colours for Assembly, SRA, and BioSample segments
+    &nbsp;&nbsp;rank: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
+    &nbsp;&nbsp;abbreviate: logical; abbreviate species names (TRUE, FALSE)<br>
+    &nbsp;&nbsp;theme_fn: function; ggplot2 theme function (ggplot2::theme_minimal)<br>
+    &nbsp;&nbsp;colours: named character vector; fill colours for Assembly, SRA, and BioSample segments
 - Output – ggplot showing stacked data richness score components across species
 
 ### summarise_assembly_availability()
 
 Provides a species-level overview of Assembly composition by classifying records by assembly level and reporting the best N50.
 
-- Input – list returned by `query_species()`
+- Input – list returned by query_species()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from list to include (NULL, one or more species names)
-- Output – tibble (`gdt_tbl`) with one row per species containing total Assembly record count, recognised assembly level counts ('complete', 'chromosome', 'scaffold', 'contig'), and `best_n50`
+    &nbsp;&nbsp;species: character vector; species from list to include (NULL, one or more species names)
+- Output – tibble (gdt_tbl) with one row per species containing total Assembly record count, recognised assembly level counts ('complete', 'chromosome', 'scaffold', 'contig'), and best_n50
 
 ### plot_assembly_availability()
 
 Visualises species-level Assembly composition using stacked horizontal bars.
 
-- Input – tibble returned by `summarise_assembly_availability()`
+- Input – tibble returned by summarise_assembly_availability()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from tibble to include (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`rank`: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
-    &nbsp;&nbsp;`abbreviate`: logical; abbreviate species names (TRUE, FALSE)<br>
-    &nbsp;&nbsp;`theme_fn`: function; ggplot2 theme function (`ggplot2::theme_minimal`)<br>
-    &nbsp;&nbsp;`colours`: named character vector; fill colours for Assembly levels
+    &nbsp;&nbsp;species: character vector; species from tibble to include (NULL, one or more species names)<br>
+    &nbsp;&nbsp;rank: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
+    &nbsp;&nbsp;abbreviate: logical; abbreviate species names (TRUE, FALSE)<br>
+    &nbsp;&nbsp;theme_fn: function; ggplot2 theme function (ggplot2::theme_minimal)<br>
+    &nbsp;&nbsp;colours: named character vector; fill colours for Assembly levels
 - Output – ggplot showing proportional Assembly level composition across species, with total Assembly record counts labelled
 
 ### extract_assembly_metadata()
 
 Returns record-level Assembly metadata for deeper inspection, including assembly level, N50, coverage, BioSample/BioProject links, submitter, release date, and FTP path.
 
-- Input – list returned by `query_species()`
+- Input – list returned by query_species()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from list to include (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`best`: logical; return the best assembly or tied best assemblies per species (FALSE, TRUE)
-- Output – tibble (`gdt_tbl`) containing Assembly metadata, including species, `entrez_uid`, level, n50, coverage, biosample, bioproject, submitter, release_date, and ftp_path. When `best = TRUE`, assemblies tied at the highest recognised level and N50 are retained
+    &nbsp;&nbsp;species: character vector; species from list to include (NULL, one or more species names)<br>
+    &nbsp;&nbsp;best: logical; return the best assembly or tied best assemblies per species (FALSE, TRUE)
+- Output – tibble (gdt_tbl) containing Assembly metadata, including species, entrez_uid, level, n50, coverage, biosample, bioproject, submitter, release_date, and ftp_path. When best = TRUE, assemblies tied at the highest recognised level and N50 are retained
 
 ### summarise_sra_availability()
 
 Provides a species-level overview of SRA modality composition by classifying SRA metadata into ontology-assigned modality classes and subclasses (see [Ontology-driven classification](#ontology-driven-classification)).
 
-- Input – list returned by `query_species()`
+- Input – list returned by query_species()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from list to include (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`all`: logical; include subclass-level columns (FALSE, TRUE)<br>
-    &nbsp;&nbsp;`include_geo`: logical; append GEO summary columns (FALSE, TRUE)
-- Output – tibble (`gdt_tbl`) with one row per species containing total SRA records and class-level modality counts; caches UID-level profiles attached to the output tibble as `attr(x, 'sra_profile')` and profile metadata as `attr(x, 'sra_profile_info')` for downstream GEO linkage plotting, replication-skew analysis, and SRA × BioSample interaction summaries
+    &nbsp;&nbsp;species: character vector; species from list to include (NULL, one or more species names)<br>
+    &nbsp;&nbsp;all: logical; include subclass-level columns (FALSE, TRUE)<br>
+    &nbsp;&nbsp;include_geo: logical; append GEO summary columns (FALSE, TRUE)
+- Output – tibble (gdt_tbl) with one row per species containing total SRA records and class-level modality counts; caches UID-level profiles attached to the output tibble as attr(x, 'sra_profile') and profile metadata as attr(x, 'sra_profile_info') for downstream GEO linkage plotting, replication-skew analysis, and SRA × BioSample interaction summaries
 
 ### plot_sra_availability()
 
 Visualises species-level SRA modality composition using stacked horizontal bars.
 
-- Input – tibble returned by `summarise_sra_availability()`
+- Input – tibble returned by summarise_sra_availability()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from tibble to include (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`rank`: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
-    &nbsp;&nbsp;`abbreviate`: logical; abbreviate species names (TRUE, FALSE)<br>
-    &nbsp;&nbsp;`theme_fn`: function; ggplot2 theme function (`ggplot2::theme_minimal`)<br>
-    &nbsp;&nbsp;`colours`: named character vector; fill colours for SRA modality classes
+    &nbsp;&nbsp;species: character vector; species from tibble to include (NULL, one or more species names)<br>
+    &nbsp;&nbsp;rank: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
+    &nbsp;&nbsp;abbreviate: logical; abbreviate species names (TRUE, FALSE)<br>
+    &nbsp;&nbsp;theme_fn: function; ggplot2 theme function (ggplot2::theme_minimal)<br>
+    &nbsp;&nbsp;colours: named character vector; fill colours for SRA modality classes
 - Output – ggplot showing proportional SRA modality composition across species, with total SRA record counts labelled
 
 ### plot_sra_geo()
 
 Visualises GEO linkage across SRA modality classes, excluding genomic records.
 
-- Input – tibble returned by `summarise_sra_availability()`
+- Input – tibble returned by summarise_sra_availability()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from tibble to plot (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`rank`: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
-    &nbsp;&nbsp;`theme_fn`: function; ggplot2 theme function (`ggplot2::theme_minimal`)<br>
-    &nbsp;&nbsp;`colours`: named character vector; fill colours for SRA modality classes<br>
-    &nbsp;&nbsp;`alpha_vals`: named numeric vector; transparency values for GEO linkage
-- Output – ggplot for a single species, or a named list of ggplot objects for multiple species, showing per-modality GEO linkage using cached profiles attached to the input tibble as `attr(x, 'sra_profile')`
+    &nbsp;&nbsp;species: character vector; species from tibble to plot (NULL, one or more species names)<br>
+    &nbsp;&nbsp;rank: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
+    &nbsp;&nbsp;theme_fn: function; ggplot2 theme function (ggplot2::theme_minimal)<br>
+    &nbsp;&nbsp;colours: named character vector; fill colours for SRA modality classes<br>
+    &nbsp;&nbsp;alpha_vals: named numeric vector; transparency values for GEO linkage
+- Output – ggplot for a single species, or a named list of ggplot objects for multiple species, showing per-modality GEO linkage using cached profiles attached to the input tibble as attr(x, 'sra_profile')
 
 ### summarise_sra_skew()
 
 Quantifies whether SRA records are broadly distributed across BioProjects or BioSamples, or concentrated within a small number of dominant units (see [Replication skew](#replication-skew)).
 
-- Input – tibble returned by `summarise_sra_availability()` with cached UID-level profiles attached as `attr(x, 'sra_profile')`
+- Input – tibble returned by summarise_sra_availability() with cached UID-level profiles attached as attr(x, 'sra_profile')
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from tibble to include (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`unit`: character; skew unit ('bioproject', 'biosample')<br>
-    &nbsp;&nbsp;`class`: character scalar; single modality class to analyse (NULL, one class name)
-- Output – tibble (`gdt_tbl`) with one row per species containing unit count, class, boxplot summary statistics of SRA records per unit (min, q25, med, q75, max), and inverse Simpson index (eff)
+    &nbsp;&nbsp;species: character vector; species from tibble to include (NULL, one or more species names)<br>
+    &nbsp;&nbsp;unit: character; skew unit ('bioproject', 'biosample')<br>
+    &nbsp;&nbsp;class: character scalar; single modality class to analyse (NULL, one class name)
+- Output – tibble (gdt_tbl) with one row per species containing unit count, class, boxplot summary statistics of SRA records per unit (min, q25, med, q75, max), and inverse Simpson index (eff)
 
 ### plot_sra_skew()
 
-Visualises SRA replication skew using the summary output of `summarise_sra_skew()`.
+Visualises SRA replication skew using the summary output of summarise_sra_skew().
 
-- Input – tibble returned by `summarise_sra_skew()`
+- Input – tibble returned by summarise_sra_skew()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from tibble to plot (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`rank`: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
-    &nbsp;&nbsp;`abbreviate`: logical; abbreviate species labels (TRUE, FALSE)<br>
-    &nbsp;&nbsp;`theme_fn`: function; ggplot2 theme function (`ggplot2::theme_minimal`)<br>
-    &nbsp;&nbsp;`colours`: named character vector; box fill and line colours<br>
-    &nbsp;&nbsp;`show_points`: logical; overlay per-unit points when cached profiles are available (TRUE, FALSE)<br>
-    &nbsp;&nbsp;`point_colour`: character scalar; point colour<br>
-    &nbsp;&nbsp;`point_alpha`: numeric; point transparency<br>
-    &nbsp;&nbsp;`show_labels`: logical; label each box with eff and n (TRUE, FALSE)<br>
-    &nbsp;&nbsp;`label_digits`: integer; decimal places for eff labels
+    &nbsp;&nbsp;species: character vector; species from tibble to plot (NULL, one or more species names)<br>
+    &nbsp;&nbsp;rank: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
+    &nbsp;&nbsp;abbreviate: logical; abbreviate species labels (TRUE, FALSE)<br>
+    &nbsp;&nbsp;theme_fn: function; ggplot2 theme function (ggplot2::theme_minimal)<br>
+    &nbsp;&nbsp;colours: named character vector; box fill and line colours<br>
+    &nbsp;&nbsp;show_points: logical; overlay per-unit points when cached profiles are available (TRUE, FALSE)<br>
+    &nbsp;&nbsp;point_colour: character scalar; point colour<br>
+    &nbsp;&nbsp;point_alpha: numeric; point transparency<br>
+    &nbsp;&nbsp;show_labels: logical; label each box with eff and n (TRUE, FALSE)<br>
+    &nbsp;&nbsp;label_digits: integer; decimal places for eff labels
 - Output – ggplot visualising replication skew across species on a log10 scale, with optional per-unit point overlays when cached profiles are available
 
 ### extract_sra_metadata()
 
 Returns SRA record metadata for deeper inspection, including ontology-assigned modality, BioSample/BioProject identifiers, and GEO linkage fields.
 
-- Input – list returned by `query_species()`
+- Input – list returned by query_species()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from list to include (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`class`: character vector; modality classes to filter by (NULL, one or more class names)<br>
-    &nbsp;&nbsp;`subclass`: character vector; modality subclasses to filter by (NULL, one or more subclass names)<br>
-    &nbsp;&nbsp;`only_geo`: logical; retain only GEO-linked records (FALSE, TRUE)
-- Output – tibble (`gdt_tbl`) containing SRA metadata, including species, entrez_uid, biosample, bioproject, strategy_raw, strategy_norm, class, subclass, geo_linked, gse_ids, and gsm_ids
+    &nbsp;&nbsp;species: character vector; species from list to include (NULL, one or more species names)<br>
+    &nbsp;&nbsp;class: character vector; modality classes to filter by (NULL, one or more class names)<br>
+    &nbsp;&nbsp;subclass: character vector; modality subclasses to filter by (NULL, one or more subclass names)<br>
+    &nbsp;&nbsp;only_geo: logical; retain only GEO-linked records (FALSE, TRUE)
+- Output – tibble (gdt_tbl) containing SRA metadata, including species, entrez_uid, biosample, bioproject, strategy_raw, strategy_norm, class, subclass, geo_linked, gse_ids, and gsm_ids
 
 ### summarise_biosample_availability()
 
 Provides a species-level overview of BioSample anatomy composition by collapsing sample-source metadata into ontology-assigned anatomy class, subclass, and term counts (see [Ontology-driven classification](#ontology-driven-classification)).
 
-- Input – list returned by `query_species()`
+- Input – list returned by query_species()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from list to include (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`all`: logical; include canonical anatomy-term columns (FALSE, TRUE)
-- Output – tibble (`gdt_tbl`) with one row per species containing total BioSample record counts, operable BioSample record counts, and class-level anatomy counts; when all = TRUE, canonical anatomy-term counts are included; cached BioSample-level profiles are attached as `attr(x, 'biosample_anatomy_profile')` and `attr(x, 'biosample_canonical_profile')` for downstream skew analysis and SRA × BioSample interaction summaries
+    &nbsp;&nbsp;species: character vector; species from list to include (NULL, one or more species names)<br>
+    &nbsp;&nbsp;all: logical; include canonical anatomy-term columns (FALSE, TRUE)
+- Output – tibble (gdt_tbl) with one row per species containing total BioSample record counts, operable BioSample record counts, and class-level anatomy counts; when all = TRUE, canonical anatomy-term counts are included; cached BioSample profiles are attached as attr(x, 'biosample_anatomy_profile') and attr(x, 'biosample_canonical_profile') for downstream skew analysis and SRA × BioSample interaction summaries
 
 ### plot_biosample_availability()
 
 Visualises species-level BioSample anatomy composition using stacked horizontal bars.
 
-- Input – tibble returned by `summarise_biosample_availability()`
+- Input – tibble returned by summarise_biosample_availability()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from tibble to include (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`rank`: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
-    &nbsp;&nbsp;`abbreviate`: logical; abbreviate species names (TRUE, FALSE)<br>
-    &nbsp;&nbsp;`theme_fn`: function; ggplot2 theme function (`ggplot2::theme_minimal`)<br>
-    &nbsp;&nbsp;`colours`: named character vector; fill colours for BioSample anatomy classes
+    &nbsp;&nbsp;species: character vector; species from tibble to include (NULL, one or more species names)<br>
+    &nbsp;&nbsp;rank: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
+    &nbsp;&nbsp;abbreviate: logical; abbreviate species names (TRUE, FALSE)<br>
+    &nbsp;&nbsp;theme_fn: function; ggplot2 theme function (ggplot2::theme_minimal)<br>
+    &nbsp;&nbsp;colours: named character vector; fill colours for BioSample anatomy classes
 - Output – ggplot showing proportional BioSample anatomy composition across species, calculated over operable BioSample records, with operable BioSample record counts labelled
 
 ### summarise_biosample_skew()
 
 Quantifies whether BioSample records are broadly distributed across BioProjects or concentrated within a small number of dominant units (see [Replication skew](#replication-skew)).
 
-- Input – tibble returned by `summarise_biosample_availability()` with cached BioSample-level profiles attached as `attr(x, 'biosample_anatomy_profile')`
+- Input – tibble returned by summarise_biosample_availability() with cached biosample_anatomy_profile data attached as attr(x, 'biosample_anatomy_profile')
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from tibble to include (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`anatomy_class`: character scalar; single anatomy class to analyse (NULL, one anatomy class)
-- Output – tibble (`gdt_tbl`) with one row per species containing BioProject count, anatomy_class, boxplot summary statistics of operable BioSample records per BioProject (min, q25, med, q75, max), and inverse Simpson index (eff)
+    &nbsp;&nbsp;species: character vector; species from tibble to include (NULL, one or more species names)<br>
+    &nbsp;&nbsp;anatomy_class: character scalar; single anatomy class to analyse (NULL, one anatomy class)
+- Output – tibble (gdt_tbl) with one row per species containing BioProject count, anatomy_class, boxplot summary statistics of operable BioSample records per BioProject (min, q25, med, q75, max), and inverse Simpson index (eff)
 
 ### plot_biosample_skew()
 
-Visualises BioSample replication skew using the summary output of `summarise_biosample_skew()`.
+Visualises BioSample replication skew using the summary output of summarise_biosample_skew().
 
-- Input – tibble returned by `summarise_biosample_skew()`
+- Input – tibble returned by summarise_biosample_skew()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from tibble to plot (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`rank`: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
-    &nbsp;&nbsp;`abbreviate`: logical; abbreviate species labels (TRUE, FALSE)<br>
-    &nbsp;&nbsp;`theme_fn`: function; ggplot2 theme function (`ggplot2::theme_minimal`)<br>
-    &nbsp;&nbsp;`colours`: named character vector; box fill and line colours<br>
-    &nbsp;&nbsp;`show_points`: logical; overlay per-BioProject points when cached profiles are available (TRUE, FALSE)<br>
-    &nbsp;&nbsp;`point_colour`: character scalar; point colour<br>
-    &nbsp;&nbsp;`point_alpha`: numeric; point transparency<br>
-    &nbsp;&nbsp;`show_labels`: logical; label each box with eff and n (TRUE, FALSE)<br>
-    &nbsp;&nbsp;`label_digits`: integer; decimal places for eff labels
-- Output – ggplot visualising replication skew across species on a log10 scale, with optional per-BioProject point overlays when cached profiles are available
+    &nbsp;&nbsp;species: character vector; species from tibble to plot (NULL, one or more species names)<br>
+    &nbsp;&nbsp;rank: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
+    &nbsp;&nbsp;abbreviate: logical; abbreviate species labels (TRUE, FALSE)<br>
+    &nbsp;&nbsp;theme_fn: function; ggplot2 theme function (ggplot2::theme_minimal)<br>
+    &nbsp;&nbsp;colours: named character vector; box fill and line colours<br>
+    &nbsp;&nbsp;show_points: logical; overlay per-BioProject points when cached biosample_anatomy_profile data are available (TRUE, FALSE)<br>
+    &nbsp;&nbsp;point_colour: character scalar; point colour<br>
+    &nbsp;&nbsp;point_alpha: numeric; point transparency<br>
+    &nbsp;&nbsp;show_labels: logical; label each box with eff and n (TRUE, FALSE)<br>
+    &nbsp;&nbsp;label_digits: integer; decimal places for eff labels
+- Output – ggplot visualising replication skew across species on a log10 scale, with optional per-BioProject point overlays when cached biosample_anatomy_profile data are available
 
 ### extract_biosample_metadata()
 
 Returns record-level BioSample source-material metadata for deeper inspection, including recovered sample-source values, ontology assignments, and collapsed anatomy profiles.
 
-- Input – list returned by `query_species()`
+- Input – list returned by query_species()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from list to include (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`anatomy_class`: character vector; anatomy classes to filter by (NULL, one or more anatomy classes)<br>
-    &nbsp;&nbsp;`anatomy_subclass`: character vector; anatomy subclasses to filter by (NULL, one or more anatomy subclasses)<br>
-    &nbsp;&nbsp;`anatomy_term`: character vector; canonical anatomy terms to filter by (NULL, one or more anatomy terms)
-- Output – tibble (`gdt_tbl`) with one row per BioSample anatomy term, including identifiers, raw and normalised sample-source values, ontology assignments, and anatomy_class_profile and anatomy_subclass_profile labels
+    &nbsp;&nbsp;species: character vector; species from list to include (NULL, one or more species names)<br>
+    &nbsp;&nbsp;anatomy_class: character vector; anatomy classes to filter by (NULL, one or more anatomy classes)<br>
+    &nbsp;&nbsp;anatomy_subclass: character vector; anatomy subclasses to filter by (NULL, one or more anatomy subclasses)<br>
+    &nbsp;&nbsp;anatomy_term: character vector; canonical anatomy terms to filter by (NULL, one or more anatomy terms)
+- Output – tibble (gdt_tbl) with one row per BioSample anatomy term, including identifiers, raw and normalised sample-source values, ontology assignments, and anatomy_class_profile and anatomy_subclass_profile labels
 
 ### summarise_interaction()
 
-Summarises cross-database SRA × BioSample structure by linking cached SRA modality profiles with cached BioSample anatomy profiles (see [Residuals](#residuals)).
+Summarises cross-database SRA × BioSample structure by linking cached SRA modality profiles with cached biosample_anatomy_profile data (see [Residuals](#residuals)).
 
-- Input – tibble returned by `summarise_sra_availability()` and tibble returned by `summarise_biosample_availability()`
+- Input – tibble returned by summarise_sra_availability() and tibble returned by summarise_biosample_availability()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`level`: character; anatomy resolution to summarise ('anatomy_class', 'anatomy_subclass')<br>
-    &nbsp;&nbsp;`species`: character vector; species from the input summaries to include (NULL, one or more species names)
-- Output – tibble (`gdt_tbl`) with one row per species, modality class, and anatomy category; columns include species, class, BioSample, expected, and residual, plus either anatomy_class or anatomy_subclass depending on level; interaction metadata are attached as `attr(x, 'interaction_info')`
+    &nbsp;&nbsp;level: character; anatomy resolution to summarise ('anatomy_class', 'anatomy_subclass')<br>
+    &nbsp;&nbsp;species: character vector; species from the input summaries to include (NULL, one or more species names)
+- Output – tibble (gdt_tbl) with one row per species, modality class, and anatomy category; columns include species, class, BioSample, expected, and residual, plus either anatomy_class or anatomy_subclass depending on level; interaction metadata are attached as attr(x, 'interaction_info')
 
 ### plot_interaction()
 
 Visualises SRA × BioSample interaction summaries as modality-by-anatomy heatmaps.
 
-- Input – tibble returned by `summarise_interaction()`
+- Input – tibble returned by summarise_interaction()
   - Optional arguments –<br>
-    &nbsp;&nbsp;`species`: character vector; species from the interaction summary to plot (NULL, one or more species names)<br>
-    &nbsp;&nbsp;`value`: character; heatmap value to display ('count', 'residual')<br>
-    &nbsp;&nbsp;`rank`: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
-    &nbsp;&nbsp;`theme_fn`: function; ggplot2 theme function (`ggplot2::theme_minimal`)<br>
-    &nbsp;&nbsp;`low_fill`: character scalar; low count fill colour<br>
-    &nbsp;&nbsp;`high_fill`: character scalar; high count fill colour<br>
-    &nbsp;&nbsp;`positive_low_fill`: character scalar; low positive residual fill colour<br>
-    &nbsp;&nbsp;`positive_high_fill`: character scalar; high positive residual fill colour<br>
-    &nbsp;&nbsp;`negative_low_fill`: character scalar; low negative residual fill colour<br>
-    &nbsp;&nbsp;`negative_high_fill`: character scalar; high negative residual fill colour<br>
-    &nbsp;&nbsp;`zero_fill`: character scalar; zero residual fill colour<br>
-    &nbsp;&nbsp;`na_fill`: character scalar; missing value fill colour<br>
-    &nbsp;&nbsp;`show_values`: logical; show cell values (TRUE, FALSE)<br>
-    &nbsp;&nbsp;`value_size`: numeric; cell-value text size
+    &nbsp;&nbsp;species: character vector; species from the interaction summary to plot (NULL, one or more species names)<br>
+    &nbsp;&nbsp;value: character; heatmap value to display ('count', 'residual')<br>
+    &nbsp;&nbsp;rank: character; species ordering method ('highest', 'lowest', 'A-Z', 'Z-A', 'input')<br>
+    &nbsp;&nbsp;theme_fn: function; ggplot2 theme function (ggplot2::theme_minimal)<br>
+    &nbsp;&nbsp;low_fill: character scalar; low count fill colour<br>
+    &nbsp;&nbsp;high_fill: character scalar; high count fill colour<br>
+    &nbsp;&nbsp;positive_low_fill: character scalar; low positive residual fill colour<br>
+    &nbsp;&nbsp;positive_high_fill: character scalar; high positive residual fill colour<br>
+    &nbsp;&nbsp;negative_low_fill: character scalar; low negative residual fill colour<br>
+    &nbsp;&nbsp;negative_high_fill: character scalar; high negative residual fill colour<br>
+    &nbsp;&nbsp;zero_fill: character scalar; zero residual fill colour<br>
+    &nbsp;&nbsp;na_fill: character scalar; missing value fill colour<br>
+    &nbsp;&nbsp;show_values: logical; show cell values (TRUE, FALSE)<br>
+    &nbsp;&nbsp;value_size: numeric; cell-value text size
 - Output – ggplot for a single species, or a named list of ggplot objects for multiple species; with value = 'count', the heatmap shows linked BioSample record counts; with value = 'residual', the heatmap shows Pearson residuals from the species-level marginal expectation
 
 ---
@@ -392,9 +392,9 @@ Visualises SRA × BioSample interaction summaries as modality-by-anatomy heatmap
 
 GAMA is organised around two archive-interrogation layers:
 
-**Genomic Availability** – Introduces `query_species()` as the entry point for GAMA, creating a species-indexed search object that anchors downstream summaries, visualisations, and metadata extraction. It queries NCBI Assembly, SRA, and BioSample through rentrez, using organism-constrained searches, `retmax = 999999`, and Entrez history tracking. Returned identifiers, record counts, and `web_history` context are preserved for later retrieval. Search requests use retrying handlers with increasing back-off, while Assembly, SRA, and BioSample records are recovered through shared `entrez_summary()` helpers in batches of up to 100 records, using returned identifiers where available and Entrez history context where history-aware retrieval is required. Records are structured with dplyr, tidyr, and purrr, with provenance metadata attached to all query-derived outputs.
+**Genomic Availability** – Introduces query_species() as the entry point for GAMA, creating a species-indexed search object that anchors downstream summaries, visualisations, and metadata extraction. It queries NCBI Assembly, SRA, and BioSample through rentrez, using organism-constrained searches, retmax = 999999, and Entrez history tracking. Returned identifiers, record counts, and web_history context are preserved for later retrieval. Search requests use retrying handlers with increasing back-off, while Assembly, SRA, and BioSample records are recovered through shared entrez_summary() helpers in batches of up to 100 records, using returned identifiers where available and Entrez history context where history-aware retrieval is required. Records are structured with dplyr, tidyr, and purrr, with provenance metadata attached to all query-derived outputs.
 
-**Metadata Analysis** – Performs deeper, database-specific metadata parsing and normalisation. For Assembly, stored identifiers are used to retrieve NCBI summary records, from which assembly level, N50, coverage, BioSample/BioProject links, submitter details, release date, and FTP path are extracted and flattened into tidy metadata fields. For SRA, the expxml field is parsed using xml2 to extract and normalise LIBRARY_STRATEGY, which is then assigned to a modality class and subclass using the internal ontology and strict matching. Missing, uninformative, or explicitly other strategies are rescued using LIBRARY_SOURCE, LIBRARY_SELECTION, and TITLE. Records that remain missing or uninformative after fallback parsing are retained as unknown; non-missing, interpretable strategies that fall outside the ontology are retained as other. GEO linkage is recorded by scanning experiment XML for GSE/GSM accessions and cached alongside BioSample/BioProject identifiers. For BioSample, record-level metadata are screened for accepted sample-source attributes, including tissue, organism part, cell type, tissue type, and organ. A BioSample record is treated as operable when an accepted sample-source attribute is present. Accepted attribute values are then parsed against the curated anatomy ontology. Missing-like values, or values with no ontological match, are retained as unknown; broad, generic, or subcellular anatomy values are classified as other; records with multiple recovered anatomy classes are classified as mixed. BioSample-level anatomy profiles are cached by BioSample identifier so subsequent skew and archive interaction workflows can reuse the recovered metadata.
+**Metadata Analysis** – Performs deeper, database-specific metadata parsing and normalisation. For Assembly, stored identifiers are used to retrieve NCBI summary records, from which assembly level, N50, coverage, BioSample/BioProject links, submitter details, release date, and FTP path are extracted and flattened into tidy metadata fields. For SRA, the expxml field is parsed using xml2 to extract and normalise LIBRARY_STRATEGY, which is then assigned to a modality class and subclass using the internal ontology and strict matching. Missing, uninformative, or explicitly other strategies are rescued using LIBRARY_SOURCE, LIBRARY_SELECTION, and TITLE. Records that remain missing or uninformative after fallback parsing are retained as unknown; non-missing, interpretable strategies that fall outside the ontology are retained as other. GEO linkage is recorded by scanning experiment XML for GSE/GSM accessions and cached alongside BioSample/BioProject identifiers. For BioSample, record-level metadata are screened for accepted sample-source attributes, including tissue, organism part, cell type, tissue type, and organ. A BioSample record is treated as operable when an accepted sample-source attribute is present. Accepted attribute values are then parsed against the curated anatomy ontology. Missing-like values, or values with no ontological match, are retained as unknown; broad, generic, or subcellular anatomy values are classified as other; records with multiple recovered anatomy classes are classified as mixed. Collapsed BioSample anatomy profiles are cached by BioSample identifier so subsequent skew and archive interaction workflows can reuse recovered anatomy assignments without repeating retrieval and parsing.
 
 ### Data richness
 

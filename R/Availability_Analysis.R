@@ -348,7 +348,7 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
 #' (genomic, transcriptomic, epigenomic, chromatin, other, unknown), plus the
 #' total number of SRA records per species.
 #'
-#' Profile cache (used by downstream summaries):
+#' Profile cache:
 #' In addition to the summary table, this function attaches a cached UID-level
 #' profile as attribute `sra_profile`. Each row corresponds to one SRA Entrez
 #' UID and stores species, record identifiers, BioSample/BioProject links, raw
@@ -570,7 +570,7 @@ include_geo = FALSE) {
 #' [summarise_sra_availability()]. Optional filters restrict the analysis to a
 #' single modality class.
 #'
-#' Profile cache (consumed by this function):
+#' Profile cache:
 #' The input must carry a cached UID-level profile as attribute `sra_profile`.
 #' Each row in the profile corresponds to one SRA Entrez UID. Required fields
 #' are `species`, `entrez_uid`, `biosample`, `bioproject`, and `class`.
@@ -883,14 +883,15 @@ only_geo = FALSE) {
 #'
 #' Profile cache:
 #' In addition to the summary table, this function attaches two cached
-#' BioSample-level profiles: `biosample_anatomy_profile` and
+#' BioSample profiles: `biosample_anatomy_profile` and
 #' `biosample_canonical_profile`. The anatomy profile stores one collapsed
 #' anatomy class and subclass profile per operable BioSample record, together
-#' with BioProject provenance where available. The canonical profile stores
-#' row-level raw and normalised values, anatomy terms, subclasses, classes,
-#' ranks, and ontology fields. These caches are reused by
-#' [summarise_biosample_skew()] and [summarise_interaction()] without repeating
-#' the BioSample retrieval and parsing stage.
+#' with BioSample Entrez UID, BioSample accession, and BioProject IDs where
+#' available. The canonical profile stores recovered source-value rows,
+#' including raw and normalised values, anatomy terms, classes, subclasses,
+#' ranks, ontology fields, and the same record identifiers. These caches are
+#' reused by [summarise_biosample_skew()] and [summarise_interaction()] without
+#' repeating the BioSample retrieval and parsing stage.
 #'
 #' @param results A list returned by [query_species()].
 #' @param species `NULL` (default) to include all species, or a character
@@ -901,9 +902,9 @@ only_geo = FALSE) {
 #' counts, operable BioSample record counts, and class-level anatomy counts.
 #' When `all = TRUE`, canonical anatomy-term counts are also included. The
 #' tibble has class `gdt_tbl` and carries a `query_info` attribute. It also
-#' carries cached BioSample-level profiles as attributes
-#' `biosample_anatomy_profile` and `biosample_canonical_profile`, plus metadata
-#' in `biosample_anatomy_profile_info` and `biosample_canonical_profile_info`.
+#' carries cached BioSample profiles as attributes `biosample_anatomy_profile`
+#' and `biosample_canonical_profile`, plus metadata in
+#' `biosample_anatomy_profile_info` and `biosample_canonical_profile_info`.
 #'
 #' @seealso [query_species()], [plot_biosample_availability()],
 #' [summarise_biosample_skew()], [extract_biosample_metadata()]
@@ -921,6 +922,7 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
   anatomy_levels <- .biosample_anatomy_profile_levels()
   canonical_fields <- c(
     'species',
+    'entrez_uid',
     'biosample_id',
     'bioproject',
     'value_raw',
@@ -967,6 +969,7 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
     OUT <- .as_gdt_table(OUT, results, 'summarise_biosample_availability')
     attr(OUT, 'biosample_anatomy_profile') <- tibble::tibble(
       species = character(),
+      entrez_uid = character(),
       biosample_id = character(),
       bioproject = character(),
       anatomy_class = character(),
@@ -975,11 +978,15 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
     attr(OUT, 'biosample_anatomy_profile_info') <- list(
       cached_at_utc = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
       id_col = 'biosample_id',
-      fields = c('species', 'biosample_id', 'bioproject', 'anatomy_class', 'anatomy_subclass'),
+      fields = c(
+        'species', 'entrez_uid', 'biosample_id', 'bioproject',
+        'anatomy_class', 'anatomy_subclass'
+      ),
       anatomy_levels = anatomy_levels
     )
     attr(OUT, 'biosample_canonical_profile') <- tibble::tibble(
       species = character(),
+      entrez_uid = character(),
       biosample_id = character(),
       bioproject = character(),
       value_raw = character(),
@@ -1087,7 +1094,10 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
     cached_at_utc = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
     profile_time_utc = attr(OUT, 'query_info')$query_time_utc %||% NA_character_,
     id_col = 'biosample_id',
-    fields = c('species', 'biosample_id', 'bioproject', 'anatomy_class', 'anatomy_subclass'),
+    fields = c(
+      'species', 'entrez_uid', 'biosample_id', 'bioproject',
+      'anatomy_class', 'anatomy_subclass'
+    ),
     anatomy_levels = anatomy_levels
   )
   attr(OUT, 'biosample_canonical_profile') <- CANONICAL
@@ -1104,15 +1114,14 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
 #' Summarise BioSample replication skew across BioProjects
 #'
 #' Quantifies replication skew across BioProjects using the cached
-#' BioSample-level anatomy profile produced by
+#' `biosample_anatomy_profile` produced by
 #' [summarise_biosample_availability()]. Optional filters restrict the analysis
 #' to a single anatomy class.
 #'
-#' Profile cache (consumed by this function):
-#' The input must carry a cached BioSample-level profile as attribute
-#' `biosample_anatomy_profile`. Each row in the profile corresponds to one
-#' operable BioSample record. Required fields are `species`, `biosample_id`,
-#' `bioproject`, and `anatomy_class`.
+#' Profile cache:
+#' The input must carry `biosample_anatomy_profile`. Each row in this profile
+#' corresponds to one operable BioSample record. Required fields are `species`,
+#' `biosample_id`, `bioproject`, and `anatomy_class`.
 #'
 #' @details
 #' The `eff` column is the *effective number of BioProjects* (Hill number of
@@ -1299,9 +1308,9 @@ summarise_biosample_skew <- function(x, species = NULL, anatomy_class = NULL) {
 #' This function preserves term-level anatomy assignments. A single BioSample
 #' record may therefore appear in multiple rows when more than one anatomy term
 #' is recovered. The `anatomy_class_profile` and `anatomy_subclass_profile`
-#' columns provide the corresponding collapsed BioSample-level class and
-#' subclass states, including `mixed` where multiple classes or subclasses are
-#' recovered from the same BioSample record.
+#' columns provide the corresponding collapsed per-BioSample class and subclass
+#' states, including `mixed` where multiple classes or subclasses are recovered
+#' from the same BioSample record.
 #'
 #' @param results A list returned by [query_species()], containing BioSample
 #' IDs.
@@ -1316,7 +1325,7 @@ summarise_biosample_skew <- function(x, species = NULL, anatomy_class = NULL) {
 #' @return A tibble with one row per recovered BioSample anatomy term. Columns
 #' include species, Entrez UID, BioSample accession, BioProject accession, raw
 #' and normalised sample-source values, row-level anatomy assignments, and
-#' collapsed BioSample-level `anatomy_class_profile` and
+#' collapsed per-BioSample `anatomy_class_profile` and
 #' `anatomy_subclass_profile` labels. The tibble has class `gdt_tbl` and
 #' carries a `query_info` attribute for provenance.
 #'
@@ -1478,10 +1487,10 @@ anatomy_term     = NULL) {
 #' Links cached SRA modality and BioSample anatomy profiles to summarise
 #' modality-by-anatomy structure for each species.
 #'
-#' Profile caches:
+#' Profile cache:
 #' The input `SRA` must carry the cached UID-level profile produced by
 #' [summarise_sra_availability()]. The input `BIO` must carry the cached
-#' BioSample-level anatomy profiles produced by
+#' `biosample_anatomy_profile` produced by
 #' [summarise_biosample_availability()]. BioSample records are linked by shared
 #' BioSample identifiers, then counted across SRA modality classes and either
 #' BioSample anatomy classes or anatomy subclasses.

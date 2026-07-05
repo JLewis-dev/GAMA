@@ -41,7 +41,7 @@ By default, the output includes class-level counts for the major modalities
 (genomic, transcriptomic, epigenomic, chromatin, other, unknown), plus the
 total number of SRA records per species.
 
-Profile cache (used by downstream summaries):
+Profile cache:
 In addition to the summary table, this function attaches a cached UID-level
 profile as attribute \code{sra_profile}. Each row corresponds to one SRA Entrez
 UID and stores species, record identifiers, BioSample/BioProject links, raw

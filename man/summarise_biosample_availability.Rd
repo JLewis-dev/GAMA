@@ -19,9 +19,9 @@ A tibble with one row per species containing total BioSample record
 counts, operable BioSample record counts, and class-level anatomy counts.
 When \code{all = TRUE}, canonical anatomy-term counts are also included. The
 tibble has class \code{gdt_tbl} and carries a \code{query_info} attribute. It also
-carries cached BioSample-level profiles as attributes
-\code{biosample_anatomy_profile} and \code{biosample_canonical_profile}, plus metadata
-in \code{biosample_anatomy_profile_info} and \code{biosample_canonical_profile_info}.
+carries cached BioSample profiles as attributes \code{biosample_anatomy_profile}
+and \code{biosample_canonical_profile}, plus metadata in
+\code{biosample_anatomy_profile_info} and \code{biosample_canonical_profile_info}.
 }
 \description{
 Collapses BioSample sample-source metadata into species-level counts of
@@ -50,14 +50,15 @@ in this summary. Subclass-level mixed states are handled when
 
 Profile cache:
 In addition to the summary table, this function attaches two cached
-BioSample-level profiles: \code{biosample_anatomy_profile} and
+BioSample profiles: \code{biosample_anatomy_profile} and
 \code{biosample_canonical_profile}. The anatomy profile stores one collapsed
 anatomy class and subclass profile per operable BioSample record, together
-with BioProject provenance where available. The canonical profile stores
-row-level raw and normalised values, anatomy terms, subclasses, classes,
-ranks, and ontology fields. These caches are reused by
-\code{\link[=summarise_biosample_skew]{summarise_biosample_skew()}} and \code{\link[=summarise_interaction]{summarise_interaction()}} without repeating
-the BioSample retrieval and parsing stage.
+with BioSample Entrez UID, BioSample accession, and BioProject IDs where
+available. The canonical profile stores recovered source-value rows,
+including raw and normalised values, anatomy terms, classes, subclasses,
+ranks, ontology fields, and the same record identifiers. These caches are
+reused by \code{\link[=summarise_biosample_skew]{summarise_biosample_skew()}} and \code{\link[=summarise_interaction]{summarise_interaction()}} without
+repeating the BioSample retrieval and parsing stage.
 }
 \examples{
 \dontrun{

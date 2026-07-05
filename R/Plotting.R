@@ -860,10 +860,10 @@ plot_biosample_availability <- function(
 #' [summarise_biosample_skew()]. Boxplots are drawn from pre-computed summary
 #' statistics on a log10 y-axis.
 #'
-#' Optional labels show `eff=<x> (n=<y>)` for each species. When a cached
-#' BioSample-level profile is available as
-#' `attr(BIO_SKEW, 'biosample_anatomy_profile')`, per-BioProject points can be
-#' overlaid with horizontal jitter.
+#' Optional labels show `eff=<x> (n=<y>)` for each species. When cached
+#' `biosample_anatomy_profile` data are available as `attr(BIO_SKEW,
+#' 'biosample_anatomy_profile')`, per-BioProject points can be overlaid with
+#' horizontal jitter.
 #'
 #' @param BIO_SKEW A tibble returned by [summarise_biosample_skew()].
 #' @param species `NULL` (default) to include all species, or a character

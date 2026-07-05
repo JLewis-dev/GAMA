@@ -55,6 +55,7 @@ synthetic_interaction_inputs <- function() {
   )
   BIO_ANATOMY <- tibble::tibble(
     species = rep('Synthetic species', 6),
+    entrez_uid = paste0('BSM', seq_len(6)),
     biosample_id = paste0('SAM', seq_len(6)),
     bioproject = rep('PRJ1', 6),
     anatomy_class = c(
@@ -64,6 +65,7 @@ synthetic_interaction_inputs <- function() {
   )
   BIO_CANONICAL <- tibble::tibble(
     species = BIO_ANATOMY$species,
+    entrez_uid = BIO_ANATOMY$entrez_uid,
     biosample_id = BIO_ANATOMY$biosample_id,
     bioproject = BIO_ANATOMY$bioproject,
     value_raw = BIO_ANATOMY$anatomy_subclass,

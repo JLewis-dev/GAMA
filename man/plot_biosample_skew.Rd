@@ -54,10 +54,9 @@ Visualises BioSample replication skew using the summary output of
 statistics on a log10 y-axis.
 }
 \details{
-Optional labels show \verb{eff=<x> (n=<y>)} for each species. When a cached
-BioSample-level profile is available as
-\code{attr(BIO_SKEW, 'biosample_anatomy_profile')}, per-BioProject points can be
-overlaid with horizontal jitter.
+Optional labels show \verb{eff=<x> (n=<y>)} for each species. When cached
+\code{biosample_anatomy_profile} data are available as \code{attr(BIO_SKEW, 'biosample_anatomy_profile')}, per-BioProject points can be overlaid with
+horizontal jitter.
 }
 \examples{
 \dontrun{

@@ -31,7 +31,7 @@ retain.}
 A tibble with one row per recovered BioSample anatomy term. Columns
 include species, Entrez UID, BioSample accession, BioProject accession, raw
 and normalised sample-source values, row-level anatomy assignments, and
-collapsed BioSample-level \code{anatomy_class_profile} and
+collapsed per-BioSample \code{anatomy_class_profile} and
 \code{anatomy_subclass_profile} labels. The tibble has class \code{gdt_tbl} and
 carries a \code{query_info} attribute for provenance.
 }
@@ -57,9 +57,9 @@ Missing-like values and values with no ontological match are retained as
 This function preserves term-level anatomy assignments. A single BioSample
 record may therefore appear in multiple rows when more than one anatomy term
 is recovered. The \code{anatomy_class_profile} and \code{anatomy_subclass_profile}
-columns provide the corresponding collapsed BioSample-level class and
-subclass states, including \code{mixed} where multiple classes or subclasses are
-recovered from the same BioSample record.
+columns provide the corresponding collapsed per-BioSample class and subclass
+states, including \code{mixed} where multiple classes or subclasses are recovered
+from the same BioSample record.
 }
 \examples{
 \dontrun{

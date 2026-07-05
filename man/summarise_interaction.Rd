@@ -29,10 +29,10 @@ Links cached SRA modality and BioSample anatomy profiles to summarise
 modality-by-anatomy structure for each species.
 }
 \details{
-Profile caches:
+Profile cache:
 The input \code{SRA} must carry the cached UID-level profile produced by
 \code{\link[=summarise_sra_availability]{summarise_sra_availability()}}. The input \code{BIO} must carry the cached
-BioSample-level anatomy profiles produced by
+\code{biosample_anatomy_profile} produced by
 \code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}. BioSample records are linked by shared
 BioSample identifiers, then counted across SRA modality classes and either
 BioSample anatomy classes or anatomy subclasses.

@@ -30,7 +30,7 @@ BioSample ID) using the cached UID-level SRA profile produced by
 single modality class.
 }
 \details{
-Profile cache (consumed by this function):
+Profile cache:
 The input must carry a cached UID-level profile as attribute \code{sra_profile}.
 Each row in the profile corresponds to one SRA Entrez UID. Required fields
 are \code{species}, \code{entrez_uid}, \code{biosample}, \code{bioproject}, and \code{class}.

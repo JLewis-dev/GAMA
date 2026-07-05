@@ -39,13 +39,21 @@ test_that('BIO_SUMMARY fixture preserves query provenance', {
   )
 })
 
-test_that('BIO_SUMMARY fixture carries BioSample profile caches', {
+test_that('BIO_SUMMARY fixture carries compacted BioSample profile caches', {
   BIO_SUMMARY <- load_fixture('BIO_SUMMARY_Arabidopsis_thaliana')
   ANATOMY <- attr(BIO_SUMMARY, 'biosample_anatomy_profile', exact = TRUE)
   CANONICAL <- attr(BIO_SUMMARY, 'biosample_canonical_profile', exact = TRUE)
-  anatomy_cols <- c('species', 'biosample_id', 'bioproject', 'anatomy_class', 'anatomy_subclass')
+  anatomy_cols <- c(
+    'species',
+    'entrez_uid',
+    'biosample_id',
+    'bioproject',
+    'anatomy_class',
+    'anatomy_subclass'
+  )
   canonical_cols <- c(
     'species',
+    'entrez_uid',
     'biosample_id',
     'bioproject',
     'value_raw',
@@ -66,9 +74,69 @@ test_that('BIO_SUMMARY fixture carries BioSample profile caches', {
   expect_gt(nrow(CANONICAL), 0L)
   expect_true(all(ANATOMY$species == 'Arabidopsis thaliana'))
   expect_true(all(CANONICAL$species == 'Arabidopsis thaliana'))
+  expect_true(any(!is.na(ANATOMY$entrez_uid) & nzchar(ANATOMY$entrez_uid)))
   expect_true(any(!is.na(ANATOMY$biosample_id) & nzchar(ANATOMY$biosample_id)))
   expect_true(any(!is.na(ANATOMY$bioproject) & nzchar(ANATOMY$bioproject)))
+  expect_true(any(!is.na(CANONICAL$entrez_uid) & nzchar(CANONICAL$entrez_uid)))
   expect_true(any(!is.na(CANONICAL$biosample_id) & nzchar(CANONICAL$biosample_id)))
+})
+
+test_that('summarise_biosample_availability attaches BioSample profile metadata', {
+  RESULTS <- load_fixture('RESULTS_Arabidopsis_thaliana')
+  BIO_SUMMARY <- summarise_biosample_availability(RESULTS, species = character())
+  ANATOMY <- attr(BIO_SUMMARY, 'biosample_anatomy_profile', exact = TRUE)
+  CANONICAL <- attr(BIO_SUMMARY, 'biosample_canonical_profile', exact = TRUE)
+  ANATOMY_INFO <- attr(
+    BIO_SUMMARY,
+    'biosample_anatomy_profile_info',
+    exact = TRUE
+  )
+  CANONICAL_INFO <- attr(
+    BIO_SUMMARY,
+    'biosample_canonical_profile_info',
+    exact = TRUE
+  )
+  anatomy_cols <- c(
+    'species',
+    'entrez_uid',
+    'biosample_id',
+    'bioproject',
+    'anatomy_class',
+    'anatomy_subclass'
+  )
+  canonical_cols <- c(
+    'species',
+    'entrez_uid',
+    'biosample_id',
+    'bioproject',
+    'value_raw',
+    'value_norm',
+    'anatomy_term',
+    'anatomy_class',
+    'anatomy_subclass',
+    'rank',
+    'ontology_namespace',
+    'ontology_id',
+    'ontology_label'
+  )
+  expect_gdt_tbl(BIO_SUMMARY)
+  expect_identical(
+    attr(BIO_SUMMARY, 'gama_object', exact = TRUE),
+    'summarise_biosample_availability'
+  )
+  expect_false(is.null(ANATOMY))
+  expect_false(is.null(CANONICAL))
+  expect_false(is.null(ANATOMY_INFO))
+  expect_false(is.null(CANONICAL_INFO))
+  expect_named(ANATOMY, anatomy_cols)
+  expect_named(CANONICAL, canonical_cols)
+  expect_identical(ANATOMY_INFO$id_col, 'biosample_id')
+  expect_identical(CANONICAL_INFO$id_col, 'biosample_id')
+  expect_identical(ANATOMY_INFO$fields, anatomy_cols)
+  expect_identical(CANONICAL_INFO$fields, canonical_cols)
+  expect_true('cached_at_utc' %in% names(ANATOMY_INFO))
+  expect_true('cached_at_utc' %in% names(CANONICAL_INFO))
+  expect_true('anatomy_levels' %in% names(ANATOMY_INFO))
 })
 
 test_that('BioSample anatomy profile collapsing follows expected mixed-state logic', {
@@ -164,6 +232,7 @@ test_that('BIO_SKEW fixture carries ID recovery diagnostics', {
 test_that('summarise_biosample_skew applies correct inverse Simpson index formula', {
   PROFILE <- tibble::tibble(
     species = rep('Synthetic species', 10),
+    entrez_uid = paste0('BSM', seq_len(10)),
     biosample_id = paste0('SAM', seq_len(10)),
     bioproject = rep(c('PRJ1', 'PRJ2', 'PRJ3'), c(5, 3, 2)),
     anatomy_class = rep('aerial', 10),

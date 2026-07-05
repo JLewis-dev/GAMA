@@ -3036,18 +3036,27 @@ title_raw = NA_character_) {
   subclass_levels <- c(.biosample_anatomy_subclass_levels(), 'mixed', 'unknown')
   out <- tibble::tibble(
     species = character(),
+    entrez_uid = character(),
     biosample_id = character(),
     bioproject = character(),
     anatomy_class = character(),
     anatomy_subclass = character()
   )
   if (is.null(tissue_classification) || !is.data.frame(tissue_classification) || !nrow(tissue_classification)) return(out)
-  req <- c('species', 'biosample_id', 'bioproject', 'anatomy_class', 'anatomy_subclass')
+  req <- c(
+    'species',
+    'entrez_uid',
+    'biosample_id',
+    'bioproject',
+    'anatomy_class',
+    'anatomy_subclass'
+  )
   miss <- setdiff(req, names(tissue_classification))
   if (length(miss)) .gama_stop('`.biosample_anatomy_profile()`: `tissue_classification` missing columns: ', paste(miss, collapse = ', '))
   profiled <- tissue_classification |>
     dplyr::transmute(
       species = as.character(.data$species),
+      entrez_uid = as.character(.data$entrez_uid),
       biosample_id = as.character(.data$biosample_id),
       bioproject = as.character(.data$bioproject),
       anatomy_class = as.character(.data$anatomy_class),
@@ -3059,6 +3068,7 @@ title_raw = NA_character_) {
   profiled |>
     dplyr::group_by(.data$species, .data$biosample_id) |>
     dplyr::summarise(
+      entrez_uid = .biosample_collapse_accessions(.data$entrez_uid),
       bioproject = .biosample_collapse_accessions(.data$bioproject),
       anatomy_class = .biosample_collapse_anatomy_profile(.data$anatomy_class, level = 'anatomy_class'),
       anatomy_subclass = .biosample_collapse_anatomy_profile(.data$anatomy_subclass, level = 'anatomy_subclass'),
@@ -3072,13 +3082,14 @@ title_raw = NA_character_) {
         'unknown'
       )
     ) |>
-    dplyr::distinct(.data$species, .data$biosample_id, .data$bioproject, .data$anatomy_class, .data$anatomy_subclass) |>
+    dplyr::distinct(.data$species, .data$entrez_uid, .data$biosample_id, .data$bioproject, .data$anatomy_class, .data$anatomy_subclass) |>
     dplyr::arrange(.data$species, .data$biosample_id, .data$anatomy_class, .data$anatomy_subclass)
 }
 
 .biosample_canonical_profile <- function(tissue_classification, species = NULL) {
   out <- tibble::tibble(
     species = character(),
+    entrez_uid = character(),
     biosample_id = character(),
     bioproject = character(),
     value_raw = character(),
@@ -3094,6 +3105,7 @@ title_raw = NA_character_) {
   if (is.null(tissue_classification) || !is.data.frame(tissue_classification) || !nrow(tissue_classification)) return(out)
   req <- c(
     'species',
+    'entrez_uid',
     'biosample_id',
     'bioproject',
     'value_raw',
@@ -3111,6 +3123,7 @@ title_raw = NA_character_) {
   out <- tissue_classification |>
     dplyr::transmute(
       species = as.character(.data$species),
+      entrez_uid = as.character(.data$entrez_uid),
       biosample_id = as.character(.data$biosample_id),
       bioproject = as.character(.data$bioproject),
       value_raw = as.character(.data$value_raw),
@@ -3128,6 +3141,7 @@ title_raw = NA_character_) {
   out |>
     dplyr::distinct(
       .data$species,
+      .data$entrez_uid,
       .data$biosample_id,
       .data$bioproject,
       .data$value_raw,
