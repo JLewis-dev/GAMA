@@ -1,5 +1,3 @@
-devtools::load_all()
-
 example_dir <- file.path('data-raw', 'examples')
 figure_dir <- file.path('man', 'figures')
 

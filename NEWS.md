@@ -1,3 +1,16 @@
+# GAMA 0.3.6
+
+## Reliability
+- Expanded the BioSample anatomy ontology using vocabulary identified in legume data and aligned canonical terms against the Plant Ontology<sup>TM</sup>
+- Expanded BioSample value normalisation to strip `WT`, `wild type`, and `wildtype` descriptors before anatomy classification
+- Added numeric affix stripping to recover anatomy terms from encoded values such as `root1`
+
+## Testing
+- Regenerated examples and fixtures for the revised behaviour
+- Confirmed the test suite passes with the updated fixtures
+
+---
+
 # GAMA 0.3.5
 
 ## Reliability

@@ -130,10 +130,10 @@ Data richness provides a weighted overview of sequence availability across speci
 
 | species | Assembly | SRA | BioSample | A | S | B | score |
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Arabidopsis thaliana | 378 | 243573 | 248739 | 17.8104 | 24.8064 | 12.4242 | 55.0409 |
+| Arabidopsis thaliana | 378 | 248679 | 249034 | 17.8104 | 24.8478 | 12.4253 | 55.0835 |
 | Glycine max | 51 | 46588 | 58528 | 15.8777 | 21.4982 | 10.9773 | 48.3533 |
-| Phaseolus vulgaris | 16 | 9629 | 9948 | 14.5109 | 18.3453 | 9.20523 | 42.0614 |
-| Vigna radiata | 9 | 5617 | 5701 | 13.9703 | 17.2675 | 8.64857 | 39.8863 |
+| Phaseolus vulgaris | 16 | 9633 | 9948 | 14.5109 | 18.3461 | 9.20523 | 42.0622 |
+| Vigna radiata | 9 | 5629 | 5701 | 13.9703 | 17.2717 | 8.64857 | 39.8906 |
 
 </details>
 
@@ -150,10 +150,10 @@ Sequencing modality summarises the proportional composition of methodological cl
 
 | species | SRA | genomic | transcriptomic | epigenomic | chromatin | other | unknown |
 | :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Arabidopsis thaliana | 243573 | 88839 | 126366 | 27239 | 717 | 87 | 325 |
+| Arabidopsis thaliana | 248679 | 88842 | 131453 | 27255 | 717 | 87 | 325 |
 | Glycine max | 46588 | 25509 | 20017 | 1002 | 24 | 0 | 36 |
-| Phaseolus vulgaris | 9629 | 6661 | 2765 | 181 | 4 | 0 | 18 |
-| Vigna radiata | 5617 | 4761 | 775 | 54 | 27 | 0 | 0 |
+| Phaseolus vulgaris | 9633 | 6665 | 2765 | 181 | 4 | 0 | 18 |
+| Vigna radiata | 5629 | 4761 | 787 | 54 | 27 | 0 | 0 |
 
 </details>
 
@@ -170,10 +170,10 @@ Replication skew reveals how broadly records are distributed across BioProjects 
 
 | species | BioProject | class | min | q25 | med | q75 | max | eff |
 | :--- | ---: | :--- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Arabidopsis thaliana | 5805 | transcriptomic | 1 | 6 | 11 | 18 | 5184 | 220.237 |
+| Arabidopsis thaliana | 5822 | transcriptomic | 1 | 6 | 11 | 18 | 5184 | 229.187 |
 | Glycine max | 1306 | transcriptomic | 1 | 1 | 6 | 16 | 801 | 155.337 |
 | Phaseolus vulgaris | 146 | transcriptomic | 1 | 5 | 12 | 21 | 200 | 53.6285 |
-| Vigna radiata | 65 | transcriptomic | 1 | 4 | 8 | 15 | 65 | 29.6064 |
+| Vigna radiata | 66 | transcriptomic | 1 | 4 | 8 | 14.25 | 65 | 30.3152 |
 
 </details>
 
@@ -190,104 +190,104 @@ Cross-database interaction links sequencing modality with sample-source anatomy 
 
 | species | class | anatomy_subclass | BioSample | expected | residual |
 | :--- | :--- | :--- | ---: | ---: | ---: |
-| Arabidopsis thaliana | genomic | leaf | 39092 | 22984.2 | 106.248 |
-| Arabidopsis thaliana | genomic | shoot_meristem | 14 | 347.602 | -17.8932 |
-| Arabidopsis thaliana | genomic | stem | 265 | 2874.6 | -48.6727 |
-| Arabidopsis thaliana | genomic | root | 452 | 3582.38 | -52.3011 |
-| Arabidopsis thaliana | genomic | root_meristem | 0 | 197.077 | -14.0384 |
+| Arabidopsis thaliana | genomic | leaf | 39095 | 23819.5 | 98.9754 |
+| Arabidopsis thaliana | genomic | shoot_meristem | 14 | 346.13 | -17.8521 |
+| Arabidopsis thaliana | genomic | stem | 265 | 2815.72 | -48.0693 |
+| Arabidopsis thaliana | genomic | root | 452 | 3481.35 | -51.3424 |
+| Arabidopsis thaliana | genomic | root_meristem | 0 | 190.651 | -13.8076 |
 | Arabidopsis thaliana | genomic | storage | 0 | 0 | 0 |
-| Arabidopsis thaliana | genomic | flower | 3313 | 3461.75 | -2.5282 |
-| Arabidopsis thaliana | genomic | fruit | 14 | 119.945 | -9.67362 |
-| Arabidopsis thaliana | genomic | seed | 154 | 1182.8 | -29.914 |
-| Arabidopsis thaliana | genomic | whole | 1927 | 10974.4 | -86.3644 |
-| Arabidopsis thaliana | genomic | in_vitro | 525 | 404.007 | 6.01958 |
-| Arabidopsis thaliana | genomic | other | 1 | 170.913 | -12.9969 |
-| Arabidopsis thaliana | genomic | mixed | 4736 | 3429.13 | 22.3172 |
-| Arabidopsis thaliana | genomic | unknown | 893 | 1657.14 | -18.7713 |
-| Arabidopsis thaliana | transcriptomic | leaf | 22628 | 36200.6 | -71.3355 |
-| Arabidopsis thaliana | transcriptomic | shoot_meristem | 938 | 547.481 | 16.6901 |
-| Arabidopsis thaliana | transcriptomic | stem | 7369 | 4527.55 | 42.2287 |
-| Arabidopsis thaliana | transcriptomic | root | 9605 | 5642.31 | 52.7547 |
-| Arabidopsis thaliana | transcriptomic | root_meristem | 552 | 310.4 | 13.7132 |
+| Arabidopsis thaliana | genomic | flower | 3313 | 3328.83 | -0.274417 |
+| Arabidopsis thaliana | genomic | fruit | 14 | 116.034 | -9.47224 |
+| Arabidopsis thaliana | genomic | seed | 154 | 1144.23 | -29.2739 |
+| Arabidopsis thaliana | genomic | whole | 1927 | 10758.3 | -85.1438 |
+| Arabidopsis thaliana | genomic | in_vitro | 525 | 390.835 | 6.78647 |
+| Arabidopsis thaliana | genomic | other | 1 | 170.271 | -12.9722 |
+| Arabidopsis thaliana | genomic | mixed | 4736 | 3312.4 | 24.7353 |
+| Arabidopsis thaliana | genomic | unknown | 893 | 1514.69 | -15.9739 |
+| Arabidopsis thaliana | transcriptomic | leaf | 27440 | 39872 | -62.2596 |
+| Arabidopsis thaliana | transcriptomic | shoot_meristem | 968 | 579.394 | 16.1444 |
+| Arabidopsis thaliana | transcriptomic | stem | 7455 | 4713.28 | 39.9357 |
+| Arabidopsis thaliana | transcriptomic | root | 9653 | 5827.5 | 50.1126 |
+| Arabidopsis thaliana | transcriptomic | root_meristem | 552 | 319.134 | 13.0352 |
 | Arabidopsis thaliana | transcriptomic | storage | 0 | 0 | 0 |
-| Arabidopsis thaliana | transcriptomic | flower | 5135 | 5452.33 | -4.29752 |
-| Arabidopsis thaliana | transcriptomic | fruit | 313 | 188.916 | 9.02783 |
-| Arabidopsis thaliana | transcriptomic | seed | 2782 | 1862.93 | 21.2936 |
-| Arabidopsis thaliana | transcriptomic | whole | 24413 | 17285 | 54.2169 |
-| Arabidopsis thaliana | transcriptomic | in_vitro | 440 | 636.319 | -7.7826 |
-| Arabidopsis thaliana | transcriptomic | other | 459 | 269.191 | 11.5687 |
-| Arabidopsis thaliana | transcriptomic | mixed | 3236 | 5400.95 | -29.4587 |
-| Arabidopsis thaliana | transcriptomic | unknown | 3064 | 2610.03 | 8.88592 |
-| Arabidopsis thaliana | epigenomic | leaf | 5701 | 8151.33 | -27.1401 |
-| Arabidopsis thaliana | epigenomic | shoot_meristem | 71 | 123.277 | -4.70835 |
-| Arabidopsis thaliana | epigenomic | stem | 744 | 1019.47 | -8.62765 |
-| Arabidopsis thaliana | epigenomic | root | 445 | 1270.49 | -23.1593 |
-| Arabidopsis thaliana | epigenomic | root_meristem | 28 | 69.893 | -5.011 |
+| Arabidopsis thaliana | transcriptomic | flower | 5094 | 5572.19 | -6.40607 |
+| Arabidopsis thaliana | transcriptomic | fruit | 313 | 194.232 | 8.52198 |
+| Arabidopsis thaliana | transcriptomic | seed | 2782 | 1915.36 | 19.8023 |
+| Arabidopsis thaliana | transcriptomic | whole | 24790 | 18008.5 | 50.5341 |
+| Arabidopsis thaliana | transcriptomic | in_vitro | 440 | 654.225 | -8.37543 |
+| Arabidopsis thaliana | transcriptomic | other | 474 | 285.02 | 11.1938 |
+| Arabidopsis thaliana | transcriptomic | mixed | 3221 | 5544.68 | -31.206 |
+| Arabidopsis thaliana | transcriptomic | unknown | 2839 | 2535.47 | 6.02805 |
+| Arabidopsis thaliana | epigenomic | leaf | 5701 | 8454.5 | -29.9462 |
+| Arabidopsis thaliana | epigenomic | shoot_meristem | 71 | 122.855 | -4.67839 |
+| Arabidopsis thaliana | epigenomic | stem | 764 | 999.411 | -7.44653 |
+| Arabidopsis thaliana | epigenomic | root | 445 | 1235.67 | -22.4928 |
+| Arabidopsis thaliana | epigenomic | root_meristem | 28 | 67.6696 | -4.82238 |
 | Arabidopsis thaliana | epigenomic | storage | 0 | 0 | 0 |
-| Arabidopsis thaliana | epigenomic | flower | 1670 | 1227.71 | 12.623 |
-| Arabidopsis thaliana | epigenomic | fruit | 26 | 42.5383 | -2.53572 |
-| Arabidopsis thaliana | epigenomic | seed | 520 | 419.479 | 4.90799 |
-| Arabidopsis thaliana | epigenomic | whole | 5812 | 3892.08 | 30.7747 |
-| Arabidopsis thaliana | epigenomic | in_vitro | 217 | 143.281 | 6.15868 |
-| Arabidopsis thaliana | epigenomic | other | 43 | 60.6141 | -2.26242 |
-| Arabidopsis thaliana | epigenomic | mixed | 2084 | 1216.14 | 24.8862 |
-| Arabidopsis thaliana | epigenomic | unknown | 863 | 587.704 | 11.3559 |
-| Arabidopsis thaliana | chromatin | leaf | 18 | 51.4378 | -4.66226 |
-| Arabidopsis thaliana | chromatin | shoot_meristem | 0 | 0.777921 | -0.881998 |
-| Arabidopsis thaliana | chromatin | stem | 29 | 6.43325 | 8.89721 |
-| Arabidopsis thaliana | chromatin | root | 4 | 8.01723 | -1.41878 |
-| Arabidopsis thaliana | chromatin | root_meristem | 0 | 0.44105 | -0.664116 |
+| Arabidopsis thaliana | epigenomic | flower | 1650 | 1181.54 | 13.6287 |
+| Arabidopsis thaliana | epigenomic | fruit | 26 | 41.1851 | -2.36618 |
+| Arabidopsis thaliana | epigenomic | seed | 520 | 406.134 | 5.65012 |
+| Arabidopsis thaliana | epigenomic | whole | 5850 | 3818.55 | 32.8743 |
+| Arabidopsis thaliana | epigenomic | in_vitro | 217 | 138.723 | 6.64602 |
+| Arabidopsis thaliana | epigenomic | other | 43 | 60.436 | -2.24284 |
+| Arabidopsis thaliana | epigenomic | mixed | 2084 | 1175.7 | 26.4899 |
+| Arabidopsis thaliana | epigenomic | unknown | 841 | 537.624 | 13.0841 |
+| Arabidopsis thaliana | chromatin | leaf | 18 | 53.3042 | -4.83554 |
+| Arabidopsis thaliana | chromatin | shoot_meristem | 0 | 0.774582 | -0.880103 |
+| Arabidopsis thaliana | chromatin | stem | 29 | 6.30111 | 9.04266 |
+| Arabidopsis thaliana | chromatin | root | 4 | 7.79069 | -1.35809 |
+| Arabidopsis thaliana | chromatin | root_meristem | 0 | 0.426645 | -0.653181 |
 | Arabidopsis thaliana | chromatin | storage | 0 | 0 | 0 |
-| Arabidopsis thaliana | chromatin | flower | 3 | 7.74727 | -1.70557 |
-| Arabidopsis thaliana | chromatin | fruit | 0 | 0.268432 | -0.518104 |
-| Arabidopsis thaliana | chromatin | seed | 6 | 2.64706 | 2.06084 |
-| Arabidopsis thaliana | chromatin | whole | 30 | 24.5604 | 1.09761 |
-| Arabidopsis thaliana | chromatin | in_vitro | 0 | 0.904153 | -0.950869 |
-| Arabidopsis thaliana | chromatin | other | 0 | 0.382497 | -0.618463 |
-| Arabidopsis thaliana | chromatin | mixed | 4 | 7.67427 | -1.32633 |
-| Arabidopsis thaliana | chromatin | unknown | 21 | 3.70862 | 8.9789 |
-| Arabidopsis thaliana | other | leaf | 87 | 38.9138 | 7.70847 |
-| Arabidopsis thaliana | other | shoot_meristem | 0 | 0.588514 | -0.767147 |
-| Arabidopsis thaliana | other | stem | 0 | 4.86689 | -2.2061 |
-| Arabidopsis thaliana | other | root | 0 | 6.06521 | -2.46276 |
-| Arabidopsis thaliana | other | root_meristem | 0 | 0.333664 | -0.577637 |
+| Arabidopsis thaliana | chromatin | flower | 3 | 7.44937 | -1.63019 |
+| Arabidopsis thaliana | chromatin | fruit | 0 | 0.259665 | -0.509573 |
+| Arabidopsis thaliana | chromatin | seed | 6 | 2.56061 | 2.14937 |
+| Arabidopsis thaliana | chromatin | whole | 46 | 24.0753 | 4.46836 |
+| Arabidopsis thaliana | chromatin | in_vitro | 0 | 0.874623 | -0.935213 |
+| Arabidopsis thaliana | chromatin | other | 0 | 0.381038 | -0.617283 |
+| Arabidopsis thaliana | chromatin | mixed | 4 | 7.41259 | -1.25343 |
+| Arabidopsis thaliana | chromatin | unknown | 5 | 3.38962 | 0.874686 |
+| Arabidopsis thaliana | other | leaf | 87 | 40.3258 | 7.34998 |
+| Arabidopsis thaliana | other | shoot_meristem | 0 | 0.585988 | -0.765498 |
+| Arabidopsis thaliana | other | stem | 0 | 4.76693 | -2.18333 |
+| Arabidopsis thaliana | other | root | 0 | 5.89382 | -2.42772 |
+| Arabidopsis thaliana | other | root_meristem | 0 | 0.322766 | -0.568125 |
 | Arabidopsis thaliana | other | storage | 0 | 0 | 0 |
-| Arabidopsis thaliana | other | flower | 0 | 5.86098 | -2.42095 |
-| Arabidopsis thaliana | other | fruit | 0 | 0.203075 | -0.450638 |
-| Arabidopsis thaliana | other | seed | 0 | 2.00256 | -1.41512 |
-| Arabidopsis thaliana | other | whole | 0 | 18.5805 | -4.31051 |
-| Arabidopsis thaliana | other | in_vitro | 0 | 0.684011 | -0.82705 |
-| Arabidopsis thaliana | other | other | 0 | 0.289367 | -0.537929 |
-| Arabidopsis thaliana | other | mixed | 0 | 5.80575 | -2.40951 |
-| Arabidopsis thaliana | other | unknown | 0 | 2.80565 | -1.67501 |
-| Arabidopsis thaliana | mixed | leaf | 77 | 124.793 | -4.27826 |
-| Arabidopsis thaliana | mixed | shoot_meristem | 0 | 1.8873 | -1.37379 |
-| Arabidopsis thaliana | mixed | stem | 35 | 15.6076 | 4.90866 |
-| Arabidopsis thaliana | mixed | root | 20 | 19.4505 | 0.124599 |
-| Arabidopsis thaliana | mixed | root_meristem | 0 | 1.07003 | -1.03442 |
+| Arabidopsis thaliana | other | flower | 0 | 5.63561 | -2.37394 |
+| Arabidopsis thaliana | other | fruit | 0 | 0.196442 | -0.443218 |
+| Arabidopsis thaliana | other | seed | 0 | 1.93715 | -1.39182 |
+| Arabidopsis thaliana | other | whole | 0 | 18.2135 | -4.26773 |
+| Arabidopsis thaliana | other | in_vitro | 0 | 0.661671 | -0.813432 |
+| Arabidopsis thaliana | other | other | 0 | 0.288264 | -0.536902 |
+| Arabidopsis thaliana | other | mixed | 0 | 5.60779 | -2.36808 |
+| Arabidopsis thaliana | other | unknown | 0 | 2.56432 | -1.60135 |
+| Arabidopsis thaliana | mixed | leaf | 77 | 129.321 | -4.60085 |
+| Arabidopsis thaliana | mixed | shoot_meristem | 0 | 1.8792 | -1.37084 |
+| Arabidopsis thaliana | mixed | stem | 35 | 15.287 | 5.04185 |
+| Arabidopsis thaliana | mixed | root | 20 | 18.9009 | 0.252814 |
+| Arabidopsis thaliana | mixed | root_meristem | 0 | 1.03508 | -1.01739 |
 | Arabidopsis thaliana | mixed | storage | 0 | 0 | 0 |
-| Arabidopsis thaliana | mixed | flower | 29 | 18.7956 | 2.35376 |
-| Arabidopsis thaliana | mixed | fruit | 0 | 0.65124 | -0.806994 |
-| Arabidopsis thaliana | mixed | seed | 7 | 6.422 | 0.228083 |
-| Arabidopsis thaliana | mixed | whole | 61 | 59.5857 | 0.183222 |
-| Arabidopsis thaliana | mixed | in_vitro | 7 | 2.19355 | 3.24526 |
-| Arabidopsis thaliana | mixed | other | 0 | 0.927971 | -0.963312 |
-| Arabidopsis thaliana | mixed | mixed | 24 | 18.6184 | 1.2472 |
-| Arabidopsis thaliana | mixed | unknown | 19 | 8.99744 | 3.33466 |
-| Arabidopsis thaliana | unknown | leaf | 40 | 91.6935 | -5.39842 |
-| Arabidopsis thaliana | unknown | shoot_meristem | 0 | 1.38673 | -1.17759 |
-| Arabidopsis thaliana | unknown | stem | 18 | 11.468 | 1.92888 |
-| Arabidopsis thaliana | unknown | root | 17 | 14.2916 | 0.716435 |
-| Arabidopsis thaliana | unknown | root_meristem | 0 | 0.78622 | -0.88669 |
+| Arabidopsis thaliana | mixed | flower | 29 | 18.0728 | 2.57037 |
+| Arabidopsis thaliana | mixed | fruit | 0 | 0.62997 | -0.793707 |
+| Arabidopsis thaliana | mixed | seed | 7 | 6.21225 | 0.316054 |
+| Arabidopsis thaliana | mixed | whole | 61 | 58.4088 | 0.339055 |
+| Arabidopsis thaliana | mixed | in_vitro | 7 | 2.12191 | 3.34878 |
+| Arabidopsis thaliana | mixed | other | 0 | 0.924432 | -0.961474 |
+| Arabidopsis thaliana | mixed | mixed | 24 | 17.9836 | 1.41873 |
+| Arabidopsis thaliana | mixed | unknown | 19 | 8.22352 | 3.75793 |
+| Arabidopsis thaliana | unknown | leaf | 46 | 95.0205 | -5.02885 |
+| Arabidopsis thaliana | unknown | shoot_meristem | 0 | 1.38078 | -1.17506 |
+| Arabidopsis thaliana | unknown | stem | 18 | 11.2324 | 2.01928 |
+| Arabidopsis thaliana | unknown | root | 17 | 13.8877 | 0.835139 |
+| Arabidopsis thaliana | unknown | root_meristem | 0 | 0.760541 | -0.87209 |
 | Arabidopsis thaliana | unknown | storage | 0 | 0 | 0 |
-| Arabidopsis thaliana | unknown | flower | 38 | 13.8104 | 6.50919 |
-| Arabidopsis thaliana | unknown | fruit | 0 | 0.47851 | -0.691744 |
-| Arabidopsis thaliana | unknown | seed | 12 | 4.71867 | 3.35197 |
-| Arabidopsis thaliana | unknown | whole | 55 | 43.7816 | 1.69545 |
-| Arabidopsis thaliana | unknown | in_vitro | 0 | 1.61175 | -1.26955 |
-| Arabidopsis thaliana | unknown | other | 0 | 0.681842 | -0.825737 |
-| Arabidopsis thaliana | unknown | mixed | 8 | 13.6802 | -1.53574 |
-| Arabidopsis thaliana | unknown | unknown | 17 | 6.61102 | 4.04053 |
+| Arabidopsis thaliana | unknown | flower | 38 | 13.2793 | 6.78379 |
+| Arabidopsis thaliana | unknown | fruit | 0 | 0.462881 | -0.680354 |
+| Arabidopsis thaliana | unknown | seed | 12 | 4.56456 | 3.48022 |
+| Arabidopsis thaliana | unknown | whole | 55 | 42.9168 | 1.84445 |
+| Arabidopsis thaliana | unknown | in_vitro | 0 | 1.55911 | -1.24864 |
+| Arabidopsis thaliana | unknown | other | 0 | 0.679242 | -0.824161 |
+| Arabidopsis thaliana | unknown | mixed | 8 | 13.2138 | -1.43429 |
+| Arabidopsis thaliana | unknown | unknown | 11 | 6.04237 | 2.01684 |
 
 </details>
 

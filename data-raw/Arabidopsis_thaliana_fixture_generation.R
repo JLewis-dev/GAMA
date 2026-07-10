@@ -1,5 +1,3 @@
-devtools::load_all()
-
 fixture_dir <- file.path('tests', 'testthat', 'object-fixtures')
 rows_per_group <- 100000L
 

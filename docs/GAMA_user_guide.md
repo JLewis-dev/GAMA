@@ -406,7 +406,7 @@ GAMA uses curated ontologies derived from archive text mining to classify NCBI m
 
 For SRA, modality terms and recognised variants were derived by mining >220,000 *Arabidopsis thaliana* accessions (conducted 31 January 2026) before manual curation to capture common submitter variants and deprecated terminology. Assignment is based primarily on normalised LIBRARY_STRATEGY terms, with conservative fallback to related SRA metadata fields, including LIBRARY_SOURCE, LIBRARY_SELECTION, and record title, when the primary strategy field is missing, unknown, or uninformative.
 
-For BioSample, anatomy terms and recognised variants were derived by mining >750,000 BioSample records across ten representative angiosperm species selected as data-rich examples of major lineages: *A. thaliana*, *Brachypodium distachyon*, *Glycine max*, *Malus domestica*, *Manihot esculenta*, *Oryza sativa*, *Populus trichocarpa*, *Solanum lycopersicum*, *Solanum tuberosum*, and *Zea mays* (conducted 24 February 2026). This produced a corpus with broad anatomical coverage and substantial terminological depth. However, the ontology has since been expanded using gymnosperm, pteridophyte, and bryophyte data. Because compiled BioSample free-text metadata proved too heterogeneous for stable classification, curation was restricted to a reliable subset of sample-source attributes, including tissue, organism part, cell type, tissue type, and organ.
+For BioSample, anatomy terms and recognised variants were derived by mining >750,000 BioSample records across ten representative angiosperm species selected as data-rich examples of major lineages: *A. thaliana*, *Brachypodium distachyon*, *Glycine max*, *Malus domestica*, *Manihot esculenta*, *Oryza sativa*, *Populus trichocarpa*, *Solanum lycopersicum*, *Solanum tuberosum*, and *Zea mays* (conducted 24 February 2026). This produced a corpus with broad anatomical coverage and substantial terminological depth. However, the ontology has since been expanded using gymnosperm, pteridophyte, and bryophyte data. Because compiled BioSample free-text metadata proved too heterogeneous for stable classification, curation was restricted to a reliable subset of sample-source attributes, including tissue, organism part, cell type, tissue type, and organ. Where possible, anatomy terms were linked to Plant Ontology identifiers for semantic provenance (Plant Ontology<sup>TM</sup> Consortium, 2002; Cooper *et al.*, 2024).
 
 ### Replication skew
 
@@ -442,6 +442,8 @@ GAMA aims to comprehensively summarise the metadata landscape underlying public 
 
 ## References
 
+**Cooper L., Elser J., Laporte M.A., Arnaud E. and Jaiswal P. (2024)** Planteome 2024 update: reference ontologies and knowledgebase for plant biology. *Nucleic Acids Research*, **52**: D1548-D1555.
+
 **Csárdi G. and Hester J. (2025)** pak: Another Approach to Package Installation. R package version 0.9.2.
 
 **Hill M.O. (1973)** Diversity and evenness: a unifying notation and its consequences. *Ecology*, **54**: 427-432.
@@ -453,6 +455,8 @@ GAMA aims to comprehensively summarise the metadata landscape underlying public 
 **National Center for Biotechnology Information (2026)** Entrez Programming Utilities. National Library of Medicine. Available at: https://www.ncbi.nlm.nih.gov (Accessed: 31 January 2026).
 
 **Pearson K. (1900)** On the criterion that a given system of deviations from the probable in the case of a correlated system of variables is such that it can be reasonably supposed to have arisen from random sampling. *The London, Edinburgh, and Dublin Philosophical Magazine and Journal of Science*, **50**: 157-175.
+
+**Plant Ontology<sup>TM</sup> Consortium (2002)** The Plant Ontology<sup>TM</sup> Consortium and plant ontologies. *Comparative and Functional Genomics*, **3**: 137-142.
 
 **R Core Team (2024)** R: A Language and Environment for Statistical Computing. R Foundation for Statistical Computing, Vienna, Austria.
 
