@@ -123,46 +123,46 @@ test_that('plot_sra_geo returns a ggplot object', {
   expect_s3_class(p, 'ggplot')
 })
 
-test_that('SRA_SKEW_BIOPROJECT fixture is a valid summarise_sra_skew object', {
-  SRA_SKEW_BIOPROJECT <- load_fixture('SRA_SKEW_BIOPROJECT_Arabidopsis_thaliana')
-  expect_gdt_tbl(SRA_SKEW_BIOPROJECT)
-  expect_identical(attr(SRA_SKEW_BIOPROJECT, 'gama_object', exact = TRUE), 'summarise_sra_skew')
+test_that('SRA_SKEW_BP fixture is a valid summarise_sra_skew object', {
+  SRA_SKEW_BP <- load_fixture('SRA_SKEW_BP_Arabidopsis_thaliana')
+  expect_gdt_tbl(SRA_SKEW_BP)
+  expect_identical(attr(SRA_SKEW_BP, 'gama_object', exact = TRUE), 'summarise_sra_skew')
 })
 
-test_that('SRA_SKEW_BIOSAMPLE fixture is a valid summarise_sra_skew object', {
-  SRA_SKEW_BIOSAMPLE <- load_fixture('SRA_SKEW_BIOSAMPLE_Arabidopsis_thaliana')
-  expect_gdt_tbl(SRA_SKEW_BIOSAMPLE)
-  expect_identical(attr(SRA_SKEW_BIOSAMPLE, 'gama_object', exact = TRUE), 'summarise_sra_skew')
+test_that('SRA_SKEW_BS fixture is a valid summarise_sra_skew object', {
+  SRA_SKEW_BS <- load_fixture('SRA_SKEW_BS_Arabidopsis_thaliana')
+  expect_gdt_tbl(SRA_SKEW_BS)
+  expect_identical(attr(SRA_SKEW_BS, 'gama_object', exact = TRUE), 'summarise_sra_skew')
 })
 
 test_that('SRA skew fixtures contain expected columns', {
-  SRA_SKEW_BIOPROJECT <- load_fixture('SRA_SKEW_BIOPROJECT_Arabidopsis_thaliana')
-  SRA_SKEW_BIOSAMPLE <- load_fixture('SRA_SKEW_BIOSAMPLE_Arabidopsis_thaliana')
-  expect_named(SRA_SKEW_BIOPROJECT, c('species', 'BioProject', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff'))
-  expect_named(SRA_SKEW_BIOSAMPLE, c('species', 'BioSample', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff'))
-  expect_identical(SRA_SKEW_BIOPROJECT$species, 'Arabidopsis thaliana')
-  expect_identical(SRA_SKEW_BIOSAMPLE$species, 'Arabidopsis thaliana')
+  SRA_SKEW_BP <- load_fixture('SRA_SKEW_BP_Arabidopsis_thaliana')
+  SRA_SKEW_BS <- load_fixture('SRA_SKEW_BS_Arabidopsis_thaliana')
+  expect_named(SRA_SKEW_BP, c('species', 'BioProject', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff'))
+  expect_named(SRA_SKEW_BS, c('species', 'BioSample', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff'))
+  expect_identical(SRA_SKEW_BP$species, 'Arabidopsis thaliana')
+  expect_identical(SRA_SKEW_BS$species, 'Arabidopsis thaliana')
 })
 
 test_that('SRA skew fixtures preserve query provenance', {
   SRA_SUMMARY <- load_fixture('SRA_SUMMARY_Arabidopsis_thaliana')
-  SRA_SKEW_BIOPROJECT <- load_fixture('SRA_SKEW_BIOPROJECT_Arabidopsis_thaliana')
-  SRA_SKEW_BIOSAMPLE <- load_fixture('SRA_SKEW_BIOSAMPLE_Arabidopsis_thaliana')
+  SRA_SKEW_BP <- load_fixture('SRA_SKEW_BP_Arabidopsis_thaliana')
+  SRA_SKEW_BS <- load_fixture('SRA_SKEW_BS_Arabidopsis_thaliana')
   expect_identical(
-    attr(SRA_SKEW_BIOPROJECT, 'query_info', exact = TRUE),
+    attr(SRA_SKEW_BP, 'query_info', exact = TRUE),
     attr(SRA_SUMMARY, 'query_info', exact = TRUE)
   )
   expect_identical(
-    attr(SRA_SKEW_BIOSAMPLE, 'query_info', exact = TRUE),
+    attr(SRA_SKEW_BS, 'query_info', exact = TRUE),
     attr(SRA_SUMMARY, 'query_info', exact = TRUE)
   )
 })
 
 test_that('SRA skew fixtures carry ID recovery diagnostics', {
-  SRA_SKEW_BIOPROJECT <- load_fixture('SRA_SKEW_BIOPROJECT_Arabidopsis_thaliana')
-  SRA_SKEW_BIOSAMPLE <- load_fixture('SRA_SKEW_BIOSAMPLE_Arabidopsis_thaliana')
-  expect_skew_id_recovery(SRA_SKEW_BIOPROJECT, unit = 'BioProject')
-  expect_skew_id_recovery(SRA_SKEW_BIOSAMPLE, unit = 'BioSample')
+  SRA_SKEW_BP <- load_fixture('SRA_SKEW_BP_Arabidopsis_thaliana')
+  SRA_SKEW_BS <- load_fixture('SRA_SKEW_BS_Arabidopsis_thaliana')
+  expect_skew_id_recovery(SRA_SKEW_BP, unit = 'BioProject')
+  expect_skew_id_recovery(SRA_SKEW_BS, unit = 'BioSample')
 })
 
 test_that('summarise_sra_skew applies correct inverse Simpson index formula', {
@@ -214,24 +214,24 @@ test_that('summarise_sra_skew applies correct inverse Simpson index formula', {
 
 test_that('SRA skew fixtures follow correct inverse Simpson index formula', {
   SRA_SUMMARY <- load_fixture('SRA_SUMMARY_Arabidopsis_thaliana')
-  SRA_SKEW_BIOPROJECT <- load_fixture('SRA_SKEW_BIOPROJECT_Arabidopsis_thaliana')
-  SRA_SKEW_BIOSAMPLE <- load_fixture('SRA_SKEW_BIOSAMPLE_Arabidopsis_thaliana')
+  SRA_SKEW_BP <- load_fixture('SRA_SKEW_BP_Arabidopsis_thaliana')
+  SRA_SKEW_BS <- load_fixture('SRA_SKEW_BS_Arabidopsis_thaliana')
   PROFILE <- attr(SRA_SUMMARY, 'sra_profile', exact = TRUE)
   expect_equal(
-    unname(SRA_SKEW_BIOPROJECT$eff),
-    unname(expected_sra_skew_eff(SRA_SKEW_BIOPROJECT, PROFILE, 'bioproject'))
+    unname(SRA_SKEW_BP$eff),
+    unname(expected_sra_skew_eff(SRA_SKEW_BP, PROFILE, 'bioproject'))
   )
   expect_equal(
-    unname(SRA_SKEW_BIOSAMPLE$eff),
-    unname(expected_sra_skew_eff(SRA_SKEW_BIOSAMPLE, PROFILE, 'biosample'))
+    unname(SRA_SKEW_BS$eff),
+    unname(expected_sra_skew_eff(SRA_SKEW_BS, PROFILE, 'biosample'))
   )
 })
 
 test_that('plot_sra_skew returns ggplot objects', {
-  SRA_SKEW_BIOPROJECT <- load_fixture('SRA_SKEW_BIOPROJECT_Arabidopsis_thaliana')
-  SRA_SKEW_BIOSAMPLE <- load_fixture('SRA_SKEW_BIOSAMPLE_Arabidopsis_thaliana')
-  p1 <- plot_sra_skew(SRA_SKEW_BIOPROJECT)
-  p2 <- plot_sra_skew(SRA_SKEW_BIOSAMPLE)
+  SRA_SKEW_BP <- load_fixture('SRA_SKEW_BP_Arabidopsis_thaliana')
+  SRA_SKEW_BS <- load_fixture('SRA_SKEW_BS_Arabidopsis_thaliana')
+  p1 <- plot_sra_skew(SRA_SKEW_BP)
+  p2 <- plot_sra_skew(SRA_SKEW_BS)
   expect_s3_class(p1, 'ggplot')
   expect_s3_class(p2, 'ggplot')
 })

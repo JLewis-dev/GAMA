@@ -1,3 +1,26 @@
+# GAMA 0.4.0
+
+## Features
+- Added `report_diagnostics()` with `recoverability` and `records` views for SRA and BioSample availability, SRA and BioSample skew, and interaction summaries
+
+## Reliability
+- Standardised BioSample record identity on `input_id` across anatomy profiles, metadata extraction, and interaction analysis, retaining BioSample accessions separately and counting operable records per input record
+- Revised SRA and BioSample skew caches to retain active filtered records with missing identifiers while excluding those records from skew calculations
+- Added `interaction_profile` and revised `interaction_info$match_report` to report `BioSample`, `operable`, `linked`, and `unknown` counts, with joint unknown modality and anatomy cases counted once
+
+## Plotting
+- Excluded missing active identifiers from SRA skew point overlays and removed redundant `(log10)` text from SRA and BioSample skew y-axis labels
+
+## Documentation
+- Updated roxygen documentation and the GAMA user guide accordingly
+
+## Testing
+- Updated testthat coverage for the new diagnostics and revised cached profile structures
+- Regenerated examples and fixtures for the revised output structure
+- Confirmed 741 passing tests and `devtools::check()` with 0 errors, 0 warnings, and 0 notes
+
+---
+
 # GAMA 0.3.6
 
 ## Reliability

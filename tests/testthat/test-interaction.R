@@ -55,6 +55,7 @@ synthetic_interaction_inputs <- function() {
   )
   BIO_ANATOMY <- tibble::tibble(
     species = rep('Synthetic species', 6),
+    input_id = paste0('INPUT', seq_len(6)),
     entrez_uid = paste0('BSM', seq_len(6)),
     biosample_id = paste0('SAM', seq_len(6)),
     bioproject = rep('PRJ1', 6),
@@ -65,6 +66,7 @@ synthetic_interaction_inputs <- function() {
   )
   BIO_CANONICAL <- tibble::tibble(
     species = BIO_ANATOMY$species,
+    input_id = BIO_ANATOMY$input_id,
     entrez_uid = BIO_ANATOMY$entrez_uid,
     biosample_id = BIO_ANATOMY$biosample_id,
     bioproject = BIO_ANATOMY$bioproject,
@@ -117,14 +119,14 @@ synthetic_interaction_inputs <- function() {
   attr(BIO_SUMMARY, 'biosample_anatomy_profile_info') <- list(
     cached_at_utc = '2026-05-22T11:23:11Z',
     profile_time_utc = '2026-05-22T11:23:11Z',
-    id_col = 'biosample_id',
+    id_col = 'input_id',
     fields = names(BIO_ANATOMY)
   )
   attr(BIO_SUMMARY, 'biosample_canonical_profile') <- BIO_CANONICAL
   attr(BIO_SUMMARY, 'biosample_canonical_profile_info') <- list(
     cached_at_utc = '2026-05-22T11:23:11Z',
     profile_time_utc = '2026-05-22T11:23:11Z',
-    id_col = 'biosample_id',
+    id_col = 'input_id',
     fields = names(BIO_CANONICAL)
   )
   class(BIO_SUMMARY) <- unique(c('gdt_tbl', class(BIO_SUMMARY)))
@@ -183,7 +185,42 @@ test_that('INTERACTION fixtures carry interaction metadata', {
     expect_true(length(INFO$term_levels) > 0L)
     expect_true(length(INFO$modality_levels) > 0L)
     expect_gama_columns(INFO$term_meta, c('term_order', 'x_term', 'anatomy_class'))
-    expect_gama_columns(INFO$match_report, c('species', 'operable', 'matched_to_sra', 'unmatched_to_sra', 'matched_prop'))
+    expect_gama_columns(
+      INFO$match_report,
+      c('species', 'BioSample', 'operable', 'linked', 'unknown')
+    )
+  }
+})
+
+test_that('INTERACTION fixtures carry record-level diagnostic caches', {
+  INTERACTION_CLASS <- load_fixture('INTERACTION_CLASS_Arabidopsis_thaliana')
+  INTERACTION_SUBCLASS <- load_fixture(
+    'INTERACTION_SUBCLASS_Arabidopsis_thaliana'
+  )
+  fixtures <- list(INTERACTION_CLASS, INTERACTION_SUBCLASS)
+  expected_cols <- c(
+    'species',
+    'entrez_uid',
+    'biosample',
+    'bioproject',
+    'strategy_raw',
+    'strategy_norm',
+    'class',
+    'value_raw',
+    'value_norm',
+    'anatomy_class'
+  )
+  for (fixture in fixtures) {
+    PROFILE <- attr(fixture, 'interaction_profile', exact = TRUE)
+    expect_false(is.null(PROFILE))
+    expect_named(PROFILE, expected_cols)
+    expect_gt(nrow(PROFILE), 0L)
+    expect_true(all(PROFILE$species == 'Arabidopsis thaliana'))
+    expect_true(any(
+      PROFILE$class == 'unknown' |
+        PROFILE$anatomy_class == 'unknown',
+      na.rm = TRUE
+    ))
   }
 })
 
@@ -193,7 +230,7 @@ test_that('INTERACTION_CLASS fixture summarises modality-by-anatomy-class counts
   expect_true(all(INTERACTION_CLASS$BioSample >= 0L))
   expect_true(all(INTERACTION_CLASS$class %in% INFO$modality_levels))
   expect_true(all(INTERACTION_CLASS$anatomy_class %in% INFO$term_levels))
-  expect_equal(sum(INTERACTION_CLASS$BioSample), sum(INFO$match_report$matched_to_sra))
+  expect_equal(sum(INTERACTION_CLASS$BioSample), sum(INFO$match_report$linked))
   expect_gt(sum(INTERACTION_CLASS$BioSample), 0L)
 })
 
@@ -203,7 +240,7 @@ test_that('INTERACTION_SUBCLASS fixture summarises modality-by-anatomy-subclass 
   expect_true(all(INTERACTION_SUBCLASS$BioSample >= 0L))
   expect_true(all(INTERACTION_SUBCLASS$class %in% INFO$modality_levels))
   expect_true(all(INTERACTION_SUBCLASS$anatomy_subclass %in% INFO$term_levels))
-  expect_equal(sum(INTERACTION_SUBCLASS$BioSample), sum(INFO$match_report$matched_to_sra))
+  expect_equal(sum(INTERACTION_SUBCLASS$BioSample), sum(INFO$match_report$linked))
   expect_gt(sum(INTERACTION_SUBCLASS$BioSample), 0L)
 })
 

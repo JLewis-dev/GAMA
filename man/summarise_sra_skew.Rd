@@ -35,15 +35,20 @@ The input must carry a cached UID-level profile as attribute \code{sra_profile}.
 Each row in the profile corresponds to one SRA Entrez UID. Required fields
 are \code{species}, \code{entrez_uid}, \code{biosample}, \code{bioproject}, and \code{class}.
 
+The returned \code{sra_profile} retains the active filtered records before those
+missing the selected identifier are excluded. Skew statistics use only
+records with a usable selected identifier; retaining the excluded records
+supports \code{report_diagnostics(view = 'records')}.
+
 The \code{eff} column is the \emph{effective number of units} (Hill number of order
 2), computed as the inverse Simpson index: \code{eff = 1 / sum(p^2)}, where \code{p}
 is the proportion of SRA records in each BioProject or BioSample ID. Larger
 values indicate a more even spread; values near 1 indicate strong
 concentration in few units.
 
-Records missing BioProject or BioSample IDs are excluded from the skew
-calculation. A \code{skew_id_recovery} attribute reports the active denominator,
-number of records included, number excluded, and recovery proportion.
+Records missing the selected identifier are excluded from the skew
+calculation. The \code{skew_id_recovery} attribute reports the active
+denominator, included and excluded records, and recovery proportion.
 }
 \examples{
 \dontrun{
@@ -55,5 +60,6 @@ print(SRA_SKEW)
 
 }
 \seealso{
-\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}, \code{\link[=plot_sra_skew]{plot_sra_skew()}}
+\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}, \code{\link[=plot_sra_skew]{plot_sra_skew()}},
+\code{\link[=report_diagnostics]{report_diagnostics()}}
 }

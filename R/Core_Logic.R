@@ -2998,14 +2998,6 @@ title_raw = NA_character_) {
   )
 }
 
-.biosample_resolve_key <- function(biosample_id, input_id) {
-  key <- as.character(biosample_id)
-  src <- as.character(input_id)
-  miss <- is.na(key) | !nzchar(key)
-  key[miss] <- src[miss]
-  key
-}
-
 .biosample_classify_tissue_attributes <- function(meta, species = NULL) {
   if (is.null(meta) || !is.data.frame(meta)) .gama_stop('`.biosample_classify_tissue_attributes()`: `meta` must be a data.frame.')
   req <- c('species', 'input_id', 'entrez_uid', 'biosample_id', 'bioproject', 'parse_status', 'attribute_name_norm', 'attribute_name_harmonised', 'attribute_value_raw', 'attribute_value_norm')
@@ -3020,12 +3012,12 @@ title_raw = NA_character_) {
       species = as.character(.data$species),
       input_id = as.character(.data$input_id),
       entrez_uid = as.character(.data$entrez_uid),
-      biosample_id = .biosample_resolve_key(.data$biosample_id, .data$input_id),
+      biosample_id = as.character(.data$biosample_id),
       bioproject = as.character(.data$bioproject),
       value_raw = as.character(.data$attribute_value_raw),
       value_norm = .biosample_tissue_normalise(.data$attribute_value_norm)
     ) |>
-    dplyr::filter(!is.na(.data$species), nzchar(.data$species), !is.na(.data$biosample_id), nzchar(.data$biosample_id))
+    dplyr::filter(!is.na(.data$species), nzchar(.data$species), !is.na(.data$input_id), nzchar(.data$input_id))
   if (!is.null(species)) tissue <- tissue |> dplyr::filter(.data$species %in% .env$species)
   if (!nrow(tissue)) return(.biosample_empty_tissue_classification())
   ref <- .biosample_anatomy_ref()
@@ -3090,6 +3082,7 @@ title_raw = NA_character_) {
   subclass_levels <- c(.biosample_anatomy_subclass_levels(), 'mixed', 'unknown')
   out <- tibble::tibble(
     species = character(),
+    input_id = character(),
     entrez_uid = character(),
     biosample_id = character(),
     bioproject = character(),
@@ -3099,6 +3092,7 @@ title_raw = NA_character_) {
   if (is.null(tissue_classification) || !is.data.frame(tissue_classification) || !nrow(tissue_classification)) return(out)
   req <- c(
     'species',
+    'input_id',
     'entrez_uid',
     'biosample_id',
     'bioproject',
@@ -3110,19 +3104,21 @@ title_raw = NA_character_) {
   profiled <- tissue_classification |>
     dplyr::transmute(
       species = as.character(.data$species),
+      input_id = as.character(.data$input_id),
       entrez_uid = as.character(.data$entrez_uid),
       biosample_id = as.character(.data$biosample_id),
       bioproject = as.character(.data$bioproject),
       anatomy_class = as.character(.data$anatomy_class),
       anatomy_subclass = as.character(.data$anatomy_subclass)
     ) |>
-    dplyr::filter(!is.na(.data$species), nzchar(.data$species), !is.na(.data$biosample_id), nzchar(.data$biosample_id))
+    dplyr::filter(!is.na(.data$species), nzchar(.data$species), !is.na(.data$input_id), nzchar(.data$input_id))
   if (!is.null(species)) profiled <- profiled |> dplyr::filter(.data$species %in% .env$species)
   if (!nrow(profiled)) return(out)
   profiled |>
-    dplyr::group_by(.data$species, .data$biosample_id) |>
+    dplyr::group_by(.data$species, .data$input_id) |>
     dplyr::summarise(
       entrez_uid = .biosample_collapse_accessions(.data$entrez_uid),
+      biosample_id = .biosample_collapse_accessions(.data$biosample_id),
       bioproject = .biosample_collapse_accessions(.data$bioproject),
       anatomy_class = .biosample_collapse_anatomy_profile(.data$anatomy_class, level = 'anatomy_class'),
       anatomy_subclass = .biosample_collapse_anatomy_profile(.data$anatomy_subclass, level = 'anatomy_subclass'),
@@ -3136,13 +3132,13 @@ title_raw = NA_character_) {
         'unknown'
       )
     ) |>
-    dplyr::distinct(.data$species, .data$entrez_uid, .data$biosample_id, .data$bioproject, .data$anatomy_class, .data$anatomy_subclass) |>
-    dplyr::arrange(.data$species, .data$biosample_id, .data$anatomy_class, .data$anatomy_subclass)
+    dplyr::arrange(.data$species, .data$input_id)
 }
 
 .biosample_canonical_profile <- function(tissue_classification, species = NULL) {
   out <- tibble::tibble(
     species = character(),
+    input_id = character(),
     entrez_uid = character(),
     biosample_id = character(),
     bioproject = character(),
@@ -3159,6 +3155,7 @@ title_raw = NA_character_) {
   if (is.null(tissue_classification) || !is.data.frame(tissue_classification) || !nrow(tissue_classification)) return(out)
   req <- c(
     'species',
+    'input_id',
     'entrez_uid',
     'biosample_id',
     'bioproject',
@@ -3177,6 +3174,7 @@ title_raw = NA_character_) {
   out <- tissue_classification |>
     dplyr::transmute(
       species = as.character(.data$species),
+      input_id = as.character(.data$input_id),
       entrez_uid = as.character(.data$entrez_uid),
       biosample_id = as.character(.data$biosample_id),
       bioproject = as.character(.data$bioproject),
@@ -3190,11 +3188,12 @@ title_raw = NA_character_) {
       ontology_id = as.character(.data$ontology_id),
       ontology_label = as.character(.data$ontology_label)
     ) |>
-    dplyr::filter(!is.na(.data$species), nzchar(.data$species), !is.na(.data$biosample_id), nzchar(.data$biosample_id), !is.na(.data$anatomy_term), nzchar(.data$anatomy_term))
+    dplyr::filter(!is.na(.data$species), nzchar(.data$species), !is.na(.data$input_id), nzchar(.data$input_id), !is.na(.data$anatomy_term), nzchar(.data$anatomy_term))
   if (!is.null(species)) out <- out |> dplyr::filter(.data$species %in% .env$species)
   out |>
     dplyr::distinct(
       .data$species,
+      .data$input_id,
       .data$entrez_uid,
       .data$biosample_id,
       .data$bioproject,
@@ -3216,7 +3215,8 @@ title_raw = NA_character_) {
   out <- tibble::tibble(
     species = character(),
     biosample_id = character(),
-    modality_class = character()
+    modality_class = character(),
+    sra_unknown = logical()
   )
   if (is.null(sra_profile) || !is.data.frame(sra_profile) || !nrow(sra_profile)) return(out)
   if (all(c('species', 'biosample_id', 'modality_class') %in% names(sra_profile))) {
@@ -3253,12 +3253,13 @@ title_raw = NA_character_) {
         vals <- vals[vals %in% modality_levels]
         if (!length(vals)) 'unknown' else if (length(vals) == 1L) vals else 'mixed'
       },
+      sra_unknown = any(.data$modality_raw == 'unknown', na.rm = TRUE),
       .groups = 'drop'
     ) |>
     dplyr::arrange(.data$species, .data$biosample_id)
 }
 
-.biosample_term_heatmap_core <- function(BIO, SRA, species = NULL) {
+.biosample_term_heatmap_core <- function(profile, species) {
   class_levels <- .biosample_anatomy_profile_levels()
   subclass_map <- .biosample_anatomy_subclass_map() |>
     dplyr::filter(
@@ -3311,29 +3312,11 @@ title_raw = NA_character_) {
     dplyr::mutate(term_order = dplyr::row_number())
   subclass_levels <- subclass_meta$anatomy_subclass
   modality_levels <- .biosample_modality_levels()
-  BIO <- .gama_require_output(
-    BIO,
-    'summarise_biosample_availability',
-    required_cols = c('species')
-  )
-  SRA <- .gama_require_output(SRA, 'summarise_sra_availability')
-  canonical <- .gama_require_cache(
-    BIO,
-    attr_name = 'biosample_canonical_profile',
-    required_cols = c('species', 'biosample_id', 'anatomy_subclass'),
-    source = 'summarise_biosample_availability'
-  )
-  species_all <- unique(as.character(BIO$species))
-  species_all <- species_all[!is.na(species_all) & nzchar(species_all)]
-  species_use <- if (is.null(species)) {
-    species_all
-  } else {
-    sp_in <- unique(as.character(species))
-    sp_in <- sp_in[!is.na(sp_in) & nzchar(sp_in)]
-    missing <- setdiff(sp_in, species_all)
-    if (length(missing)) .gama_warn('Requested species not found in `BIO`: ', paste(missing, collapse = ', '), '. Dropping.')
-    sp_in[sp_in %in% species_all]
-  }
+  req <- c('species', 'input_id', 'modality_class', 'anatomy_subclass')
+  miss <- setdiff(req, names(profile))
+  if (length(miss)) .gama_stop('`.biosample_term_heatmap_core()`: `profile` missing columns: ', paste(miss, collapse = ', '), '.')
+  species_use <- unique(as.character(species))
+  species_use <- species_use[!is.na(species_use) & nzchar(species_use)]
   if (!length(species_use)) {
     return(tibble::tibble(
       species = character(),
@@ -3344,27 +3327,11 @@ title_raw = NA_character_) {
       BioSample = integer()
     ))
   }
-  sra_profile <- .gama_require_cache(
-    SRA,
-    attr_name = 'sra_profile',
-    required_cols = c('species', 'class'),
-    source = 'summarise_sra_availability'
-  )
-  if (!any(c('biosample', 'biosample_id') %in% names(sra_profile))) {
-    .gama_input_error(
-      'summarise_sra_availability',
-      detected = .detect_gama_object(SRA),
-      detail = 'cache \'sra_profile\' missing required BioSample ID column: biosample or biosample_id.'
-    )
-  }
-  modality <- .biosample_modality_profile(sra_profile)
-  counts <- canonical |>
+  counts <- profile |>
     dplyr::filter(.data$species %in% .env$species_use) |>
-    dplyr::left_join(modality, by = c('species', 'biosample_id')) |>
     dplyr::filter(!is.na(.data$modality_class), nzchar(.data$modality_class)) |>
     dplyr::transmute(
       species = .data$species,
-      biosample_id = .data$biosample_id,
       modality_class = .data$modality_class,
       anatomy_subclass = dplyr::coalesce(.data$anatomy_subclass, 'unknown')
     ) |>
@@ -3374,12 +3341,6 @@ title_raw = NA_character_) {
         .data$anatomy_subclass,
         'unknown'
       )
-    ) |>
-    dplyr::distinct(.data$species, .data$biosample_id, .data$modality_class, .data$anatomy_subclass) |>
-    dplyr::group_by(.data$species, .data$biosample_id, .data$modality_class) |>
-    dplyr::summarise(
-      anatomy_subclass = .biosample_collapse_anatomy_profile(.data$anatomy_subclass, level = 'anatomy_subclass'),
-      .groups = 'drop'
     ) |>
     dplyr::left_join(
       subclass_meta |>

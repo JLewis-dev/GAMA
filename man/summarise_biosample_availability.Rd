@@ -53,8 +53,8 @@ In addition to the summary table, this function attaches two cached
 BioSample profiles: \code{biosample_anatomy_profile} and
 \code{biosample_canonical_profile}. The anatomy profile stores one collapsed
 anatomy class and subclass profile per operable BioSample record, together
-with BioSample Entrez UID, BioSample accession, and BioProject IDs where
-available. The canonical profile stores recovered source-value rows,
+with input ID, BioSample Entrez UID, BioSample accession, and BioProject IDs
+where available. The canonical profile stores recovered source-value rows,
 including raw and normalised values, anatomy terms, classes, subclasses,
 ranks, ontology fields, and the same record identifiers. These caches are
 reused by \code{\link[=summarise_biosample_skew]{summarise_biosample_skew()}} and \code{\link[=summarise_interaction]{summarise_interaction()}} without
@@ -69,5 +69,6 @@ print(BIO_SUMMARY)
 }
 \seealso{
 \code{\link[=query_species]{query_species()}}, \code{\link[=plot_biosample_availability]{plot_biosample_availability()}},
-\code{\link[=summarise_biosample_skew]{summarise_biosample_skew()}}, \code{\link[=extract_biosample_metadata]{extract_biosample_metadata()}}
+\code{\link[=summarise_biosample_skew]{summarise_biosample_skew()}}, \code{\link[=extract_biosample_metadata]{extract_biosample_metadata()}},
+\code{\link[=report_diagnostics]{report_diagnostics()}}
 }

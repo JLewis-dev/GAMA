@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.3.6'
+.GAMA_VERSION <- '0.4.0'
 
 # NCBI configuration
 
@@ -381,7 +381,6 @@ utils::globalVariables(c(
   'level',
   'level_class',
   'linked',
-  'matched_to_sra',
   'max',
   'med',
   'min',

@@ -34,7 +34,12 @@ to a single anatomy class.
 Profile cache:
 The input must carry \code{biosample_anatomy_profile}. Each row in this profile
 corresponds to one operable BioSample record. Required fields are \code{species},
-\code{biosample_id}, \code{bioproject}, and \code{anatomy_class}.
+\code{input_id}, \code{bioproject}, and \code{anatomy_class}.
+
+The returned \code{biosample_anatomy_profile} retains the active filtered records
+before those missing BioProject identifiers are excluded. Skew statistics
+use only records with a usable BioProject identifier; retaining the excluded
+records supports \code{report_diagnostics(view = 'records')}.
 
 The \code{eff} column is the \emph{effective number of BioProjects} (Hill number of
 order 2), computed as the inverse Simpson index: \code{eff = 1 / sum(p^2)}, where
@@ -42,9 +47,9 @@ order 2), computed as the inverse Simpson index: \code{eff = 1 / sum(p^2)}, wher
 Larger values indicate a more even spread; values near 1 indicate strong
 concentration in few BioProjects.
 
-Records missing BioProject IDs are excluded from the skew calculation. A
-\code{skew_id_recovery} attribute reports the active denominator, number of
-records included, number excluded, and recovery proportion.
+Records missing BioProject identifiers are excluded from the skew
+calculation. The \code{skew_id_recovery} attribute reports the active
+denominator, included and excluded records, and recovery proportion.
 }
 \examples{
 \dontrun{
@@ -56,5 +61,6 @@ print(BIO_SKEW)
 
 }
 \seealso{
-\code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}, \code{\link[=plot_biosample_skew]{plot_biosample_skew()}}
+\code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}, \code{\link[=plot_biosample_skew]{plot_biosample_skew()}},
+\code{\link[=report_diagnostics]{report_diagnostics()}}
 }

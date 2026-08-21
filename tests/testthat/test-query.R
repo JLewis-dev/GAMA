@@ -50,14 +50,26 @@ test_that('fixture manifest records the complete fixture set', {
     'ASM_SUMMARY_Arabidopsis_thaliana',
     'ASM_Arabidopsis_thaliana',
     'SRA_SUMMARY_Arabidopsis_thaliana',
-    'SRA_SKEW_BIOPROJECT_Arabidopsis_thaliana',
-    'SRA_SKEW_BIOSAMPLE_Arabidopsis_thaliana',
+    'SRA_SUMMARY_DIAGNOSTICS_RECOVERABILITY_Arabidopsis_thaliana',
+    'SRA_SUMMARY_DIAGNOSTICS_RECORDS_Arabidopsis_thaliana',
+    'SRA_SKEW_BP_Arabidopsis_thaliana',
+    'SRA_SKEW_BP_DIAGNOSTICS_RECOVERABILITY_Arabidopsis_thaliana',
+    'SRA_SKEW_BP_DIAGNOSTICS_RECORDS_Arabidopsis_thaliana',
+    'SRA_SKEW_BS_Arabidopsis_thaliana',
+    'SRA_SKEW_BS_DIAGNOSTICS_RECOVERABILITY_Arabidopsis_thaliana',
+    'SRA_SKEW_BS_DIAGNOSTICS_RECORDS_Arabidopsis_thaliana',
     'SRA_Arabidopsis_thaliana',
     'BIO_SUMMARY_Arabidopsis_thaliana',
+    'BIO_SUMMARY_DIAGNOSTICS_RECOVERABILITY_Arabidopsis_thaliana',
+    'BIO_SUMMARY_DIAGNOSTICS_RECORDS_Arabidopsis_thaliana',
     'BIO_SKEW_Arabidopsis_thaliana',
+    'BIO_SKEW_DIAGNOSTICS_RECOVERABILITY_Arabidopsis_thaliana',
+    'BIO_SKEW_DIAGNOSTICS_RECORDS_Arabidopsis_thaliana',
     'BIO_Arabidopsis_thaliana',
     'INTERACTION_CLASS_Arabidopsis_thaliana',
-    'INTERACTION_SUBCLASS_Arabidopsis_thaliana'
+    'INTERACTION_SUBCLASS_Arabidopsis_thaliana',
+    'INTERACTION_DIAGNOSTICS_RECOVERABILITY_Arabidopsis_thaliana',
+    'INTERACTION_DIAGNOSTICS_RECORDS_Arabidopsis_thaliana'
   )
   manifest_paths <- vapply(MANIFEST$file, fixture_path, character(1))
   expect_named(MANIFEST, c('object', 'file', 'size_bytes', 'query_time_utc', 'tool_version'))

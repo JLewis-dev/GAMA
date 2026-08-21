@@ -31,7 +31,7 @@ the \code{query_info} attribute.
 }
 \details{
 \code{query_species()} is the entry point for the NCBI search phase. Each species
-is queried independently across the supported databases, and results are
+is queried independently across the supported databases and results are
 stored in a per-species list with components \code{assembly}, \code{sra}, and
 \code{biosample}. When \code{synonyms} is supplied, results are collapsed under the
 canonical species names using unique database record identifiers.

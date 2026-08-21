@@ -8,7 +8,7 @@
 #'
 #' @details
 #' `query_species()` is the entry point for the NCBI search phase. Each species
-#' is queried independently across the supported databases, and results are
+#' is queried independently across the supported databases and results are
 #' stored in a per-species list with components `assembly`, `sra`, and
 #' `biosample`. When `synonyms` is supplied, results are collapsed under the
 #' canonical species names using unique database record identifiers.
@@ -126,8 +126,8 @@ query_species <- function(species, synonyms = NULL) {
 #' transformed contributions from Assembly, SRA, and BioSample availability.
 #' `A = best + ln(1 + total - best)`, with assembly weights of Complete = 10,
 #' Chromosome = 8, Scaffold = 5, and Contig = 2; `best` is the maximum-weight
-#' assembly, with ties broken by highest N50, and `total` is the sum of all
-#' assembly weights. `S = 2 * ln(1 + SRA)`, and `B = ln(1 + BioSample)`. This
+#' assembly, with ties broken by highest N50. `total` is the sum of all
+#' assembly weights. `S = 2 * ln(1 + SRA)` and `B = ln(1 + BioSample)`. This
 #' formulation prioritises high-quality assemblies while applying diminishing
 #' returns to highly sampled taxa.
 #'
@@ -381,7 +381,7 @@ extract_assembly_metadata <- function(results, species = NULL, best = FALSE) {
 #' metadata in `sra_profile_info`.
 #'
 #' @seealso [query_species()], [plot_sra_availability()], [plot_sra_geo()],
-#' [summarise_sra_skew()], [extract_sra_metadata()]
+#' [summarise_sra_skew()], [extract_sra_metadata()], [report_diagnostics()]
 #'
 #' @examples
 #' \dontrun{
@@ -575,6 +575,11 @@ include_geo = FALSE) {
 #' Each row in the profile corresponds to one SRA Entrez UID. Required fields
 #' are `species`, `entrez_uid`, `biosample`, `bioproject`, and `class`.
 #'
+#' The returned `sra_profile` retains the active filtered records before those
+#' missing the selected identifier are excluded. Skew statistics use only
+#' records with a usable selected identifier; retaining the excluded records
+#' supports `report_diagnostics(view = 'records')`.
+#'
 #' @details
 #' The `eff` column is the *effective number of units* (Hill number of order
 #' 2), computed as the inverse Simpson index: `eff = 1 / sum(p^2)`, where `p`
@@ -582,9 +587,9 @@ include_geo = FALSE) {
 #' values indicate a more even spread; values near 1 indicate strong
 #' concentration in few units.
 #'
-#' Records missing BioProject or BioSample IDs are excluded from the skew
-#' calculation. A `skew_id_recovery` attribute reports the active denominator,
-#' number of records included, number excluded, and recovery proportion.
+#' Records missing the selected identifier are excluded from the skew
+#' calculation. The `skew_id_recovery` attribute reports the active
+#' denominator, included and excluded records, and recovery proportion.
 #'
 #' @param x A data.frame/tibble returned by summarise_sra_availability() that
 #' has a cached profile attached as attribute `sra_profile`.
@@ -598,7 +603,8 @@ include_geo = FALSE) {
 #' `min`, `q25`, `med`, `q75`, `max` (SRA records per unit), and `eff`
 #' (effective number of units; inverse Simpson index).
 #'
-#' @seealso [summarise_sra_availability()], [plot_sra_skew()]
+#' @seealso [summarise_sra_availability()], [plot_sra_skew()],
+#' [report_diagnostics()]
 #'
 #' @examples
 #' \dontrun{
@@ -669,19 +675,43 @@ summarise_sra_skew <- function(x, species = NULL, unit = 'bioproject', class = N
     )
     return(out)
   }
-  prof_use <- prof[prof$species %in% species_all, , drop = FALSE]
-  if (!is.null(class)) prof_use <- prof_use[prof_use$class %in% class, , drop = FALSE]
-  unit_values <- trimws(as.character(prof_use[[unit_col]]))
-  prof_use[[unit_col]] <- unit_values
-  has_unit <- !is.na(unit_values) & nzchar(unit_values)
-  prof_skew <- prof_use[has_unit, , drop = FALSE]
+  profile_filtered <- (
+    if (is.null(class)) {
+      dplyr::filter(prof, .data$species %in% .env$species_all)
+    } else {
+      dplyr::filter(
+        prof,
+        .data$species %in% .env$species_all,
+        .data$class %in% .env$class
+      )
+    }
+  ) |>
+    dplyr::mutate(
+      dplyr::across(
+        dplyr::all_of(unit_col),
+        ~ trimws(as.character(.x))
+      )
+    )
+  profile_linked <- profile_filtered |>
+    dplyr::filter(
+      !is.na(.data[[unit_col]]),
+      nzchar(.data[[unit_col]])
+    )
   class_label <- if (is.null(class)) 'all' else as.character(class)
   recovery <- .skew_id_recovery_table(
     species = species_all,
     unit = out_unit_label,
     class = class_label,
-    records = vapply(species_all, function(sp) sum(prof_use$species == sp), integer(1)),
-    included = vapply(species_all, function(sp) sum(prof_skew$species == sp), integer(1))
+    records = vapply(
+      species_all,
+      function(sp) sum(profile_filtered$species == sp),
+      integer(1)
+    ),
+    included = vapply(
+      species_all,
+      function(sp) sum(profile_linked$species == sp),
+      integer(1)
+    )
   )
   n_records <- sum(recovery$records)
   n_excluded <- sum(recovery$excluded)
@@ -693,7 +723,7 @@ summarise_sra_skew <- function(x, species = NULL, unit = 'bioproject', class = N
     )
   }
   calc_one <- function(sp) {
-    units <- prof_skew[[unit_col]][prof_skew$species == sp]
+    units <- profile_linked[[unit_col]][profile_linked$species == sp]
     counts <- as.numeric(table(units))
     counts <- counts[counts > 0]
     if (length(counts) == 0L) {
@@ -738,7 +768,7 @@ summarise_sra_skew <- function(x, species = NULL, unit = 'bioproject', class = N
   }
   out <- out[c('species', out_unit_label, 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff')]
   out <- .as_gdt_table(out, x, 'summarise_sra_skew')
-  attr(out, 'sra_profile') <- prof_skew
+  attr(out, 'sra_profile') <- profile_filtered
   attr(out, 'sra_profile_info') <- attr(x, 'sra_profile_info', exact = TRUE)
   attr(out, 'skew_id_recovery') <- recovery
   out
@@ -886,8 +916,8 @@ only_geo = FALSE) {
 #' BioSample profiles: `biosample_anatomy_profile` and
 #' `biosample_canonical_profile`. The anatomy profile stores one collapsed
 #' anatomy class and subclass profile per operable BioSample record, together
-#' with BioSample Entrez UID, BioSample accession, and BioProject IDs where
-#' available. The canonical profile stores recovered source-value rows,
+#' with input ID, BioSample Entrez UID, BioSample accession, and BioProject IDs
+#' where available. The canonical profile stores recovered source-value rows,
 #' including raw and normalised values, anatomy terms, classes, subclasses,
 #' ranks, ontology fields, and the same record identifiers. These caches are
 #' reused by [summarise_biosample_skew()] and [summarise_interaction()] without
@@ -907,7 +937,8 @@ only_geo = FALSE) {
 #' `biosample_anatomy_profile_info` and `biosample_canonical_profile_info`.
 #'
 #' @seealso [query_species()], [plot_biosample_availability()],
-#' [summarise_biosample_skew()], [extract_biosample_metadata()]
+#' [summarise_biosample_skew()], [extract_biosample_metadata()],
+#' [report_diagnostics()]
 #'
 #' @examples
 #' \dontrun{
@@ -922,6 +953,7 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
   anatomy_levels <- .biosample_anatomy_profile_levels()
   canonical_fields <- c(
     'species',
+    'input_id',
     'entrez_uid',
     'biosample_id',
     'bioproject',
@@ -969,6 +1001,7 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
     OUT <- .as_gdt_table(OUT, results, 'summarise_biosample_availability')
     attr(OUT, 'biosample_anatomy_profile') <- tibble::tibble(
       species = character(),
+      input_id = character(),
       entrez_uid = character(),
       biosample_id = character(),
       bioproject = character(),
@@ -977,15 +1010,16 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
     )
     attr(OUT, 'biosample_anatomy_profile_info') <- list(
       cached_at_utc = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
-      id_col = 'biosample_id',
+      id_col = 'input_id',
       fields = c(
-        'species', 'entrez_uid', 'biosample_id', 'bioproject',
+        'species', 'input_id', 'entrez_uid', 'biosample_id', 'bioproject',
         'anatomy_class', 'anatomy_subclass'
       ),
       anatomy_levels = anatomy_levels
     )
     attr(OUT, 'biosample_canonical_profile') <- tibble::tibble(
       species = character(),
+      input_id = character(),
       entrez_uid = character(),
       biosample_id = character(),
       bioproject = character(),
@@ -1001,7 +1035,7 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
     )
     attr(OUT, 'biosample_canonical_profile_info') <- list(
       cached_at_utc = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
-      id_col = 'biosample_id',
+      id_col = 'input_id',
       fields = canonical_fields
     )
     return(OUT)
@@ -1030,7 +1064,6 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
   CANONICAL <- .biosample_canonical_profile(CLASSIFIED, species = SPECIES_USE)
   .pb_advance(PROGRESS)
   operable_tbl <- ANATOMY |>
-    dplyr::distinct(.data$species, .data$biosample_id) |>
     dplyr::count(.data$species, name = 'operable')
   bucket_wide <- ANATOMY |>
     dplyr::count(.data$species, .data$anatomy_class, name = 'n') |>
@@ -1093,9 +1126,9 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
   attr(OUT, 'biosample_anatomy_profile_info') <- list(
     cached_at_utc = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
     profile_time_utc = attr(OUT, 'query_info')$query_time_utc %||% NA_character_,
-    id_col = 'biosample_id',
+    id_col = 'input_id',
     fields = c(
-      'species', 'entrez_uid', 'biosample_id', 'bioproject',
+      'species', 'input_id', 'entrez_uid', 'biosample_id', 'bioproject',
       'anatomy_class', 'anatomy_subclass'
     ),
     anatomy_levels = anatomy_levels
@@ -1104,7 +1137,7 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
   attr(OUT, 'biosample_canonical_profile_info') <- list(
     cached_at_utc = format(as.POSIXct(Sys.time(), tz = 'UTC'), '%Y-%m-%dT%H:%M:%SZ'),
     profile_time_utc = attr(OUT, 'query_info')$query_time_utc %||% NA_character_,
-    id_col = 'biosample_id',
+    id_col = 'input_id',
     fields = canonical_fields
   )
   .pb_advance(PROGRESS)
@@ -1121,7 +1154,12 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
 #' Profile cache:
 #' The input must carry `biosample_anatomy_profile`. Each row in this profile
 #' corresponds to one operable BioSample record. Required fields are `species`,
-#' `biosample_id`, `bioproject`, and `anatomy_class`.
+#' `input_id`, `bioproject`, and `anatomy_class`.
+#'
+#' The returned `biosample_anatomy_profile` retains the active filtered records
+#' before those missing BioProject identifiers are excluded. Skew statistics
+#' use only records with a usable BioProject identifier; retaining the excluded
+#' records supports `report_diagnostics(view = 'records')`.
 #'
 #' @details
 #' The `eff` column is the *effective number of BioProjects* (Hill number of
@@ -1130,9 +1168,9 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
 #' Larger values indicate a more even spread; values near 1 indicate strong
 #' concentration in few BioProjects.
 #'
-#' Records missing BioProject IDs are excluded from the skew calculation. A
-#' `skew_id_recovery` attribute reports the active denominator, number of
-#' records included, number excluded, and recovery proportion.
+#' Records missing BioProject identifiers are excluded from the skew
+#' calculation. The `skew_id_recovery` attribute reports the active
+#' denominator, included and excluded records, and recovery proportion.
 #'
 #' @param x A data.frame/tibble returned by
 #' [summarise_biosample_availability()] that has a cached profile attached as
@@ -1148,7 +1186,8 @@ summarise_biosample_availability <- function(results, species = NULL, all = FALS
 #' BioSample records per BioProject), and `eff` (effective number of
 #' BioProjects; inverse Simpson index).
 #'
-#' @seealso [summarise_biosample_availability()], [plot_biosample_skew()]
+#' @seealso [summarise_biosample_availability()], [plot_biosample_skew()],
+#' [report_diagnostics()]
 #'
 #' @examples
 #' \dontrun{
@@ -1173,7 +1212,7 @@ summarise_biosample_skew <- function(x, species = NULL, anatomy_class = NULL) {
   prof <- .gama_require_cache(
     x,
     attr_name = 'biosample_anatomy_profile',
-    required_cols = c('species', 'biosample_id', 'bioproject', 'anatomy_class'),
+    required_cols = c('species', 'input_id', 'bioproject', 'anatomy_class'),
     source = 'summarise_biosample_availability'
   )
   if (is.null(species)) {
@@ -1210,19 +1249,40 @@ summarise_biosample_skew <- function(x, species = NULL, anatomy_class = NULL) {
     )
     return(out)
   }
-  prof_use <- prof[prof$species %in% species_all, , drop = FALSE]
-  if (!is.null(anatomy_class)) prof_use <- prof_use[prof_use$anatomy_class %in% anatomy_class, , drop = FALSE]
-  unit_values <- trimws(as.character(prof_use$bioproject))
-  prof_use$bioproject <- unit_values
-  has_unit <- !is.na(unit_values) & nzchar(unit_values)
-  prof_skew <- prof_use[has_unit, , drop = FALSE]
+  profile_filtered <- (
+    if (is.null(anatomy_class)) {
+      dplyr::filter(prof, .data$species %in% .env$species_all)
+    } else {
+      dplyr::filter(
+        prof,
+        .data$species %in% .env$species_all,
+        .data$anatomy_class %in% .env$anatomy_class
+      )
+    }
+  ) |>
+    dplyr::mutate(
+      bioproject = trimws(as.character(.data$bioproject))
+    )
+  profile_linked <- profile_filtered |>
+    dplyr::filter(
+      !is.na(.data$bioproject),
+      nzchar(.data$bioproject)
+    )
   anatomy_class_label <- if (is.null(anatomy_class)) 'all' else as.character(anatomy_class)
   recovery <- .skew_id_recovery_table(
     species = species_all,
     unit = 'BioProject',
     class = anatomy_class_label,
-    records = vapply(species_all, function(sp) sum(prof_use$species == sp), integer(1)),
-    included = vapply(species_all, function(sp) sum(prof_skew$species == sp), integer(1))
+    records = vapply(
+      species_all,
+      function(sp) sum(profile_filtered$species == sp),
+      integer(1)
+    ),
+    included = vapply(
+      species_all,
+      function(sp) sum(profile_linked$species == sp),
+      integer(1)
+    )
   )
   n_records <- sum(recovery$records)
   n_excluded <- sum(recovery$excluded)
@@ -1234,7 +1294,7 @@ summarise_biosample_skew <- function(x, species = NULL, anatomy_class = NULL) {
     )
   }
   calc_one <- function(sp) {
-    units <- prof_skew$bioproject[prof_skew$species == sp]
+    units <- profile_linked$bioproject[profile_linked$species == sp]
     counts <- as.numeric(table(units))
     counts <- counts[counts > 0]
     if (length(counts) == 0L) {
@@ -1279,7 +1339,7 @@ summarise_biosample_skew <- function(x, species = NULL, anatomy_class = NULL) {
   }
   out <- out[c('species', 'BioProject', 'anatomy_class', 'min', 'q25', 'med', 'q75', 'max', 'eff')]
   out <- .as_gdt_table(out, x, 'summarise_biosample_skew')
-  attr(out, 'biosample_anatomy_profile') <- prof_skew
+  attr(out, 'biosample_anatomy_profile') <- profile_filtered
   attr(out, 'biosample_anatomy_profile_info') <- attr(x, 'biosample_anatomy_profile_info', exact = TRUE)
   attr(out, 'skew_id_recovery') <- recovery
   out
@@ -1441,7 +1501,7 @@ anatomy_term     = NULL) {
     return(OUT)
   }
   PROFILE <- HITS |>
-    dplyr::group_by(.data$species, .data$biosample) |>
+    dplyr::group_by(.data$species, .data$input_id) |>
     dplyr::summarise(
       anatomy_class_profile = .biosample_collapse_anatomy_profile(.data$anatomy_class, level = 'anatomy_class'),
       anatomy_subclass_profile = .biosample_collapse_anatomy_profile(.data$anatomy_subclass, level = 'anatomy_subclass'),
@@ -1459,7 +1519,7 @@ anatomy_term     = NULL) {
   OUT <- HITS |>
     dplyr::left_join(
       PROFILE,
-      by = c('species', 'biosample')
+      by = c('species', 'input_id')
     ) |>
     dplyr::transmute(
       species = .data$species,
@@ -1488,12 +1548,21 @@ anatomy_term     = NULL) {
 #' modality-by-anatomy structure for each species.
 #'
 #' Profile cache:
-#' The input `SRA` must carry the cached UID-level profile produced by
-#' [summarise_sra_availability()]. The input `BIO` must carry the cached
-#' `biosample_anatomy_profile` produced by
-#' [summarise_biosample_availability()]. BioSample records are linked by shared
-#' BioSample identifiers, then counted across SRA modality classes and either
-#' BioSample anatomy classes or anatomy subclasses.
+#' The input `SRA` must carry `sra_profile`. The input `BIO` must carry
+#' `biosample_anatomy_profile` and `biosample_canonical_profile`. These caches
+#' are produced by [summarise_sra_availability()] and
+#' [summarise_biosample_availability()], respectively.
+#'
+#' The returned `interaction_profile` contains `species`, `entrez_uid`,
+#' `biosample`, `bioproject`, `strategy_raw`, `strategy_norm`, `class`,
+#' `value_raw`, `value_norm`, and `anatomy_class`. BioProject values come from
+#' SRA where available, with BioSample values used as a fallback. Raw and
+#' normalised source values come from `biosample_canonical_profile`.
+#'
+#' `interaction_info$match_report` contains `species`, `BioSample`, `operable`,
+#' `linked`, and `unknown`. These give the total archive count, operable count,
+#' linked operable count, and linked count with unknown modality or anatomy.
+#' Records with both classifications unknown are counted once in `unknown`.
 #'
 #' @details
 #' For each species, the `BioSample` column gives the observed number of linked
@@ -1526,10 +1595,12 @@ anatomy_term     = NULL) {
 #' category. Columns include `species`, `class`, `BioSample`, `expected`, and
 #' `residual`, plus either `anatomy_class` or `anatomy_subclass`, depending on
 #' `level`. The tibble has class `gdt_tbl`, carries a `query_info` attribute,
-#' and includes interaction metadata in `interaction_info`.
+#' and includes a record-level interaction profile in `interaction_profile`
+#' plus interaction metadata in `interaction_info`.
 #'
 #' @seealso [summarise_sra_availability()],
-#' [summarise_biosample_availability()], [plot_interaction()]
+#' [summarise_biosample_availability()], [plot_interaction()],
+#' [report_diagnostics()]
 #'
 #' @examples
 #' \dontrun{
@@ -1552,22 +1623,38 @@ summarise_interaction <- function(SRA,
   BIO <- .gama_require_output(
     BIO,
     'summarise_biosample_availability',
-    required_cols = c('species', 'BioSample')
+    required_cols = c('species', 'BioSample', 'operable')
   )
   SRA <- .gama_require_output(SRA, 'summarise_sra_availability')
   anatomy <- .gama_require_cache(
     BIO,
     attr_name = 'biosample_anatomy_profile',
-    required_cols = c('species', 'biosample_id', 'anatomy_class'),
+    required_cols = c(
+      'species', 'input_id', 'entrez_uid', 'biosample_id', 'bioproject',
+      'anatomy_class', 'anatomy_subclass'
+    ),
     source = 'summarise_biosample_availability'
   )
-  sra_prof <- .gama_require_cache(
+  canonical <- .gama_require_cache(
+    BIO,
+    attr_name = 'biosample_canonical_profile',
+    required_cols = c('species', 'input_id', 'value_raw', 'value_norm'),
+    source = 'summarise_biosample_availability'
+  )
+  sra_profile <- .gama_require_cache(
     SRA,
     attr_name = 'sra_profile',
-    required_cols = c('species', 'class'),
+    required_cols = c(
+      'species', 'entrez_uid', 'bioproject', 'strategy_raw',
+      'strategy_norm', 'class'
+    ),
     source = 'summarise_sra_availability'
   )
-  if (!any(c('biosample', 'biosample_id') %in% names(sra_prof))) {
+  biosample_col <- if ('biosample' %in% names(sra_profile)) {
+    'biosample'
+  } else if ('biosample_id' %in% names(sra_profile)) {
+    'biosample_id'
+  } else {
     .gama_input_error(
       'summarise_sra_availability',
       detected = .detect_gama_object(SRA),
@@ -1621,66 +1708,164 @@ summarise_interaction <- function(SRA,
       ) |>
       dplyr::select(-.interaction_term, -total_n, -row_total, -col_total)
   }
-  match_report <- function(anatomy, modality, species_use) {
-    matched <- anatomy |>
-      dplyr::filter(.data$species %in% .env$species_use) |>
-      dplyr::left_join(modality, by = c('species', 'biosample_id')) |>
-      dplyr::transmute(
-        species = .data$species,
-        biosample_id = .data$biosample_id,
-        matched_to_sra = !is.na(.data$modality_class) & nzchar(.data$modality_class)
-      ) |>
-      dplyr::distinct(.data$species, .data$biosample_id, .data$matched_to_sra)
-    report <- matched |>
-      dplyr::group_by(.data$species) |>
-      dplyr::summarise(
-        operable = dplyr::n(),
-        matched_to_sra = sum(.data$matched_to_sra, na.rm = TRUE),
-        .groups = 'drop'
-      ) |>
-      dplyr::mutate(
-        unmatched_to_sra = .data$operable - .data$matched_to_sra,
-        matched_prop = dplyr::if_else(
-          .data$operable > 0L,
-          .data$matched_to_sra / .data$operable,
-          NA_real_
-        )
-      )
-    tibble::tibble(species = species_use) |>
-      dplyr::left_join(report, by = 'species') |>
-      dplyr::mutate(
-        operable = as.integer(dplyr::coalesce(.data$operable, 0L)),
-        matched_to_sra = as.integer(dplyr::coalesce(.data$matched_to_sra, 0L)),
-        unmatched_to_sra = as.integer(dplyr::coalesce(.data$unmatched_to_sra, 0L)),
-        matched_prop = dplyr::if_else(
-          .data$operable > 0L,
-          .data$matched_to_sra / .data$operable,
-          NA_real_
-        )
-      )
-  }
   class_levels <- .biosample_anatomy_profile_levels()
   modality_levels <- .biosample_modality_levels()
-  modality <- .biosample_modality_profile(sra_prof)
-  report <- match_report(anatomy, modality, species_use)
-  for (i in seq_len(nrow(report))) {
+  sra_filtered <- sra_profile |>
+    dplyr::filter(.data$species %in% .env$species_use)
+  modality <- .biosample_modality_profile(sra_filtered)
+  profile <- anatomy |>
+    dplyr::filter(.data$species %in% .env$species_use) |>
+    dplyr::left_join(
+      modality,
+      by = c('species', 'biosample_id'),
+      na_matches = 'never',
+      relationship = 'many-to-one'
+    ) |>
+    dplyr::transmute(
+      species = .data$species,
+      input_id = .data$input_id,
+      entrez_uid = .data$entrez_uid,
+      biosample_id = .data$biosample_id,
+      bioproject = .data$bioproject,
+      anatomy_class = .data$anatomy_class,
+      anatomy_subclass = .data$anatomy_subclass,
+      modality_class = .data$modality_class,
+      sra_unknown = dplyr::coalesce(.data$sra_unknown, FALSE),
+      linked = !is.na(.data$modality_class) &
+        nzchar(.data$modality_class)
+    ) |>
+    dplyr::arrange(match(.data$species, .env$species_use), .data$input_id)
+  match_report <- tibble::tibble(species = species_use) |>
+    dplyr::left_join(
+      BIO |>
+        dplyr::filter(.data$species %in% .env$species_use) |>
+        dplyr::transmute(
+          species = as.character(.data$species),
+          BioSample = as.integer(.data$BioSample),
+          operable = as.integer(.data$operable)
+        ),
+      by = 'species',
+      relationship = 'one-to-one'
+    ) |>
+    dplyr::left_join(
+      profile |>
+        dplyr::group_by(.data$species) |>
+        dplyr::summarise(
+          linked = sum(.data$linked),
+          unknown = sum(
+            .data$linked &
+              (
+                .data$sra_unknown |
+                  dplyr::coalesce(
+                    .data$anatomy_class == 'unknown',
+                    FALSE
+                  )
+              )
+          ),
+          .groups = 'drop'
+        ),
+      by = 'species',
+      relationship = 'one-to-one'
+    ) |>
+    dplyr::transmute(
+      species = .data$species,
+      BioSample = as.integer(dplyr::coalesce(.data$BioSample, 0L)),
+      operable = as.integer(dplyr::coalesce(.data$operable, 0L)),
+      linked = as.integer(dplyr::coalesce(.data$linked, 0L)),
+      unknown = as.integer(dplyr::coalesce(.data$unknown, 0L))
+    )
+  for (i in seq_len(nrow(match_report))) {
     .gama_msg(
-      report$species[[i]],
+      match_report$species[[i]],
       ': ',
-      report$matched_to_sra[[i]],
-      ' matched to SRA out of ',
-      report$operable[[i]],
+      match_report$linked[[i]],
+      ' linked to SRA out of ',
+      match_report$operable[[i]],
       ' operable BioSample records.'
     )
   }
+  biosample_records <- profile |>
+    dplyr::filter(.data$linked) |>
+    dplyr::select(
+      species,
+      input_id,
+      biosample = biosample_id,
+      bioproject_bio = bioproject,
+      anatomy_class
+    ) |>
+    dplyr::inner_join(
+      canonical |>
+        dplyr::filter(.data$species %in% .env$species_use) |>
+        dplyr::select(species, input_id, value_raw, value_norm) |>
+        dplyr::distinct(),
+      by = c('species', 'input_id'),
+      na_matches = 'never',
+      relationship = 'one-to-many'
+    ) |>
+    dplyr::mutate(
+      biosample = dplyr::na_if(
+        trimws(as.character(.data$biosample)),
+        ''
+      ),
+      bioproject_bio = dplyr::na_if(
+        trimws(as.character(.data$bioproject_bio)),
+        ''
+      )
+    ) |>
+    dplyr::filter(!is.na(.data$biosample)) |>
+    dplyr::distinct()
+  sra_records <- sra_filtered |>
+    dplyr::transmute(
+      species = as.character(.data$species),
+      entrez_uid = as.character(.data$entrez_uid),
+      biosample = dplyr::na_if(
+        trimws(as.character(.data[[biosample_col]])),
+        ''
+      ),
+      bioproject_sra = dplyr::na_if(
+        trimws(as.character(.data$bioproject)),
+        ''
+      ),
+      strategy_raw = as.character(.data$strategy_raw),
+      strategy_norm = as.character(.data$strategy_norm),
+      class = as.character(.data$class)
+    ) |>
+    dplyr::filter(!is.na(.data$biosample)) |>
+    dplyr::distinct()
+  interaction_profile <- sra_records |>
+    dplyr::inner_join(
+      biosample_records,
+      by = c('species', 'biosample'),
+      na_matches = 'never',
+      relationship = 'many-to-many'
+    ) |>
+    dplyr::transmute(
+      species = .data$species,
+      entrez_uid = .data$entrez_uid,
+      biosample = .data$biosample,
+      bioproject = dplyr::coalesce(
+        .data$bioproject_sra,
+        .data$bioproject_bio
+      ),
+      strategy_raw = .data$strategy_raw,
+      strategy_norm = .data$strategy_norm,
+      class = .data$class,
+      value_raw = as.character(.data$value_raw),
+      value_norm = as.character(.data$value_norm),
+      anatomy_class = as.character(.data$anatomy_class)
+    ) |>
+    dplyr::distinct() |>
+    dplyr::arrange(
+      match(.data$species, .env$species_use),
+      .data$biosample,
+      .data$entrez_uid,
+      .data$value_norm
+    )
   if (level == 'anatomy_class') {
-    counts <- anatomy |>
-      dplyr::filter(.data$species %in% .env$species_use) |>
-      dplyr::left_join(modality, by = c('species', 'biosample_id')) |>
-      dplyr::filter(!is.na(.data$modality_class), nzchar(.data$modality_class)) |>
+    counts <- profile |>
+      dplyr::filter(.data$linked) |>
       dplyr::transmute(
         species = .data$species,
-        biosample_id = .data$biosample_id,
         modality_class = .data$modality_class,
         anatomy_class = dplyr::coalesce(.data$anatomy_class, 'unknown')
       ) |>
@@ -1691,7 +1876,6 @@ summarise_interaction <- function(SRA,
           'unknown'
         )
       ) |>
-      dplyr::distinct(.data$species, .data$biosample_id, .data$modality_class, .data$anatomy_class) |>
       dplyr::count(.data$species, .data$modality_class, .data$anatomy_class, name = 'BioSample')
     MAT <- tidyr::expand_grid(
       species = species_use,
@@ -1716,8 +1900,7 @@ summarise_interaction <- function(SRA,
     )
   } else {
     SUB <- .biosample_term_heatmap_core(
-      BIO = BIO,
-      SRA = SRA,
+      profile = profile,
       species = species_use
     )
     if (!nrow(SUB)) .gama_stop('No anatomy subclasses found for selected species.')
@@ -1757,13 +1940,14 @@ summarise_interaction <- function(SRA,
   if (is.null(qi)) qi <- attr(SRA, 'query_info', exact = TRUE)
   if (is.null(qi)) .gama_warn('No query_info found on input objects.')
   attr(OUT, 'query_info') <- qi
+  attr(OUT, 'interaction_profile') <- interaction_profile
   attr(OUT, 'interaction_info') <- list(
     level = level,
     term_col = term_col,
     term_levels = term_meta$x_term,
     modality_levels = modality_levels,
     term_meta = term_meta,
-    match_report = report
+    match_report = match_report
   )
   OUT <- .set_gama_object(OUT, 'summarise_interaction')
   class(OUT) <- unique(c('gdt_tbl', class(OUT)))

@@ -41,12 +41,14 @@
 &nbsp;&nbsp;<a href="#extract_biosample_metadata">extract_biosample_metadata()</a><br>
 &nbsp;&nbsp;<a href="#summarise_interaction">summarise_interaction()</a><br>
 &nbsp;&nbsp;<a href="#plot_interaction">plot_interaction()</a><br>
+&nbsp;&nbsp;<a href="#report_diagnostics">report_diagnostics()</a><br>
 <a href="#methods">Methods</a><br>
 &nbsp;&nbsp;<a href="#retrieval">Retrieval</a><br>
 &nbsp;&nbsp;<a href="#data-richness">Data richness</a><br>
 &nbsp;&nbsp;<a href="#ontology-driven-classification">Ontology-driven classification</a><br>
 &nbsp;&nbsp;<a href="#replication-skew">Replication skew</a><br>
 &nbsp;&nbsp;<a href="#residuals">Residuals</a><br>
+&nbsp;&nbsp;<a href="#recoverability">Recoverability</a><br>
 <a href="#limitations">Limitations</a><br>
 <a href="#development">Development</a><br>
 <a href="#references">References</a>
@@ -141,7 +143,7 @@ citation('GAMA')
 
 ## Dependencies
 
-GAMA is implemented in R (≥4.2.0) and built on tidyverse tooling for data manipulation, iteration, and plotting (R Core Team, 2024; Wickham *et al.*, 2023; Wickham *et al.*, 2025; Wickham & Henry, 2026). NCBI Entrez eUtils queries are performed via rentrez (Winter, 2017; National Center for Biotechnology Information, 2026), and the SRA expxml field is parsed with xml2 (Wickham *et al.*, 2026). Tabular outputs use tibble (Müller & Wickham, 2026), while plots are produced with ggplot2 (Wickham, 2016). Ensure that all dependencies are installed prior to running GAMA.
+GAMA is implemented in R (≥4.2.0) and built on tidyverse tooling for data manipulation, iteration, and plotting (R Core Team, 2024; Wickham *et al.*, 2023; Wickham *et al.*, 2025; Wickham & Henry, 2026). NCBI Entrez eUtils queries are performed via rentrez (Winter, 2017; National Center for Biotechnology Information, 2026) and the SRA expxml field is parsed with xml2 (Wickham *et al.*, 2026). Tabular outputs use tibble (Müller & Wickham, 2026), while plots are produced with ggplot2 (Wickham, 2016). Ensure that all dependencies are installed prior to running GAMA.
 
 ---
 
@@ -220,7 +222,7 @@ Provides a species-level overview of SRA modality composition by classifying SRA
     &nbsp;&nbsp;species: character vector; species from list to include (NULL, one or more species names)<br>
     &nbsp;&nbsp;all: logical; include subclass-level columns (FALSE, TRUE)<br>
     &nbsp;&nbsp;include_geo: logical; append GEO summary columns (FALSE, TRUE)
-- Output – tibble (gdt_tbl) with one row per species containing total SRA records and class-level modality counts; caches UID-level profiles attached to the output tibble as attr(x, 'sra_profile') and profile metadata as attr(x, 'sra_profile_info') for downstream GEO linkage plotting, replication-skew analysis, and SRA × BioSample interaction summaries
+- Output – tibble (gdt_tbl) with one row per species containing total SRA records and class-level modality counts; caches UID-level profiles attached to the output tibble as attr(x, 'sra_profile') and profile metadata as attr(x, 'sra_profile_info') for downstream GEO linkage plotting, replication-skew analysis, SRA × BioSample interaction summaries, and diagnostics
 
 ### plot_sra_availability()
 
@@ -246,18 +248,18 @@ Visualises GEO linkage across SRA modality classes, excluding genomic records.
     &nbsp;&nbsp;theme_fn: function; ggplot2 theme function (ggplot2::theme_minimal)<br>
     &nbsp;&nbsp;colours: named character vector; fill colours for SRA modality classes<br>
     &nbsp;&nbsp;alpha_vals: named numeric vector; transparency values for GEO linkage
-- Output – ggplot for a single species, or a named list of ggplot objects for multiple species, showing per-modality GEO linkage using cached profiles attached to the input tibble as attr(x, 'sra_profile')
+- Output – ggplot for a single species or a named list of ggplot objects for multiple species, showing per-modality GEO linkage using cached profiles attached to the input tibble as attr(x, 'sra_profile')
 
 ### summarise_sra_skew()
 
-Quantifies whether SRA records are broadly distributed across BioProjects or BioSamples, or concentrated within a small number of dominant units (see [Replication skew](#replication-skew)).
+Quantifies whether SRA records are broadly distributed across BioProjects or BioSamples or concentrated within a small number of dominant units (see [Replication skew](#replication-skew)).
 
 - Input – tibble returned by summarise_sra_availability() with cached UID-level profiles attached as attr(x, 'sra_profile')
   - Optional arguments –<br>
     &nbsp;&nbsp;species: character vector; species from tibble to include (NULL, one or more species names)<br>
     &nbsp;&nbsp;unit: character; skew unit ('bioproject', 'biosample')<br>
     &nbsp;&nbsp;class: character scalar; single modality class to analyse (NULL, one class name)
-- Output – tibble (gdt_tbl) with one row per species containing unit count, class, boxplot summary statistics of SRA records per unit (min, q25, med, q75, max), and inverse Simpson index (eff)
+- Output – tibble (gdt_tbl) with one row per species containing the active BioProject or BioSample count, class, boxplot summary statistics of SRA records per unit (min, q25, med, q75, max), and inverse Simpson index (eff); retains the active filtered records in attr(x, 'sra_profile') before records missing the selected identifier are excluded and attaches attr(x, 'skew_id_recovery') containing species, unit, class, records, included, excluded, and id_recovery_prop
 
 ### plot_sra_skew()
 
@@ -297,7 +299,7 @@ Provides a species-level overview of BioSample anatomy composition by collapsing
   - Optional arguments –<br>
     &nbsp;&nbsp;species: character vector; species from list to include (NULL, one or more species names)<br>
     &nbsp;&nbsp;all: logical; include canonical anatomy-term columns (FALSE, TRUE)
-- Output – tibble (gdt_tbl) with one row per species containing total BioSample record counts, operable BioSample record counts, and class-level anatomy counts; when all = TRUE, canonical anatomy-term counts are included; cached BioSample profiles are attached as attr(x, 'biosample_anatomy_profile') and attr(x, 'biosample_canonical_profile') for downstream skew analysis and SRA × BioSample interaction summaries
+- Output – tibble (gdt_tbl) with one row per species containing total BioSample record counts, operable BioSample record counts, and class-level anatomy counts; when all = TRUE, canonical anatomy-term counts are included; cached BioSample profiles are attached as attr(x, 'biosample_anatomy_profile') and attr(x, 'biosample_canonical_profile'), with the latter retaining raw and normalised source values and BioProject provenance for downstream skew analysis, SRA × BioSample interaction summaries, and diagnostics
 
 ### plot_biosample_availability()
 
@@ -320,7 +322,7 @@ Quantifies whether BioSample records are broadly distributed across BioProjects 
   - Optional arguments –<br>
     &nbsp;&nbsp;species: character vector; species from tibble to include (NULL, one or more species names)<br>
     &nbsp;&nbsp;anatomy_class: character scalar; single anatomy class to analyse (NULL, one anatomy class)
-- Output – tibble (gdt_tbl) with one row per species containing BioProject count, anatomy_class, boxplot summary statistics of operable BioSample records per BioProject (min, q25, med, q75, max), and inverse Simpson index (eff)
+- Output – tibble (gdt_tbl) with one row per species containing BioProject count, anatomy_class, boxplot summary statistics of operable BioSample records per BioProject (min, q25, med, q75, max), and inverse Simpson index (eff); retains the active filtered records in attr(x, 'biosample_anatomy_profile') before records missing BioProject identifiers are excluded and attaches attr(x, 'skew_id_recovery') containing species, unit, class, records, included, excluded, and id_recovery_prop
 
 ### plot_biosample_skew()
 
@@ -354,13 +356,13 @@ Returns record-level BioSample source-material metadata for deeper inspection, i
 
 ### summarise_interaction()
 
-Summarises cross-database SRA × BioSample structure by linking cached SRA modality profiles with cached biosample_anatomy_profile data (see [Residuals](#residuals)).
+Summarises cross-database SRA × BioSample structure by linking cached sra_profile, biosample_anatomy_profile, and biosample_canonical_profile data (see [Residuals](#residuals)).
 
 - Input – tibble returned by summarise_sra_availability() and tibble returned by summarise_biosample_availability()
   - Optional arguments –<br>
     &nbsp;&nbsp;level: character; anatomy resolution to summarise ('anatomy_class', 'anatomy_subclass')<br>
     &nbsp;&nbsp;species: character vector; species from the input summaries to include (NULL, one or more species names)
-- Output – tibble (gdt_tbl) with one row per species, modality class, and anatomy category; columns include species, class, BioSample, expected, and residual, plus either anatomy_class or anatomy_subclass depending on level; interaction metadata are attached as attr(x, 'interaction_info')
+- Output – tibble (gdt_tbl) with one row per species, modality class, and anatomy category; columns include species, class, BioSample, expected, and residual, plus either anatomy_class or anatomy_subclass depending on level; BioSample-to-SRA linkage information and supporting metadata are attached as attr(x, 'interaction_profile') and attr(x, 'interaction_info'), respectively
 
 ### plot_interaction()
 
@@ -382,7 +384,16 @@ Visualises SRA × BioSample interaction summaries as modality-by-anatomy heatmap
     &nbsp;&nbsp;na_fill: character scalar; missing value fill colour<br>
     &nbsp;&nbsp;show_values: logical; show cell values (TRUE, FALSE)<br>
     &nbsp;&nbsp;value_size: numeric; cell-value text size
-- Output – ggplot for a single species, or a named list of ggplot objects for multiple species; with value = 'count', the heatmap shows linked BioSample record counts; with value = 'residual', the heatmap shows Pearson residuals from the species-level marginal expectation
+- Output – ggplot for a single species or a named list of ggplot objects for multiple species; with value = 'count', the heatmap shows linked BioSample record counts; with value = 'residual', the heatmap shows Pearson residuals from the species-level marginal expectation
+
+### report_diagnostics()
+
+Reports metadata recoverability and identifies records with unresolved classifications or missing linkage identifiers in supported GAMA objects (see [Recoverability](#recoverability)).
+
+- Input – tibble returned by summarise_sra_availability(), summarise_sra_skew(), summarise_biosample_availability(), summarise_biosample_skew(), or summarise_interaction()
+  - Optional arguments –<br>
+    &nbsp;&nbsp;view: character; diagnostic view ('recoverability', 'records')
+- Output – tibble (gdt_tbl) retaining query provenance; with view = 'recoverability', contains one row per species with the relevant denominator, diagnostic counts, and recoverability; with view = 'records', contains object-specific rows with unresolved classifications or missing active linkage identifiers. If no matching records are found, an empty table retaining the complete typed column schema is returned and a message is emitted
 
 ---
 
@@ -394,7 +405,7 @@ GAMA is organised around two archive-interrogation layers:
 
 **Genomic Availability** – Introduces query_species() as the entry point for GAMA, creating a species-indexed search object that anchors downstream summaries, visualisations, and metadata extraction. It queries NCBI Assembly, SRA, and BioSample through rentrez, using organism-constrained searches, retmax = 999999, and Entrez history tracking. Returned identifiers, record counts, and web_history context are preserved for later retrieval. Search requests use retrying handlers with increasing back-off, while Assembly, SRA, and BioSample records are recovered through shared entrez_summary() helpers in batches of up to 100 records, using returned identifiers where available and Entrez history context where history-aware retrieval is required. Records are structured with dplyr, tidyr, and purrr, with provenance metadata attached to all query-derived outputs.
 
-**Metadata Analysis** – Performs deeper, database-specific metadata parsing and normalisation. For Assembly, stored identifiers are used to retrieve NCBI summary records, from which assembly level, N50, coverage, BioSample/BioProject links, submitter details, release date, and FTP path are extracted and flattened into tidy metadata fields. For SRA, the expxml field is parsed using xml2 to extract and normalise LIBRARY_STRATEGY, which is then assigned to a modality class and subclass using the internal ontology and strict matching. Missing, uninformative, or explicitly other strategies are rescued using LIBRARY_SOURCE, LIBRARY_SELECTION, and TITLE. Records that remain missing or uninformative after fallback parsing are retained as unknown; non-missing, interpretable strategies that fall outside the ontology are retained as other. GEO linkage is recorded by scanning experiment XML for GSE/GSM accessions and cached alongside BioSample/BioProject identifiers. For BioSample, record-level metadata are screened for accepted sample-source attributes, including tissue, organism part, cell type, tissue type, and organ. A BioSample record is treated as operable when an accepted sample-source attribute is present. Accepted attribute values are then parsed against the curated anatomy ontology. Missing-like values, or values with no ontological match, are retained as unknown; broad, generic, or subcellular anatomy values are classified as other; records with multiple recovered anatomy classes are classified as mixed. Collapsed BioSample anatomy profiles are cached by BioSample identifier so subsequent skew and archive interaction workflows can reuse recovered anatomy assignments without repeating retrieval and parsing.
+**Metadata Analysis** – Performs deeper, database-specific metadata parsing and normalisation. For Assembly, stored identifiers are used to retrieve NCBI summary records, from which assembly level, N50, coverage, BioSample/BioProject links, submitter details, release date, and FTP path are extracted and flattened into tidy metadata fields. For SRA, the expxml field is parsed using xml2 to extract and normalise LIBRARY_STRATEGY, which is then assigned to a modality class and subclass using the internal ontology and strict matching. Missing, uninformative, or explicitly other strategies are rescued using LIBRARY_SOURCE, LIBRARY_SELECTION, and TITLE. Records that remain missing or uninformative after fallback parsing are retained as unknown; non-missing, interpretable strategies that fall outside the ontology are retained as other. GEO linkage is recorded by scanning experiment XML for GSE/GSM accessions and cached alongside BioSample/BioProject identifiers. For BioSample, record-level metadata are screened for accepted sample-source attributes, including tissue, organism part, cell type, tissue type, and organ. A BioSample record is treated as operable when an accepted sample-source attribute is present. Accepted attribute values are then parsed against the curated anatomy ontology. Missing-like values, or values with no ontological match, are retained as unknown; broad, generic, or subcellular anatomy values are classified as other; records with multiple recovered anatomy classes are classified as mixed. Collapsed and canonical BioSample anatomy profiles are cached with record identifiers and BioProject provenance so subsequent skew, interaction, and diagnostic workflows can reuse recovered anatomy assignments and raw and normalised source values without repeating retrieval and parsing.
 
 ### Data richness
 
@@ -410,7 +421,7 @@ For BioSample, anatomy terms and recognised variants were derived by mining >750
 
 ### Replication skew
 
-*eff* = 1 / Σ(*pᵢ*²), where *pᵢ* = *nᵢ* / *N*, *nᵢ* is the number of records in unit *i* (BioProject or BioSample), *N* = Σ(*nᵢ*) is the total number of records, and *n* is the number of distinct units. This is the inverse Simpson index, expressed as an ‘effective number’ of units: *eff* = 1 when all records come from a single dominant BioProject/BioSample (Simpson, 1949), and *eff* increases towards *n* as records are distributed more evenly across many units (Hill, 1973). Archive record counts grouped by BioProject or BioSample are often long-tailed. The squared-proportion weighting makes *eff* appropriately sensitive to dominance (replication skew) without being inflated by numerous singletons, providing a compact, comparable measure of replication structure alongside raw record counts (Jost, 2006).
+*eff* = 1 / Σ(*pᵢ*²), where *pᵢ* = *nᵢ* / *N*, *nᵢ* is the number of records in unit *i* (BioProject or BioSample), *N* = Σ(*nᵢ*) is the total number of records, and *n* is the number of distinct units. This is the inverse Simpson index, expressed as an ‘effective number’ of units: *eff* = 1 when all records come from a single dominant BioProject/BioSample (Simpson, 1949) and *eff* increases towards *n* as records are distributed more evenly across many units (Hill, 1973). Archive record counts grouped by BioProject or BioSample are often long-tailed. The squared-proportion weighting makes *eff* appropriately sensitive to dominance (replication skew) without being inflated by numerous singletons, providing a compact, comparable measure of replication structure alongside raw record counts (Jost, 2006).
 
 ### Residuals
 
@@ -421,6 +432,10 @@ Residuals quantify whether an SRA modality–BioSample anatomy combination is ov
 </p>
 
 **Figure 1.** Interaction heatmaps showing BioSample counts and Pearson residuals for linked SRA modality and BioSample anatomy profiles generated using GAMA 0.3.2 with a *Nicotiana benthamiana* query (conducted 2 June 2026; 16:19:35 UTC). Residuals are calculated relative to the species-level marginal expectation, highlighting modality–anatomy combinations observed more or less often than expected.
+
+### Recoverability
+
+Recoverability is the proportion of the relevant record denominator for which the required classification or linkage information was recovered. For SRA availability, recoverability = (*SRA* − *unknown*) / *SRA*; for SRA skew, recoverability = *linked* / *SRA*; for BioSample availability, recoverability = (*operable* − *unknown*) / *BioSample*; for BioSample skew, recoverability = *linked* / *BioSample*; for interaction summaries, recoverability = (*linked* − *unknown*) / *BioSample*. An *operable* BioSample record contains at least one accepted sample-source attribute. The *unknown* count represents records that could not be classified by the relevant ontology. Interaction summaries count each linked BioSample once when either or both classifications are unknown. The *linked* count represents records carrying the active identifier in skew diagnostics. Values range from 0 to 1, with zero denominators returning NA.
 
 ---
 

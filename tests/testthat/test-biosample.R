@@ -45,6 +45,7 @@ test_that('BIO_SUMMARY fixture carries compacted BioSample profile caches', {
   CANONICAL <- attr(BIO_SUMMARY, 'biosample_canonical_profile', exact = TRUE)
   anatomy_cols <- c(
     'species',
+    'input_id',
     'entrez_uid',
     'biosample_id',
     'bioproject',
@@ -53,6 +54,7 @@ test_that('BIO_SUMMARY fixture carries compacted BioSample profile caches', {
   )
   canonical_cols <- c(
     'species',
+    'input_id',
     'entrez_uid',
     'biosample_id',
     'bioproject',
@@ -98,6 +100,7 @@ test_that('summarise_biosample_availability attaches BioSample profile metadata'
   )
   anatomy_cols <- c(
     'species',
+    'input_id',
     'entrez_uid',
     'biosample_id',
     'bioproject',
@@ -106,6 +109,7 @@ test_that('summarise_biosample_availability attaches BioSample profile metadata'
   )
   canonical_cols <- c(
     'species',
+    'input_id',
     'entrez_uid',
     'biosample_id',
     'bioproject',
@@ -130,8 +134,8 @@ test_that('summarise_biosample_availability attaches BioSample profile metadata'
   expect_false(is.null(CANONICAL_INFO))
   expect_named(ANATOMY, anatomy_cols)
   expect_named(CANONICAL, canonical_cols)
-  expect_identical(ANATOMY_INFO$id_col, 'biosample_id')
-  expect_identical(CANONICAL_INFO$id_col, 'biosample_id')
+  expect_identical(ANATOMY_INFO$id_col, 'input_id')
+  expect_identical(CANONICAL_INFO$id_col, 'input_id')
   expect_identical(ANATOMY_INFO$fields, anatomy_cols)
   expect_identical(CANONICAL_INFO$fields, canonical_cols)
   expect_true('cached_at_utc' %in% names(ANATOMY_INFO))
@@ -232,6 +236,7 @@ test_that('BIO_SKEW fixture carries ID recovery diagnostics', {
 test_that('summarise_biosample_skew applies correct inverse Simpson index formula', {
   PROFILE <- tibble::tibble(
     species = rep('Synthetic species', 10),
+    input_id = paste0('INPUT', seq_len(10)),
     entrez_uid = paste0('BSM', seq_len(10)),
     biosample_id = paste0('SAM', seq_len(10)),
     bioproject = rep(c('PRJ1', 'PRJ2', 'PRJ3'), c(5, 3, 2)),
@@ -263,7 +268,7 @@ test_that('summarise_biosample_skew applies correct inverse Simpson index formul
   attr(BIO_SUMMARY, 'biosample_anatomy_profile_info') <- list(
     cached_at_utc = '2026-05-31T07:30:00Z',
     profile_time_utc = '2026-05-31T07:30:00Z',
-    id_col = 'biosample_id',
+    id_col = 'input_id',
     fields = names(PROFILE)
   )
   class(BIO_SUMMARY) <- unique(c('gdt_tbl', class(BIO_SUMMARY)))

@@ -66,5 +66,5 @@ print(SRA_SUMMARY)
 }
 \seealso{
 \code{\link[=query_species]{query_species()}}, \code{\link[=plot_sra_availability]{plot_sra_availability()}}, \code{\link[=plot_sra_geo]{plot_sra_geo()}},
-\code{\link[=summarise_sra_skew]{summarise_sra_skew()}}, \code{\link[=extract_sra_metadata]{extract_sra_metadata()}}
+\code{\link[=summarise_sra_skew]{summarise_sra_skew()}}, \code{\link[=extract_sra_metadata]{extract_sra_metadata()}}, \code{\link[=report_diagnostics]{report_diagnostics()}}
 }

@@ -22,7 +22,8 @@ A tibble with one row per species, modality class, and anatomy
 category. Columns include \code{species}, \code{class}, \code{BioSample}, \code{expected}, and
 \code{residual}, plus either \code{anatomy_class} or \code{anatomy_subclass}, depending on
 \code{level}. The tibble has class \code{gdt_tbl}, carries a \code{query_info} attribute,
-and includes interaction metadata in \code{interaction_info}.
+and includes a record-level interaction profile in \code{interaction_profile}
+plus interaction metadata in \code{interaction_info}.
 }
 \description{
 Links cached SRA modality and BioSample anatomy profiles to summarise
@@ -30,12 +31,21 @@ modality-by-anatomy structure for each species.
 }
 \details{
 Profile cache:
-The input \code{SRA} must carry the cached UID-level profile produced by
-\code{\link[=summarise_sra_availability]{summarise_sra_availability()}}. The input \code{BIO} must carry the cached
-\code{biosample_anatomy_profile} produced by
-\code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}. BioSample records are linked by shared
-BioSample identifiers, then counted across SRA modality classes and either
-BioSample anatomy classes or anatomy subclasses.
+The input \code{SRA} must carry \code{sra_profile}. The input \code{BIO} must carry
+\code{biosample_anatomy_profile} and \code{biosample_canonical_profile}. These caches
+are produced by \code{\link[=summarise_sra_availability]{summarise_sra_availability()}} and
+\code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}, respectively.
+
+The returned \code{interaction_profile} contains \code{species}, \code{entrez_uid},
+\code{biosample}, \code{bioproject}, \code{strategy_raw}, \code{strategy_norm}, \code{class},
+\code{value_raw}, \code{value_norm}, and \code{anatomy_class}. BioProject values come from
+SRA where available, with BioSample values used as a fallback. Raw and
+normalised source values come from \code{biosample_canonical_profile}.
+
+\code{interaction_info$match_report} contains \code{species}, \code{BioSample}, \code{operable},
+\code{linked}, and \code{unknown}. These give the total archive count, operable count,
+linked operable count, and linked count with unknown modality or anatomy.
+Records with both classifications unknown are counted once in \code{unknown}.
 
 For each species, the \code{BioSample} column gives the observed number of linked
 BioSample records in each modality-by-anatomy cell. Expected counts are
@@ -71,5 +81,6 @@ print(INTERACTION)
 }
 \seealso{
 \code{\link[=summarise_sra_availability]{summarise_sra_availability()}},
-\code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}, \code{\link[=plot_interaction]{plot_interaction()}}
+\code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}, \code{\link[=plot_interaction]{plot_interaction()}},
+\code{\link[=report_diagnostics]{report_diagnostics()}}
 }

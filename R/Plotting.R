@@ -667,7 +667,7 @@ plot_sra_skew <- function(
   x_labs <- levels(CORE$species_label)
   CORE$x <- as.numeric(CORE$species_label)
   class_title <- if (identical(tolower(class_val), 'all')) 'SRA records' else paste0(toupper(substr(class_val, 1, 1)), substr(class_val, 2, nchar(class_val)), ' SRA records')
-  y_lab <- paste0(class_title, ' per ', unit_col, ' (log10)')
+  y_lab <- paste0(class_title, ' per ', unit_col)
   box_w <- 0.7
   cap_w <- 0.22
   BOX <- CORE |> dplyr::transmute(x, xmin = x - box_w / 2, xmax = x + box_w / 2, ymin = q25, ymax = q75, med = med, min = min, max = max)
@@ -698,6 +698,10 @@ plot_sra_skew <- function(
       unit_col_lower <- tolower(unit_col)
       counts_df <- prof |>
         dplyr::filter(.data$species %in% CORE$species) |>
+        dplyr::filter(
+          !is.na(.data[[unit_col_lower]]),
+          nzchar(.data[[unit_col_lower]])
+        ) |>
         dplyr::count(species, .data[[unit_col_lower]], name = 'count') |>
         dplyr::mutate(species_label = if (abbreviate) .shorten_species(species) else species) |>
         dplyr::mutate(species_label = factor(species_label, levels = levels(CORE$species_label))) |>
@@ -957,9 +961,9 @@ plot_biosample_skew <- function(
     paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)), ' BioSample records')
   }
   y_lab <- if (identical(label_term, 'in_vitro')) {
-    expression(italic('in vitro')~'BioSample records per BioProject (log10)')
+    expression(italic('in vitro')~'BioSample records per BioProject')
   } else {
-    paste0(display_label(label_term), ' per BioProject (log10)')
+    paste0(display_label(label_term), ' per BioProject')
   }
   box_w <- 0.7
   cap_w <- 0.22
