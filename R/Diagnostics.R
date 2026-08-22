@@ -11,10 +11,10 @@
 .diagnostics_object <- function(x) {
   supported <- c(
     'summarise_sra_availability',
-    'summarise_biosample_availability',
-    'summarise_interaction',
     'summarise_sra_skew',
-    'summarise_biosample_skew'
+    'summarise_biosample_availability',
+    'summarise_biosample_skew',
+    'summarise_interaction'
   )
   object <- .detect_gama_object(x)
   if (!object %in% supported) {
@@ -25,6 +25,21 @@
     )
   }
   object
+}
+
+.diagnostics_sra_skew_unit <- function(x) {
+  units <- intersect(c('BioProject', 'BioSample'), names(x))
+  if (length(units) != 1L) {
+    .gama_input_error(
+      'summarise_sra_skew',
+      detected = .detect_gama_object(x),
+      detail = paste0(
+        'must contain exactly one active unit column: ',
+        'BioProject or BioSample.'
+      )
+    )
+  }
+  if (identical(units, 'BioProject')) 'bioproject' else 'biosample'
 }
 
 .diagnostics_interaction_report <- function(x) {
@@ -58,21 +73,6 @@
   tibble::as_tibble(report)
 }
 
-.diagnostics_sra_skew_unit <- function(x) {
-  units <- intersect(c('BioProject', 'BioSample'), names(x))
-  if (length(units) != 1L) {
-    .gama_input_error(
-      'summarise_sra_skew',
-      detected = .detect_gama_object(x),
-      detail = paste0(
-        'must contain exactly one active unit column: ',
-        'BioProject or BioSample.'
-      )
-    )
-  }
-  if (identical(units, 'BioProject')) 'bioproject' else 'biosample'
-}
-
 .diagnostics_recoverability <- function(x, object) {
   switch(object,
     summarise_sra_availability = {
@@ -88,37 +88,6 @@
         recoverability = .diagnostics_rate(
           data$SRA - data$unknown,
           data$SRA
-        )
-      )
-    },
-    summarise_biosample_availability = {
-      data <- .gama_require_output(
-        x,
-        object,
-        required_cols = c('species', 'BioSample', 'operable', 'unknown')
-      )
-      tibble::tibble(
-        species = as.character(data$species),
-        BioSample = as.integer(data$BioSample),
-        operable = as.integer(data$operable),
-        unknown = as.integer(data$unknown),
-        recoverability = .diagnostics_rate(
-          data$operable - data$unknown,
-          data$BioSample
-        )
-      )
-    },
-    summarise_interaction = {
-      data <- .diagnostics_interaction_report(x)
-      tibble::tibble(
-        species = as.character(data$species),
-        BioSample = as.integer(data$BioSample),
-        operable = as.integer(data$operable),
-        linked = as.integer(data$linked),
-        unknown = as.integer(data$unknown),
-        recoverability = .diagnostics_rate(
-          data$linked - data$unknown,
-          data$BioSample
         )
       )
     },
@@ -139,6 +108,23 @@
         )
       )
     },
+    summarise_biosample_availability = {
+      data <- .gama_require_output(
+        x,
+        object,
+        required_cols = c('species', 'BioSample', 'operable', 'unknown')
+      )
+      tibble::tibble(
+        species = as.character(data$species),
+        BioSample = as.integer(data$BioSample),
+        operable = as.integer(data$operable),
+        unknown = as.integer(data$unknown),
+        recoverability = .diagnostics_rate(
+          data$operable - data$unknown,
+          data$BioSample
+        )
+      )
+    },
     summarise_biosample_skew = {
       recovery <- .gama_require_cache(
         x,
@@ -153,6 +139,20 @@
         recoverability = .diagnostics_rate(
           recovery$included,
           recovery$records
+        )
+      )
+    },
+    summarise_interaction = {
+      data <- .diagnostics_interaction_report(x)
+      tibble::tibble(
+        species = as.character(data$species),
+        BioSample = as.integer(data$BioSample),
+        operable = as.integer(data$operable),
+        linked = as.integer(data$linked),
+        unknown = as.integer(data$unknown),
+        recoverability = .diagnostics_rate(
+          data$linked - data$unknown,
+          data$BioSample
         )
       )
     }
@@ -185,6 +185,30 @@
         strategy_norm = as.character(.data$strategy_norm),
         class = as.character(.data$class)
       ),
+    summarise_sra_skew = {
+      unit <- .diagnostics_sra_skew_unit(x)
+      .gama_require_cache(
+        x,
+        attr_name = 'sra_profile',
+        required_cols = c(
+          'species',
+          'entrez_uid',
+          'biosample',
+          'bioproject'
+        ),
+        source = object
+      ) |>
+        dplyr::filter(
+          is.na(.data[[unit]]) |
+            !nzchar(trimws(as.character(.data[[unit]])))
+        ) |>
+        dplyr::transmute(
+          species = as.character(.data$species),
+          entrez_uid = as.character(.data$entrez_uid),
+          biosample = as.character(.data$biosample),
+          bioproject = as.character(.data$bioproject)
+        )
+    },
     summarise_biosample_availability = .gama_require_cache(
       x,
       attr_name = 'biosample_canonical_profile',
@@ -210,60 +234,6 @@
         anatomy_class = as.character(.data$anatomy_class)
       ) |>
       dplyr::distinct(),
-    summarise_interaction = .gama_require_cache(
-      x,
-      attr_name = 'interaction_profile',
-      required_cols = c(
-        'species',
-        'entrez_uid',
-        'biosample',
-        'bioproject',
-        'strategy_raw',
-        'strategy_norm',
-        'class',
-        'value_raw',
-        'value_norm',
-        'anatomy_class'
-      ),
-      source = object
-    ) |>
-      dplyr::filter(.data$class == 'unknown' | .data$anatomy_class == 'unknown') |>
-      dplyr::transmute(
-        species = as.character(.data$species),
-        entrez_uid = as.character(.data$entrez_uid),
-        biosample = as.character(.data$biosample),
-        bioproject = as.character(.data$bioproject),
-        strategy_raw = as.character(.data$strategy_raw),
-        strategy_norm = as.character(.data$strategy_norm),
-        class = as.character(.data$class),
-        value_raw = as.character(.data$value_raw),
-        value_norm = as.character(.data$value_norm),
-        anatomy_class = as.character(.data$anatomy_class)
-      ),
-    summarise_sra_skew = {
-      unit <- .diagnostics_sra_skew_unit(x)
-      .gama_require_cache(
-        x,
-        attr_name = 'sra_profile',
-        required_cols = c(
-          'species',
-          'entrez_uid',
-          'biosample',
-          'bioproject'
-        ),
-        source = object
-      ) |>
-        dplyr::filter(
-          is.na(.data[[unit]]) |
-            !nzchar(trimws(as.character(.data[[unit]])))
-        ) |>
-        dplyr::transmute(
-          species = as.character(.data$species),
-          entrez_uid = as.character(.data$entrez_uid),
-          biosample = as.character(.data$biosample),
-          bioproject = as.character(.data$bioproject)
-        )
-    },
     summarise_biosample_skew = .gama_require_cache(
       x,
       attr_name = 'biosample_anatomy_profile',
@@ -284,6 +254,40 @@
         entrez_uid = as.character(.data$entrez_uid),
         biosample = as.character(.data$biosample_id),
         bioproject = as.character(.data$bioproject)
+      ),
+    summarise_interaction = .gama_require_cache(
+      x,
+      attr_name = 'interaction_profile',
+      required_cols = c(
+        'species',
+        'entrez_uid',
+        'biosample',
+        'bioproject',
+        'strategy_raw',
+        'strategy_norm',
+        'class',
+        'value_raw',
+        'value_norm',
+        'anatomy_class'
+      ),
+      source = object
+    ) |>
+      dplyr::filter(
+        is.na(.data$class) |
+          .data$class == 'unknown' |
+          .data$anatomy_class == 'unknown'
+      ) |>
+      dplyr::transmute(
+        species = as.character(.data$species),
+        entrez_uid = as.character(.data$entrez_uid),
+        biosample = as.character(.data$biosample),
+        bioproject = as.character(.data$bioproject),
+        strategy_raw = as.character(.data$strategy_raw),
+        strategy_norm = as.character(.data$strategy_norm),
+        class = as.character(.data$class),
+        value_raw = as.character(.data$value_raw),
+        value_norm = as.character(.data$value_norm),
+        anatomy_class = as.character(.data$anatomy_class)
       )
   )
 }
@@ -291,14 +295,6 @@
 .diagnostics_empty_records <- function(x, object) {
   text <- switch(object,
     summarise_sra_availability = 'No unknown SRA records found; returning empty table.',
-    summarise_biosample_availability = paste0(
-      'No operable BioSample records with unknown anatomy found; ',
-      'returning empty table.'
-    ),
-    summarise_interaction = paste0(
-      'No linked records with unknown SRA modality or BioSample anatomy found; ',
-      'returning empty table.'
-    ),
     summarise_sra_skew = paste0(
       'No SRA records with missing ',
       if (identical(.diagnostics_sra_skew_unit(x), 'bioproject')) {
@@ -308,9 +304,17 @@
       },
       ' IDs found; returning empty table.'
     ),
+    summarise_biosample_availability = paste0(
+      'No operable BioSample records with unknown anatomy found; ',
+      'returning empty table.'
+    ),
     summarise_biosample_skew = paste0(
       'No operable BioSample records with missing BioProject IDs found; ',
       'returning empty table.'
+    ),
+    summarise_interaction = paste0(
+      'No unlinked BioSample records or linked records with unknown ',
+      'SRA modality or BioSample anatomy found; returning empty table.'
     )
   )
   .gama_msg(text)
@@ -339,19 +343,19 @@
 #' }
 #' `unknown` counts SRA records whose modality metadata remain missing or
 #' uninformative after fallback parsing and BioSample records with missing-like
-#' sample-source values or no anatomy ontology match. Non-missing, interpretable
-#' SRA strategies outside the modality ontology are classified as `other`. In
-#' interaction diagnostics, each linked BioSample is counted once when either
-#' or both classifications are unknown. For skew diagnostics, `linked` counts
-#' records carrying the active identifier. A zero denominator produces
-#' `NA_real_`.
+#' sample-source values or no anatomy ontology match. Non-missing,
+#' interpretable SRA strategies outside the modality ontology are classified as
+#' `other`. In interaction diagnostics, each linked BioSample is counted once
+#' when either or both classifications are unknown. For skew diagnostics,
+#' `linked` counts records carrying the active identifier. A zero denominator
+#' produces `NA_real_`.
 #'
 #' With `view = 'recoverability'`, the function returns one row per species.
 #' With `view = 'records'`, it returns unknown SRA modalities, operable
-#' BioSample records with unknown anatomy, linked interaction records with
-#' unknown modality or anatomy, or skew records missing the active linkage
-#' identifier. If none are found, an empty table retaining the complete typed
-#' column schema is returned and a message is emitted.
+#' BioSample records with unknown anatomy, interaction BioSample records that
+#' are unlinked or have unknown modality or anatomy, or skew records missing
+#' the active linkage identifier. If none are found, an empty table with the
+#' complete typed column schema is returned and a message is emitted.
 #'
 #' @param x A data frame or tibble returned by [summarise_sra_availability()],
 #' [summarise_sra_skew()], [summarise_biosample_availability()],

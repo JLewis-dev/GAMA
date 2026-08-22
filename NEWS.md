@@ -1,3 +1,20 @@
+# GAMA 0.4.1
+
+## Reliability
+- Retained unlinked operable BioSample records in `interaction_profile` for diagnostics
+
+## Refactoring
+- Reorganised internal functions and tests to align with the general package workflow
+
+## Documentation
+- Updated roxygen documentation and the GAMA user guide accordingly
+
+## Testing
+- Updated existing tests and regenerated examples and fixtures
+- Confirmed the test suite passes with the updated fixtures
+
+---
+
 # GAMA 0.4.0
 
 ## Features

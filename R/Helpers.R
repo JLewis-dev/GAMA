@@ -1,6 +1,6 @@
 # HELPERS =====================================================================
 
-.GAMA_VERSION <- '0.4.0'
+.GAMA_VERSION <- '0.4.1'
 
 # NCBI configuration
 
@@ -453,6 +453,8 @@ utils::globalVariables(c(
   format(as.numeric(x), big.mark = ',', scientific = FALSE, trim = TRUE)
 }
 
+# Skew recovery
+
 .skew_id_recovery_table <- function(species, unit, class, records, included) {
   species <- as.character(species)
   records <- as.integer(records)
@@ -496,29 +498,29 @@ utils::globalVariables(c(
     if (all(c('species', 'Assembly', 'complete', 'chromosome', 'scaffold', 'contig', 'best_n50') %in% nms)) {
       return('summarise_assembly_availability')
     }
+    if (all(c('species', 'entrez_uid', 'level', 'n50', 'coverage', 'biosample', 'bioproject', 'submitter', 'release_date', 'ftp_path') %in% nms)) {
+      return('extract_assembly_metadata')
+    }
     if (all(c('species', 'SRA', 'genomic', 'transcriptomic', 'epigenomic', 'chromatin', 'other', 'unknown') %in% nms)) {
       return('summarise_sra_availability')
     }
-    if (all(c('species', 'BioSample', 'operable', 'aerial', 'ground', 'reproductive', 'whole', 'in_vitro', 'other', 'mixed', 'unknown') %in% nms)) {
-      return('summarise_biosample_availability')
-    }
-    if (all(c('species', 'BioSample', 'expected', 'residual') %in% nms) && any(c('class', 'modality_class') %in% nms) && any(c('anatomy_class', 'anatomy_subclass') %in% nms)) {
-      return('summarise_interaction')
-    }
-    if (all(c('species', 'entrez_uid', 'level', 'n50', 'coverage', 'biosample', 'bioproject', 'submitter', 'release_date', 'ftp_path') %in% nms)) {
-      return('extract_assembly_metadata')
+    if (all(c('species', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff') %in% nms) && any(c('BioProject', 'BioSample') %in% nms)) {
+      return('summarise_sra_skew')
     }
     if (all(c('species', 'entrez_uid', 'biosample', 'bioproject', 'strategy_raw', 'strategy_norm', 'class', 'subclass', 'geo_linked', 'gse_ids', 'gsm_ids') %in% nms)) {
       return('extract_sra_metadata')
     }
-    if (all(c('species', 'entrez_uid', 'biosample', 'bioproject', 'value_raw', 'value_norm', 'anatomy_class', 'anatomy_subclass', 'anatomy_term') %in% nms)) {
-      return('extract_biosample_metadata')
+    if (all(c('species', 'BioSample', 'operable', 'aerial', 'ground', 'reproductive', 'whole', 'in_vitro', 'other', 'mixed', 'unknown') %in% nms)) {
+      return('summarise_biosample_availability')
     }
     if (all(c('species', 'BioProject', 'anatomy_class', 'min', 'q25', 'med', 'q75', 'max', 'eff') %in% nms)) {
       return('summarise_biosample_skew')
     }
-    if (all(c('species', 'class', 'min', 'q25', 'med', 'q75', 'max', 'eff') %in% nms) && any(c('BioProject', 'BioSample') %in% nms)) {
-      return('summarise_sra_skew')
+    if (all(c('species', 'entrez_uid', 'biosample', 'bioproject', 'value_raw', 'value_norm', 'anatomy_class', 'anatomy_subclass', 'anatomy_term') %in% nms)) {
+      return('extract_biosample_metadata')
+    }
+    if (all(c('species', 'BioSample', 'expected', 'residual') %in% nms) && any(c('class', 'modality_class') %in% nms) && any(c('anatomy_class', 'anatomy_subclass') %in% nms)) {
+      return('summarise_interaction')
     }
   }
   'incompatible'

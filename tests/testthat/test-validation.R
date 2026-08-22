@@ -590,28 +590,6 @@ test_that('report_diagnostics validation reports missing diagnostic caches', {
     ),
     "missing required cache 'sra_profile'"
   )
-  BIO_SUMMARY <- load_fixture('BIO_SUMMARY_Arabidopsis_thaliana')
-  expect_gama_error(
-    report_diagnostics(
-      without_attr(BIO_SUMMARY, 'biosample_canonical_profile'),
-      view = 'records'
-    ),
-    "missing required cache 'biosample_canonical_profile'"
-  )
-  INTERACTION <- load_fixture('INTERACTION_CLASS_Arabidopsis_thaliana')
-  expect_gama_error(
-    report_diagnostics(
-      without_attr(INTERACTION, 'interaction_info')
-    ),
-    "missing required cache 'interaction_info'"
-  )
-  expect_gama_error(
-    report_diagnostics(
-      without_attr(INTERACTION, 'interaction_profile'),
-      view = 'records'
-    ),
-    "missing required cache 'interaction_profile'"
-  )
   SRA_SKEW <- load_fixture(
     'SRA_SKEW_BP_Arabidopsis_thaliana'
   )
@@ -628,6 +606,14 @@ test_that('report_diagnostics validation reports missing diagnostic caches', {
     ),
     "missing required cache 'sra_profile'"
   )
+  BIO_SUMMARY <- load_fixture('BIO_SUMMARY_Arabidopsis_thaliana')
+  expect_gama_error(
+    report_diagnostics(
+      without_attr(BIO_SUMMARY, 'biosample_canonical_profile'),
+      view = 'records'
+    ),
+    "missing required cache 'biosample_canonical_profile'"
+  )
   BIO_SKEW <- load_fixture('BIO_SKEW_Arabidopsis_thaliana')
   expect_gama_error(
     report_diagnostics(
@@ -641,6 +627,39 @@ test_that('report_diagnostics validation reports missing diagnostic caches', {
       view = 'records'
     ),
     "missing required cache 'biosample_anatomy_profile'"
+  )
+  INTERACTION <- load_fixture('INTERACTION_CLASS_Arabidopsis_thaliana')
+  expect_gama_error(
+    report_diagnostics(
+      without_attr(INTERACTION, 'interaction_info')
+    ),
+    "missing required cache 'interaction_info'"
+  )
+  expect_gama_error(
+    report_diagnostics(
+      without_attr(INTERACTION, 'interaction_profile'),
+      view = 'records'
+    ),
+    "missing required cache 'interaction_profile'"
+  )
+})
+
+test_that('report_diagnostics validation rejects ambiguous SRA skew units', {
+  SRA_SKEW <- load_fixture(
+    'SRA_SKEW_BP_Arabidopsis_thaliana'
+  )
+  SRA_SKEW$BioSample <- SRA_SKEW$BioProject
+  expect_gama_error(
+    report_diagnostics(SRA_SKEW, view = 'records'),
+    'must contain exactly one active unit column: BioProject or BioSample'
+  )
+  SRA_SKEW <- load_fixture(
+    'SRA_SKEW_BP_Arabidopsis_thaliana'
+  )
+  SRA_SKEW$BioProject <- NULL
+  expect_gama_error(
+    report_diagnostics(SRA_SKEW, view = 'records'),
+    'must contain exactly one active unit column: BioProject or BioSample'
   )
 })
 
@@ -668,24 +687,5 @@ test_that('report_diagnostics validation reports malformed interaction metadata'
   expect_gama_error(
     report_diagnostics(INTERACTION),
     "cache 'interaction_info\\$match_report' missing required columns: unknown"
-  )
-})
-
-test_that('report_diagnostics validation rejects ambiguous SRA skew units', {
-  SRA_SKEW <- load_fixture(
-    'SRA_SKEW_BP_Arabidopsis_thaliana'
-  )
-  SRA_SKEW$BioSample <- SRA_SKEW$BioProject
-  expect_gama_error(
-    report_diagnostics(SRA_SKEW, view = 'records'),
-    'must contain exactly one active unit column: BioProject or BioSample'
-  )
-  SRA_SKEW <- load_fixture(
-    'SRA_SKEW_BP_Arabidopsis_thaliana'
-  )
-  SRA_SKEW$BioProject <- NULL
-  expect_gama_error(
-    report_diagnostics(SRA_SKEW, view = 'records'),
-    'must contain exactly one active unit column: BioProject or BioSample'
   )
 })

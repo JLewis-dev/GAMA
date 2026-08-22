@@ -41,19 +41,19 @@ Values range from 0 to 1 and are calculated from the returned count columns:
 }
 \code{unknown} counts SRA records whose modality metadata remain missing or
 uninformative after fallback parsing and BioSample records with missing-like
-sample-source values or no anatomy ontology match. Non-missing, interpretable
-SRA strategies outside the modality ontology are classified as \code{other}. In
-interaction diagnostics, each linked BioSample is counted once when either
-or both classifications are unknown. For skew diagnostics, \code{linked} counts
-records carrying the active identifier. A zero denominator produces
-\code{NA_real_}.
+sample-source values or no anatomy ontology match. Non-missing,
+interpretable SRA strategies outside the modality ontology are classified as
+\code{other}. In interaction diagnostics, each linked BioSample is counted once
+when either or both classifications are unknown. For skew diagnostics,
+\code{linked} counts records carrying the active identifier. A zero denominator
+produces \code{NA_real_}.
 
 With \code{view = 'recoverability'}, the function returns one row per species.
 With \code{view = 'records'}, it returns unknown SRA modalities, operable
-BioSample records with unknown anatomy, linked interaction records with
-unknown modality or anatomy, or skew records missing the active linkage
-identifier. If none are found, an empty table retaining the complete typed
-column schema is returned and a message is emitted.
+BioSample records with unknown anatomy, interaction BioSample records that
+are unlinked or have unknown modality or anatomy, or skew records missing
+the active linkage identifier. If none are found, an empty table with the
+complete typed column schema is returned and a message is emitted.
 }
 \examples{
 \dontrun{

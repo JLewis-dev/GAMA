@@ -36,11 +36,13 @@ The input \code{SRA} must carry \code{sra_profile}. The input \code{BIO} must ca
 are produced by \code{\link[=summarise_sra_availability]{summarise_sra_availability()}} and
 \code{\link[=summarise_biosample_availability]{summarise_biosample_availability()}}, respectively.
 
-The returned \code{interaction_profile} contains \code{species}, \code{entrez_uid},
-\code{biosample}, \code{bioproject}, \code{strategy_raw}, \code{strategy_norm}, \code{class},
-\code{value_raw}, \code{value_norm}, and \code{anatomy_class}. BioProject values come from
-SRA where available, with BioSample values used as a fallback. Raw and
-normalised source values come from \code{biosample_canonical_profile}.
+The returned \code{interaction_profile} retains linked and unlinked operable
+BioSamples and contains \code{species}, \code{entrez_uid}, \code{biosample}, \code{bioproject},
+\code{strategy_raw}, \code{strategy_norm}, \code{class}, \code{value_raw}, \code{value_norm}, and
+\code{anatomy_class}. \code{entrez_uid} identifies the SRA record when linked and the
+BioSample record otherwise. BioProject values come from SRA where available,
+with BioSample values used as a fallback. Raw and normalised source values
+come from \code{biosample_canonical_profile}.
 
 \code{interaction_info$match_report} contains \code{species}, \code{BioSample}, \code{operable},
 \code{linked}, and \code{unknown}. These give the total archive count, operable count,

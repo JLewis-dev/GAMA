@@ -1553,11 +1553,13 @@ anatomy_term     = NULL) {
 #' are produced by [summarise_sra_availability()] and
 #' [summarise_biosample_availability()], respectively.
 #'
-#' The returned `interaction_profile` contains `species`, `entrez_uid`,
-#' `biosample`, `bioproject`, `strategy_raw`, `strategy_norm`, `class`,
-#' `value_raw`, `value_norm`, and `anatomy_class`. BioProject values come from
-#' SRA where available, with BioSample values used as a fallback. Raw and
-#' normalised source values come from `biosample_canonical_profile`.
+#' The returned `interaction_profile` retains linked and unlinked operable
+#' BioSamples and contains `species`, `entrez_uid`, `biosample`, `bioproject`,
+#' `strategy_raw`, `strategy_norm`, `class`, `value_raw`, `value_norm`, and
+#' `anatomy_class`. `entrez_uid` identifies the SRA record when linked and the
+#' BioSample record otherwise. BioProject values come from SRA where available,
+#' with BioSample values used as a fallback. Raw and normalised source values
+#' come from `biosample_canonical_profile`.
 #'
 #' `interaction_info$match_report` contains `species`, `BioSample`, `operable`,
 #' `linked`, and `unknown`. These give the total archive count, operable count,
@@ -1785,10 +1787,10 @@ summarise_interaction <- function(SRA,
     )
   }
   biosample_records <- profile |>
-    dplyr::filter(.data$linked) |>
     dplyr::select(
       species,
       input_id,
+      entrez_uid_bio = entrez_uid,
       biosample = biosample_id,
       bioproject_bio = bioproject,
       anatomy_class
@@ -1812,7 +1814,6 @@ summarise_interaction <- function(SRA,
         ''
       )
     ) |>
-    dplyr::filter(!is.na(.data$biosample)) |>
     dplyr::distinct()
   sra_records <- sra_filtered |>
     dplyr::transmute(
@@ -1833,7 +1834,7 @@ summarise_interaction <- function(SRA,
     dplyr::filter(!is.na(.data$biosample)) |>
     dplyr::distinct()
   interaction_profile <- sra_records |>
-    dplyr::inner_join(
+    dplyr::right_join(
       biosample_records,
       by = c('species', 'biosample'),
       na_matches = 'never',
@@ -1841,7 +1842,10 @@ summarise_interaction <- function(SRA,
     ) |>
     dplyr::transmute(
       species = .data$species,
-      entrez_uid = .data$entrez_uid,
+      entrez_uid = dplyr::coalesce(
+        .data$entrez_uid,
+        .data$entrez_uid_bio
+      ),
       biosample = .data$biosample,
       bioproject = dplyr::coalesce(
         .data$bioproject_sra,

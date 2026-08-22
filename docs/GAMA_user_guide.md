@@ -299,7 +299,7 @@ Provides a species-level overview of BioSample anatomy composition by collapsing
   - Optional arguments –<br>
     &nbsp;&nbsp;species: character vector; species from list to include (NULL, one or more species names)<br>
     &nbsp;&nbsp;all: logical; include canonical anatomy-term columns (FALSE, TRUE)
-- Output – tibble (gdt_tbl) with one row per species containing total BioSample record counts, operable BioSample record counts, and class-level anatomy counts; when all = TRUE, canonical anatomy-term counts are included; cached BioSample profiles are attached as attr(x, 'biosample_anatomy_profile') and attr(x, 'biosample_canonical_profile'), with the latter retaining raw and normalised source values and BioProject provenance for downstream skew analysis, SRA × BioSample interaction summaries, and diagnostics
+- Output – tibble (gdt_tbl) with one row per species containing total BioSample record counts, operable BioSample record counts, and class-level anatomy counts; when all = TRUE, canonical anatomy-term counts are included; cached profiles are attached as attr(x, 'biosample_anatomy_profile') and attr(x, 'biosample_canonical_profile') for downstream skew, interaction, and diagnostics; the latter retains raw and normalised source values and BioProject provenance
 
 ### plot_biosample_availability()
 
@@ -362,7 +362,7 @@ Summarises cross-database SRA × BioSample structure by linking cached sra_profi
   - Optional arguments –<br>
     &nbsp;&nbsp;level: character; anatomy resolution to summarise ('anatomy_class', 'anatomy_subclass')<br>
     &nbsp;&nbsp;species: character vector; species from the input summaries to include (NULL, one or more species names)
-- Output – tibble (gdt_tbl) with one row per species, modality class, and anatomy category; columns include species, class, BioSample, expected, and residual, plus either anatomy_class or anatomy_subclass depending on level; BioSample-to-SRA linkage information and supporting metadata are attached as attr(x, 'interaction_profile') and attr(x, 'interaction_info'), respectively
+- Output – tibble (gdt_tbl) with one row per species, modality class, and anatomy category; columns include species, class, BioSample, expected, and residual, plus either anatomy_class or anatomy_subclass depending on level; record-level profiles for linked and unlinked operable BioSamples and supporting metadata are attached as attr(x, 'interaction_profile') and attr(x, 'interaction_info'), respectively
 
 ### plot_interaction()
 
@@ -393,7 +393,7 @@ Reports metadata recoverability and identifies records with unresolved classific
 - Input – tibble returned by summarise_sra_availability(), summarise_sra_skew(), summarise_biosample_availability(), summarise_biosample_skew(), or summarise_interaction()
   - Optional arguments –<br>
     &nbsp;&nbsp;view: character; diagnostic view ('recoverability', 'records')
-- Output – tibble (gdt_tbl) retaining query provenance; with view = 'recoverability', contains one row per species with the relevant denominator, diagnostic counts, and recoverability; with view = 'records', contains object-specific rows with unresolved classifications or missing active linkage identifiers. If no matching records are found, an empty table retaining the complete typed column schema is returned and a message is emitted
+- Output – tibble (gdt_tbl) retaining query provenance; with view = 'recoverability', contains one row per species with the relevant denominator, diagnostic counts, and recoverability; with view = 'records', contains object-specific rows with unresolved classifications, unlinked interaction BioSamples, or missing active linkage identifiers. If no matching records are found, an empty table retaining the complete typed column schema is returned and a message is emitted
 
 ---
 
